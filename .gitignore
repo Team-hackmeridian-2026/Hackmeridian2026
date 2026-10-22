@@ -1,0 +1,18 @@
+# Rust / Soroban
+target/
+contracts/**/test_snapshots/
+
+# Node
+node_modules/
+dist/
+
+# Environment & keys (never commit secrets)
+.env
+.env.local
+.env.*.local
+.stellar/
+
+# OS / editors
+.DS_Store
+.vscode/
+.idea/
