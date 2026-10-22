@@ -1,0 +1,336 @@
+use super::*;
+use ip_license_nft::{IpLicenseNft, IpLicenseNftClient, LicenseTerms};
+use royalty_splitter::{Beneficiary, RoyaltySplitter, RoyaltySplitterClient, SplitConfig};
+use soroban_sdk::{
+    testutils::{Address as _, Ledger},
+    token::{StellarAssetClient, TokenClient},
+    vec, String,
+};
+
+const WINDOW: u64 = 60;
+
+struct Setup<'a> {
+    env: Env,
+    escrow: MilestoneEscrowClient<'a>,
+    splitter: RoyaltySplitterClient<'a>,
+    token: TokenClient<'a>,
+    token_admin: StellarAssetClient<'a>,
+    lab: Address,
+    inventor: Address,
+    investor: Address,
+    arbiter: Address,
+    treasury: Address,
+    license_id: u64,
+}
+
+fn setup(fee_bps: u32) -> Setup<'static> {
+    let env = Env::default();
+    env.mock_all_auths();
+
+    let admin = Address::generate(&env);
+    let lab = Address::generate(&env);
+    let inventor = Address::generate(&env);
+    let investor = Address::generate(&env);
+    let arbiter = Address::generate(&env);
+    let treasury = Address::generate(&env);
+
+    let sac = env.register_stellar_asset_contract_v2(admin.clone());
+    let token = TokenClient::new(&env, &sac.address());
+    let token_admin = StellarAssetClient::new(&env, &sac.address());
+    token_admin.mint(&investor, &1_000_000);
+
+    let nft_id = env.register(IpLicenseNft, (admin.clone(),));
+    let nft = IpLicenseNftClient::new(&env, &nft_id);
+    nft.set_institution(&lab, &true);
+    let license_id = nft.mint(
+        &lab,
+        &String::from_str(&env, "Anti-X antibody"),
+        &vec![&env, inventor.clone()],
+        &LicenseTerms {
+            exclusive: true,
+            territory: String::from_str(&env, "EU"),
+            field: String::from_str(&env, "Oncology"),
+            duration_years: 10,
+        },
+        &BytesN::from_array(&env, &[1; 32]),
+        &String::from_str(&env, ""),
+    );
+
+    let splitter_id = env.register(
+        RoyaltySplitter,
+        (
+            admin.clone(),
+            sac.address(),
+            nft_id.clone(),
+            treasury.clone(),
+            0u32,
+        ),
+    );
+    let splitter = RoyaltySplitterClient::new(&env, &splitter_id);
+
+    let escrow_id = env.register(
+        MilestoneEscrow,
+        (
+            admin.clone(),
+            sac.address(),
+            nft_id,
+            splitter_id.clone(),
+            treasury.clone(),
+            fee_bps,
+        ),
+    );
+    let escrow = MilestoneEscrowClient::new(&env, &escrow_id);
+
+    splitter.set_minter(&escrow_id);
+    splitter.set_allowed(&investor, &true);
+    splitter.configure(
+        &license_id,
+        &SplitConfig {
+            fixed: vec![
+                &env,
+                Beneficiary {
+                    addr: lab.clone(),
+                    bps: 4_000,
+                },
+                Beneficiary {
+                    addr: inventor.clone(),
+                    bps: 3_000,
+                },
+            ],
+            investors_bps: 3_000,
+        },
+    );
+
+    Setup {
+        env,
+        escrow,
+        splitter,
+        token,
+        token_admin,
+        lab,
+        inventor,
+        investor,
+        arbiter,
+        treasury,
+        license_id,
+    }
+}
+
+fn create(s: &Setup) -> u64 {
+    s.escrow.create_project(
+        &s.license_id,
+        &s.investor,
+        &s.arbiter,
+        &vec![&s.env, 10_000i128, 10_000, 10_000],
+        &WINDOW,
+    )
+}
+
+fn proof(s: &Setup, byte: u8) -> BytesN<32> {
+    BytesN::from_array(&s.env, &[byte; 32])
+}
+
+fn advance(s: &Setup, seconds: u64) {
+    s.env.ledger().with_mut(|l| l.timestamp += seconds);
+}
+
+fn status(s: &Setup, pid: u64, index: u32) -> MilestoneStatus {
+    s.escrow.get_project(&pid).milestones.get_unchecked(index).status
+}
+
+/// Le scénario exact de la démo.
+#[test]
+fn demo_scenario_end_to_end() {
+    let s = setup(0);
+    let pid = create(&s);
+    assert_eq!(s.escrow.projects_by_license(&s.license_id), vec![&s.env, pid]);
+
+    s.escrow.fund(&pid);
+    assert_eq!(s.token.balance(&s.escrow.address), 30_000);
+    assert_eq!(s.splitter.shares_of(&s.license_id, &s.investor), 30_000);
+
+    s.escrow.submit_milestone(&pid, &0, &proof(&s, 9));
+    assert_eq!(
+        s.escrow.try_release(&pid, &0),
+        Err(Ok(Error::ChallengeWindowOpen.into()))
+    );
+    advance(&s, WINDOW);
+    s.escrow.release(&pid, &0);
+    assert_eq!(s.token.balance(&s.lab), 10_000);
+    assert_eq!(status(&s, pid, 0), MilestoneStatus::Released);
+
+    let pharma = Address::generate(&s.env);
+    s.token_admin.mint(&pharma, &5_000);
+    s.splitter.pay_royalty(&s.license_id, &pharma, &5_000);
+    assert_eq!(s.splitter.claimable(&s.license_id, &s.lab), 2_000);
+    assert_eq!(s.splitter.claimable(&s.license_id, &s.inventor), 1_500);
+    assert_eq!(s.splitter.claimable(&s.license_id, &s.investor), 1_500);
+}
+
+#[test]
+fn fee_goes_to_treasury_on_release() {
+    let s = setup(250); // 2,5 %
+    let pid = create(&s);
+    s.escrow.fund(&pid);
+    s.escrow.submit_milestone(&pid, &0, &proof(&s, 1));
+    advance(&s, WINDOW);
+    s.escrow.release(&pid, &0);
+    assert_eq!(s.token.balance(&s.treasury), 250);
+    assert_eq!(s.token.balance(&s.lab), 9_750);
+}
+
+#[test]
+fn milestones_in_order() {
+    let s = setup(0);
+    let pid = create(&s);
+    assert_eq!(
+        s.escrow.try_submit_milestone(&pid, &0, &proof(&s, 1)),
+        Err(Ok(Error::NotFunded.into()))
+    );
+    s.escrow.fund(&pid);
+    assert_eq!(
+        s.escrow.try_submit_milestone(&pid, &1, &proof(&s, 1)),
+        Err(Ok(Error::PreviousNotSettled.into()))
+    );
+    assert_eq!(
+        s.escrow.try_submit_milestone(&pid, &5, &proof(&s, 1)),
+        Err(Ok(Error::InvalidIndex.into()))
+    );
+    assert_eq!(s.escrow.try_fund(&pid), Err(Ok(Error::AlreadyFunded.into())));
+}
+
+#[test]
+fn dispute_then_arbiter_approves() {
+    let s = setup(0);
+    let pid = create(&s);
+    s.escrow.fund(&pid);
+    s.escrow.submit_milestone(&pid, &0, &proof(&s, 1));
+    s.escrow.dispute(&pid, &0, &proof(&s, 2));
+    assert_eq!(status(&s, pid, 0), MilestoneStatus::Disputed);
+
+    advance(&s, WINDOW);
+    assert_eq!(s.escrow.try_release(&pid, &0), Err(Ok(Error::WrongStatus.into())));
+
+    s.escrow.resolve(&pid, &0, &true);
+    assert_eq!(s.token.balance(&s.lab), 10_000);
+    assert_eq!(status(&s, pid, 0), MilestoneStatus::Released);
+}
+
+#[test]
+fn dispute_then_arbiter_refunds_and_burns_shares() {
+    let s = setup(0);
+    let pid = create(&s);
+    s.escrow.fund(&pid);
+    s.escrow.submit_milestone(&pid, &0, &proof(&s, 1));
+    s.escrow.dispute(&pid, &0, &proof(&s, 2));
+    s.escrow.resolve(&pid, &0, &false);
+
+    assert_eq!(status(&s, pid, 0), MilestoneStatus::Refunded);
+    assert_eq!(s.token.balance(&s.investor), 1_000_000 - 20_000);
+    assert_eq!(s.splitter.shares_of(&s.license_id, &s.investor), 20_000);
+
+    // Le jalon suivant peut être soumis après un remboursement.
+    s.escrow.submit_milestone(&pid, &1, &proof(&s, 3));
+}
+
+#[test]
+fn dispute_only_inside_window() {
+    let s = setup(0);
+    let pid = create(&s);
+    s.escrow.fund(&pid);
+    s.escrow.submit_milestone(&pid, &0, &proof(&s, 1));
+    advance(&s, WINDOW);
+    assert_eq!(
+        s.escrow.try_dispute(&pid, &0, &proof(&s, 2)),
+        Err(Ok(Error::ChallengeWindowClosed.into()))
+    );
+}
+
+#[test]
+fn cannot_release_twice() {
+    let s = setup(0);
+    let pid = create(&s);
+    s.escrow.fund(&pid);
+    s.escrow.submit_milestone(&pid, &0, &proof(&s, 1));
+    advance(&s, WINDOW);
+    s.escrow.release(&pid, &0);
+    assert_eq!(s.escrow.try_release(&pid, &0), Err(Ok(Error::WrongStatus.into())));
+    assert_eq!(
+        s.escrow.try_resolve(&pid, &0, &true),
+        Err(Ok(Error::WrongStatus.into()))
+    );
+}
+
+#[test]
+fn cancel_refunds_pending_milestones() {
+    let s = setup(0);
+    let pid = create(&s);
+    s.escrow.fund(&pid);
+    s.escrow.submit_milestone(&pid, &0, &proof(&s, 1));
+    advance(&s, WINDOW);
+    s.escrow.release(&pid, &0);
+
+    s.escrow.cancel(&pid);
+    assert_eq!(status(&s, pid, 1), MilestoneStatus::Refunded);
+    assert_eq!(status(&s, pid, 2), MilestoneStatus::Refunded);
+    assert_eq!(s.token.balance(&s.escrow.address), 0);
+    assert_eq!(s.token.balance(&s.investor), 1_000_000 - 10_000);
+    assert_eq!(s.splitter.shares_of(&s.license_id, &s.investor), 10_000);
+}
+
+#[test]
+fn refund_does_not_block_when_shares_were_sold() {
+    let s = setup(0);
+    let pid = create(&s);
+    s.escrow.fund(&pid);
+    let buyer = Address::generate(&s.env);
+    s.splitter.set_allowed(&buyer, &true);
+    s.splitter
+        .transfer_shares(&s.license_id, &s.investor, &buyer, &25_000);
+
+    s.escrow.cancel(&pid);
+    assert_eq!(s.splitter.shares_of(&s.license_id, &s.investor), 0);
+    assert_eq!(s.splitter.shares_of(&s.license_id, &buyer), 25_000);
+    assert_eq!(s.token.balance(&s.escrow.address), 0);
+}
+
+#[test]
+fn project_requires_configured_split_and_valid_amounts() {
+    let s = setup(0);
+    assert_eq!(
+        s.escrow.try_create_project(
+            &s.license_id,
+            &s.investor,
+            &s.arbiter,
+            &vec![&s.env, 0i128],
+            &WINDOW
+        ),
+        Err(Ok(Error::InvalidMilestones.into()))
+    );
+    assert_eq!(
+        s.escrow.try_create_project(
+            &s.license_id,
+            &s.investor,
+            &s.investor,
+            &vec![&s.env, 10i128],
+            &WINDOW
+        ),
+        Err(Ok(Error::InvalidMilestones.into()))
+    );
+}
+
+#[test]
+fn unverified_investor_cannot_fund() {
+    let s = setup(0);
+    let stranger = Address::generate(&s.env);
+    s.token_admin.mint(&stranger, &30_000);
+    let pid = s.escrow.create_project(
+        &s.license_id,
+        &stranger,
+        &s.arbiter,
+        &vec![&s.env, 30_000i128],
+        &WINDOW,
+    );
+    assert!(s.escrow.try_fund(&pid).is_err());
+    assert_eq!(s.token.balance(&stranger), 30_000);
+}
