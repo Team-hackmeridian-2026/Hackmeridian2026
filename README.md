@@ -1,8 +1,8 @@
 # BioLicensing
 
-Decentralized marketplace that turns European biotech patents into programmable
-licences on Stellar: funded in EURC, released by milestones, with royalties
-shared automatically.
+Decentralized marketplace that turns European research patents (biotech first)
+into programmable licences on Stellar: funded in EURC, released by milestones,
+with royalties shared automatically.
 
 Built for **HackMeridian** (Lisbon, 25–26 October 2026).
 
