@@ -9,6 +9,7 @@ import { Button } from "./ui";
 const NAV = [
   { to: "/", label: "Marketplace" },
   { to: "/new", label: "List a patent" },
+  { to: "/cash-out", label: "Cash out" },
   { to: "/admin", label: "Admin" },
 ];
 
