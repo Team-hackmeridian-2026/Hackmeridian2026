@@ -316,4 +316,27 @@ Everything after the `pre-hackathon` tag
 
 - **FASSINOU Aziz**: smart contracts, front-end, Stellar integrations
 - **CHAFI Marwane**: multilingual site, pitch
-- **Antoine**: deployment, pitch
+- **Antoine** (Tungstene): deployment, design, front-end, pitch
+
+### What Antoine did during the event
+
+- **Deployment**: public site on Vercel, deployed automatically from `main`
+  with a preview for every pull request
+- **Design**: full redesign of the app from the Figma, dark and light themes,
+  binary DNA helix in the hero and behind every page, molecules and titles
+  that react to the pointer, "molecular signature" logo and favicons
+  ([#11](https://github.com/Team-hackmeridian-2026/Hackmeridian2026/pull/11), [#14](https://github.com/Team-hackmeridian-2026/Hackmeridian2026/pull/14), [#15](https://github.com/Team-hackmeridian-2026/Hackmeridian2026/pull/15), [#17](https://github.com/Team-hackmeridian-2026/Hackmeridian2026/pull/17), [#20](https://github.com/Team-hackmeridian-2026/Hackmeridian2026/pull/20), [#23](https://github.com/Team-hackmeridian-2026/Hackmeridian2026/pull/23), [#24](https://github.com/Team-hackmeridian-2026/Hackmeridian2026/pull/24))
+- **Mobile and accessibility**: mobile menu, hero and header fitted to small
+  screens, form errors next to their field, loading and empty states
+  ([#12](https://github.com/Team-hackmeridian-2026/Hackmeridian2026/pull/12), [#16](https://github.com/Team-hackmeridian-2026/Hackmeridian2026/pull/16), [#22](https://github.com/Team-hackmeridian-2026/Hackmeridian2026/pull/22), [#27](https://github.com/Team-hackmeridian-2026/Hackmeridian2026/pull/27))
+- **Wallet experience**: wallet kept connected after a page refresh, and clear,
+  translated messages instead of raw errors when Freighter is locked, on the
+  wrong network or on another account ([#9](https://github.com/Team-hackmeridian-2026/Hackmeridian2026/pull/9), [#25](https://github.com/Team-hackmeridian-2026/Hackmeridian2026/pull/25))
+- **Admin tools**: account checker that shows, without a wallet, whether an
+  address is funded, has an EURC trustline, is a verified institution or is
+  KYC-approved, with links to the admin's audit trail on stellar.expert
+  ([#26](https://github.com/Team-hackmeridian-2026/Hackmeridian2026/pull/26))
+- **Sharing**: link previews for Discord, Slack, X and LinkedIn, and a tab
+  title per page ([#18](https://github.com/Team-hackmeridian-2026/Hackmeridian2026/pull/18))
+- **Docs and pitch**: README screenshots, event summary and roadmap
+  ([#19](https://github.com/Team-hackmeridian-2026/Hackmeridian2026/pull/19), [#28](https://github.com/Team-hackmeridian-2026/Hackmeridian2026/pull/28)), market figures for the pitch (EPO, AUTM, crowdfunding fees)
