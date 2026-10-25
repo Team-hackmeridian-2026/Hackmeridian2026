@@ -2,7 +2,7 @@ import { createContext, useCallback, useContext, useMemo, useState, type ReactNo
 import { Keypair, TransactionBuilder } from "@stellar/stellar-sdk";
 import { StellarWalletsKit } from "@creit.tech/stellar-wallets-kit/sdk";
 import { defaultModules } from "@creit.tech/stellar-wallets-kit/modules/utils";
-import { Networks } from "@creit.tech/stellar-wallets-kit/types";
+import { LocalStorageKeys, Networks } from "@creit.tech/stellar-wallets-kit/types";
 import { NETWORK_PASSPHRASE } from "../config";
 
 export type SignTransaction = (
@@ -53,6 +53,68 @@ function initKit() {
   kitReady = true;
 }
 
+function walletSigner(address: string): Signer {
+  return {
+    address,
+    kind: "wallet",
+    label: "Wallet",
+    sign: (xdr) =>
+      StellarWalletsKit.signTransaction(xdr, { networkPassphrase: NETWORK_PASSPHRASE, address }),
+  };
+}
+
+function demoSigner(role: DemoRole): Signer | null {
+  const secret = DEMO_SECRETS[role];
+  if (!secret) return null;
+  const keypair = Keypair.fromSecret(secret);
+  return {
+    address: keypair.publicKey(),
+    kind: "demo",
+    label: ROLE_LABELS[role],
+    role,
+    sign: async (xdr) => {
+      const tx = TransactionBuilder.fromXDR(xdr, NETWORK_PASSPHRASE);
+      tx.sign(keypair);
+      return { signedTxXdr: tx.toXDR(), signerAddress: keypair.publicKey() };
+    },
+  };
+}
+
+/** Demo role kept for the browser tab only, so a refresh on stage keeps the role. */
+const DEMO_ROLE_KEY = "biolicensing/demoRole";
+
+function rememberDemoRole(role: DemoRole | null) {
+  try {
+    if (role) sessionStorage.setItem(DEMO_ROLE_KEY, role);
+    else sessionStorage.removeItem(DEMO_ROLE_KEY);
+  } catch {
+    // Storage unavailable (private mode, blocked cookies): the session just won't persist.
+  }
+}
+
+/**
+ * Restores the session after a page refresh. Stellar Wallets Kit already saves the
+ * connected address and the chosen wallet in localStorage; we only read them back, so
+ * the user is not asked to reconnect. Signing still goes through the wallet as usual.
+ */
+function restoreSigner(): Signer | null {
+  try {
+    const role = sessionStorage.getItem(DEMO_ROLE_KEY) as DemoRole | null;
+    if (role && DEMO_ENABLED) {
+      const demo = demoSigner(role);
+      if (demo) return demo;
+    }
+    const address = localStorage.getItem(LocalStorageKeys.activeAddress);
+    const walletId = localStorage.getItem(LocalStorageKeys.selectedModuleId);
+    if (!address || !walletId) return null;
+    initKit();
+    StellarWalletsKit.setWallet(walletId);
+    return walletSigner(address);
+  } catch {
+    return null;
+  }
+}
+
 type WalletState = {
   signer: Signer | null;
   connecting: boolean;
@@ -64,7 +126,7 @@ type WalletState = {
 const WalletContext = createContext<WalletState | null>(null);
 
 export function WalletProvider({ children }: { children: ReactNode }) {
-  const [signer, setSigner] = useState<Signer | null>(null);
+  const [signer, setSigner] = useState<Signer | null>(restoreSigner);
   const [connecting, setConnecting] = useState(false);
 
   const connectWallet = useCallback(async () => {
@@ -72,37 +134,23 @@ export function WalletProvider({ children }: { children: ReactNode }) {
     setConnecting(true);
     try {
       const { address } = await StellarWalletsKit.authModal();
-      setSigner({
-        address,
-        kind: "wallet",
-        label: "Wallet",
-        sign: (xdr) =>
-          StellarWalletsKit.signTransaction(xdr, { networkPassphrase: NETWORK_PASSPHRASE, address }),
-      });
+      rememberDemoRole(null);
+      setSigner(walletSigner(address));
     } finally {
       setConnecting(false);
     }
   }, []);
 
   const useDemoRole = useCallback((role: DemoRole) => {
-    const secret = DEMO_SECRETS[role];
-    if (!secret) return;
-    const keypair = Keypair.fromSecret(secret);
-    setSigner({
-      address: keypair.publicKey(),
-      kind: "demo",
-      label: ROLE_LABELS[role],
-      role,
-      sign: async (xdr) => {
-        const tx = TransactionBuilder.fromXDR(xdr, NETWORK_PASSPHRASE);
-        tx.sign(keypair);
-        return { signedTxXdr: tx.toXDR(), signerAddress: keypair.publicKey() };
-      },
-    });
+    const demo = demoSigner(role);
+    if (!demo) return;
+    rememberDemoRole(role);
+    setSigner(demo);
   }, []);
 
   const disconnect = useCallback(async () => {
     if (signer?.kind === "wallet") await StellarWalletsKit.disconnect();
+    rememberDemoRole(null);
     setSigner(null);
   }, [signer]);
 
