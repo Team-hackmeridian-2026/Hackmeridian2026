@@ -218,7 +218,7 @@ function FundingRound({ projectId, signer, onChange }: { projectId: bigint; sign
   const [busy, setBusy] = useState(false);
 
   if (project.loading && !project.data) return <Spinner />;
-  if (project.error) return <ErrorBox message={project.error} />;
+  if (project.error) return <ErrorBox message={project.error} onRetry={project.reload} />;
   const p = project.data!;
   const total = p.milestones.reduce((s, m) => s + m.amount, 0n);
   const status = fundingStatus(t, p);
@@ -300,7 +300,7 @@ function Royalties({ license, signer, version }: { license: License; signer: Sig
   }, [license.id, signer?.address, version]);
 
   if (data.loading && !data.data) return <Card><Spinner /></Card>;
-  if (data.error) return <Card><ErrorBox message={data.error} /></Card>;
+  if (data.error) return <Card><ErrorBox message={data.error} onRetry={data.reload} /></Card>;
   const d = data.data!;
   const name = (addr: string) =>
     addr === license.owner
@@ -389,7 +389,8 @@ export function LicenceDetail() {
   const projects = useAsync(() => escrow.projectsByLicense(licenseId), [id]);
 
   if (license.loading) return <Spinner />;
-  if (license.error || !license.data) return <ErrorBox message={license.error ?? t("licence.notFound")} />;
+  if (license.error) return <ErrorBox message={license.error} onRetry={license.reload} />;
+  if (!license.data) return <ErrorBox message={t("licence.notFound")} />;
   const l = license.data;
 
   return (

@@ -1,4 +1,4 @@
-import { useState, type FormEvent } from "react";
+import { useEffect, useState, type DragEvent, type FormEvent } from "react";
 import { useNavigate } from "react-router-dom";
 import { Trans, useTranslation } from "react-i18next";
 import { ACCOUNTS } from "../config";
@@ -8,7 +8,7 @@ import { useToasts } from "../components/toasts";
 import { DIRECTORY, PersonPicker, type PersonKind } from "../components/people";
 import { useAsync } from "../lib/useAsync";
 import { formatNumber, sha256, toHex } from "../lib/format";
-import { Badge, Button, Card, ErrorBox, Field, Input, SectionTitle, TxLink } from "../components/ui";
+import { Badge, Button, Card, ErrorBox, Field, Input, Notice, SectionTitle, TxLink } from "../components/ui";
 
 const WINDOWS = [
   { key: "minute", seconds: 60 },
@@ -23,6 +23,18 @@ const INITIAL_STEPS: Step[] = [
   { key: "split", state: "todo" },
   { key: "round", state: "todo" },
 ];
+
+type FieldKey = "dossier" | "inventors" | "parties" | "split" | "milestones";
+
+/** Error shown right under the section it is about. */
+function FieldError({ message }: { message?: string }) {
+  if (!message) return null;
+  return (
+    <p role="alert" className="text-sm font-medium text-danger">
+      {message}
+    </p>
+  );
+}
 
 const isAddress = (a: string) => /^G[A-Z2-7]{55}$/.test(a);
 
@@ -95,6 +107,22 @@ export function NewLicence() {
   const [steps, setSteps] = useState<Step[]>(INITIAL_STEPS);
   const [busy, setBusy] = useState(false);
   const [formError, setFormError] = useState<string>();
+  const [errorField, setErrorField] = useState<FieldKey | null>(null);
+  const [dragging, setDragging] = useState(false);
+  const fieldError = (key: FieldKey) => (errorField === key ? formError : undefined);
+
+  // Live re-validation: once the user edits the faulty part, the message goes away.
+  useEffect(() => {
+    setErrorField(null);
+    setFormError(undefined);
+  }, [hash, inventors, investor, arbiter, universityPct, inventorsPct, investorsPct, milestones]);
+
+  /** Shows a validation message next to its section and brings that section into view. */
+  function fail(key: FieldKey, message: string) {
+    setFormError(message);
+    setErrorField(key);
+    document.getElementById(`section-${key}`)?.scrollIntoView({ behavior: "smooth", block: "center" });
+  }
 
   const institution = useAsync(
     () => (signer ? nft.isInstitution(signer.address) : Promise.resolve(false)),
@@ -111,6 +139,13 @@ export function NewLicence() {
   const setStep = (i: number, patch: Partial<Step>) =>
     setSteps((all) => all.map((s, j) => (j === i ? { ...s, ...patch } : s)));
 
+  function onDrop(e: DragEvent<HTMLLabelElement>) {
+    e.preventDefault();
+    setDragging(false);
+    const dropped = e.dataTransfer.files?.[0];
+    if (dropped) onFile(dropped);
+  }
+
   async function onFile(f: File | null) {
     setFile(f);
     setHash(f ? await sha256(f) : null);
@@ -120,14 +155,15 @@ export function NewLicence() {
     e.preventDefault();
     if (!signer) return;
     setFormError(undefined);
+    setErrorField(null);
 
     const inventorList = inventors.filter(Boolean);
-    if (!hash) return setFormError(t("newLicence.errors.dossier"));
-    if (inventorList.length === 0 || !inventorList.every(isAddress)) return setFormError(t("newLicence.errors.inventors"));
-    if (!isAddress(investor) || !isAddress(arbiter)) return setFormError(t("newLicence.errors.parties"));
-    if (universityPct + inventorsPct + investorsPct !== 100) return setFormError(t("newLicence.errors.split"));
+    if (!hash) return fail("dossier", t("newLicence.errors.dossier"));
+    if (inventorList.length === 0 || !inventorList.every(isAddress)) return fail("inventors", t("newLicence.errors.inventors"));
+    if (!isAddress(investor) || !isAddress(arbiter)) return fail("parties", t("newLicence.errors.parties"));
+    if (universityPct + inventorsPct + investorsPct !== 100) return fail("split", t("newLicence.errors.split"));
     if (milestones.length === 0 || milestones.some((m) => !(Number(m) > 0)))
-      return setFormError(t("newLicence.errors.milestones"));
+      return fail("milestones", t("newLicence.errors.milestones"));
 
     setBusy(true);
     setSteps(INITIAL_STEPS);
@@ -219,7 +255,7 @@ export function NewLicence() {
                 ))}
               </div>
             </div>
-            <div className="flex flex-col gap-2">
+            <div id="section-inventors" className="flex flex-col gap-2">
               <span className="text-sm font-semibold">{t("newLicence.inventors")}</span>
               {inventors.map((addr, i) => (
                 <div key={i} className="flex items-start gap-2">
@@ -240,17 +276,32 @@ export function NewLicence() {
               <Button type="button" variant="ghost" className="self-start" onClick={() => setInventors((all) => [...all, ""])}>
                 {t("newLicence.addInventor")}
               </Button>
+              <FieldError message={fieldError("inventors")} />
             </div>
           </Card>
 
           <Card className="flex flex-col gap-5">
             <CardTitle n={2} title={t("newLicence.card2Title")} subtitle={t("newLicence.card2Subtitle")} />
             <label
-              className={`flex cursor-pointer flex-col items-center gap-2 rounded-xl border-2 border-dashed px-6 py-8 text-center transition ${
-                hash ? "border-teal-dark bg-teal/5" : "border-line bg-field hover:border-teal-dark"
+              id="section-dossier"
+              onDragOver={(e) => {
+                e.preventDefault();
+                setDragging(true);
+              }}
+              onDragLeave={() => setDragging(false)}
+              onDrop={onDrop}
+              className={`flex cursor-pointer flex-col items-center gap-2 rounded-xl border-2 border-dashed px-6 py-8 text-center transition duration-200 focus-within:ring-2 focus-within:ring-teal ${
+                dragging
+                  ? "border-teal bg-teal/10"
+                  : fieldError("dossier")
+                    ? "border-danger/60 bg-danger/5"
+                    : hash
+                      ? "border-teal-dark bg-teal/5"
+                      : "border-line bg-field hover:border-teal-dark"
               }`}
             >
-              <input type="file" className="hidden" onChange={(e) => onFile(e.target.files?.[0] ?? null)} />
+              {/* sr-only rather than hidden, so the file picker stays reachable with the keyboard. */}
+              <input type="file" className="sr-only" onChange={(e) => onFile(e.target.files?.[0] ?? null)} />
               {hash ? (
                 <>
                   <Badge tone="teal">{t("newLicence.fingerprintReady")}</Badge>
@@ -265,6 +316,7 @@ export function NewLicence() {
                 </>
               )}
             </label>
+            <FieldError message={fieldError("dossier")} />
             <Field label={t("newLicence.dataRoom")} hint={t("newLicence.dataRoomHint")}>
               <Input value={metadataUri} onChange={(e) => setMetadataUri(e.target.value)} placeholder={t("newLicence.dataRoomPlaceholder")} />
             </Field>
@@ -273,7 +325,7 @@ export function NewLicence() {
           <Card className="flex flex-col gap-5">
             <CardTitle n={3} title={t("newLicence.card3Title")} subtitle={t("newLicence.card3Subtitle")} />
 
-            <div className="flex flex-col gap-3">
+            <div id="section-split" className="flex flex-col gap-3">
               <span className="text-sm font-semibold">{t("newLicence.royaltySplit")}</span>
               <div className="grid gap-4 sm:grid-cols-3">
                 <Field label={t("newLicence.university")}>
@@ -293,18 +345,22 @@ export function NewLicence() {
                   { label: t("newLicence.investors"), pct: investorsPct, color: "bg-lime" },
                 ]}
               />
+              <FieldError message={fieldError("split")} />
             </div>
 
-            <div className="grid gap-4 sm:grid-cols-2">
+            <div id="section-parties" className="grid gap-4 sm:grid-cols-2">
               <Field label={t("newLicence.investor")} hint={t("newLicence.investorHint")}>
                 <PersonPicker value={investor} onChange={setInvestor} suggested={people("investor")} />
               </Field>
               <Field label={t("newLicence.arbiter")} hint={t("newLicence.arbiterHint")}>
                 <PersonPicker value={arbiter} onChange={setArbiter} suggested={people("arbiter")} />
               </Field>
+              <div className="sm:col-span-2">
+                <FieldError message={fieldError("parties")} />
+              </div>
             </div>
 
-            <div className="flex flex-col gap-2">
+            <div id="section-milestones" className="flex flex-col gap-2">
               <span className="text-sm font-semibold">{t("newLicence.milestones")}</span>
               <p className="text-xs text-muted">{t("newLicence.milestonesHint")}</p>
               {milestones.map((m, i) => (
@@ -316,7 +372,9 @@ export function NewLicence() {
                     step="any"
                     value={m}
                     onChange={(e) => setMilestones((all) => all.map((x, j) => (j === i ? e.target.value : x)))}
-                    className="w-32"
+                    aria-invalid={!(Number(m) > 0)}
+                    aria-label={t("newLicence.milestone", { n: i + 1 })}
+                    className={`w-32 ${Number(m) > 0 ? "" : "border-danger/60"}`}
                   />
                   <span className="text-sm">EURC</span>
                   {milestones.length > 1 && (
@@ -334,6 +392,7 @@ export function NewLicence() {
                   <Trans i18nKey="newLicence.totalRaised" values={{ amount: formatNumber(total) }} components={{ strong: <strong /> }} />
                 </p>
               </div>
+              <FieldError message={fieldError("milestones")} />
             </div>
 
             <Field label={t("newLicence.window")}>
@@ -377,11 +436,11 @@ export function NewLicence() {
                 ))}
               </ol>
             </div>
-            {formError && <ErrorBox message={formError} />}
+            {formError && !errorField && <ErrorBox message={formError} />}
             <Button type="submit" busy={busy} disabled={Boolean(blocker)}>
               {t("newLicence.submit")}
             </Button>
-            {blocker && <p className="text-xs text-muted">{blocker}</p>}
+            {blocker && <Notice>{blocker}</Notice>}
           </Card>
         </div>
       </form>
