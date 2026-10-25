@@ -4,6 +4,7 @@ import { StellarWalletsKit } from "@creit.tech/stellar-wallets-kit/sdk";
 import { defaultModules } from "@creit.tech/stellar-wallets-kit/modules/utils";
 import { LocalStorageKeys, Networks } from "@creit.tech/stellar-wallets-kit/types";
 import { NETWORK_PASSPHRASE } from "../config";
+import { WalletError } from "./errors";
 
 export type SignTransaction = (
   xdr: string,
@@ -53,13 +54,29 @@ function initKit() {
   kitReady = true;
 }
 
+/** Catch the usual mistakes up front: extension off or locked, wrong network, other account active. */
+async function checkWallet(address: string): Promise<void> {
+  let network: { networkPassphrase: string };
+  let active: string;
+  try {
+    network = await StellarWalletsKit.getNetwork();
+    active = (await StellarWalletsKit.fetchAddress()).address;
+  } catch {
+    throw new WalletError("notConnected");
+  }
+  if (network.networkPassphrase && network.networkPassphrase !== NETWORK_PASSPHRASE) throw new WalletError("network");
+  if (active && active !== address) throw new WalletError("account", active);
+}
+
 function walletSigner(address: string): Signer {
   return {
     address,
     kind: "wallet",
     label: "Wallet",
-    sign: (xdr) =>
-      StellarWalletsKit.signTransaction(xdr, { networkPassphrase: NETWORK_PASSPHRASE, address }),
+    sign: async (xdr) => {
+      await checkWallet(address);
+      return StellarWalletsKit.signTransaction(xdr, { networkPassphrase: NETWORK_PASSPHRASE, address });
+    },
   };
 }
 
