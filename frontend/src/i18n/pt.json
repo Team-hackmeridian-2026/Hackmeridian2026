@@ -80,35 +80,67 @@
     "done": "Todos os marcos liquidados"
   },
   "marketplace": {
-    "licenceLine": "{{licence}} · {{territory}} · {{duration}}",
-    "exclusiveLicence": "Licença exclusiva",
-    "nonExclusiveLicence": "Licença não exclusiva",
     "released": "{{released}} libertados de {{total}}",
     "noRound": "Ainda sem ronda de financiamento",
-    "heroEyebrow": "Para laboratórios, investidores e indústria",
-    "heroTitle": "Financie a investigação sem vender a patente.",
-    "heroText": "O BioLicensing transforma uma patente universitária numa licença na Stellar: financiada em euros, libertada marco a marco, com royalties repartidos automaticamente.",
+    "heroTitle": "Dê um futuro à investigação.",
+    "heroText": "Explore licenças de patentes, financie a investigação marco a marco e acompanhe a repartição dos royalties, na Stellar.",
     "listPatent": "Registar uma patente",
-    "browse": "Ver licenças",
-    "eyebrow": "Mercado",
-    "title": "Licenças na Stellar",
+    "title": "Licenças na testnet Stellar",
     "empty": "Ainda não há licenças",
     "emptyCta": "Registar a primeira patente",
-    "points": {
-      "licence": {
-        "title": "Uma licença, não uma venda",
-        "text": "A universidade mantém a patente. Os investidores financiam uma licença cujos termos e impressão digital do dossiê ficam registados on-chain."
+    "heroNote": "Demonstração ao vivo na testnet Stellar: os montantes são EURC de teste, não circula dinheiro real.",
+    "explore": "Explorar licenças",
+    "builtFor": "Feito para",
+    "audiences": {
+      "labs": {
+        "title": "Laboratórios universitários",
+        "text": "Licencie uma patente que continua sua e receba financiamento passo a passo."
       },
-      "milestones": {
-        "title": "Pago por marcos",
-        "text": "Os EURC ficam no escrow e só são libertados quando o laboratório comprova cada marco. O investidor pode contestar."
+      "investors": {
+        "title": "Investidores em investigação",
+        "text": "Financie marcos em EURC e receba uma parte dos royalties."
       },
-      "royalties": {
-        "title": "Royalties repartidos automaticamente",
-        "text": "Um único pagamento do licenciado é repartido entre a universidade, os seus inventores e os investidores."
+      "industry": {
+        "title": "Parceiros industriais",
+        "text": "Licencie a tecnologia e pague royalties on-chain."
       }
     },
-    "emptyText": "Uma universidade regista uma patente em três passos curtos. A primeira licença aparecerá aqui."
+    "how": {
+      "title": "Como o financiamento chega ao laboratório",
+      "steps": {
+        "publish": {
+          "title": "Publicar uma licença",
+          "text": "Uma universidade verificada publica uma licença sobre a sua patente. Mantém a propriedade e o dossiê científico permanece privado: só a sua impressão digital é registada.",
+          "note": "IP-NFT com impressão digital SHA-256"
+        },
+        "fund": {
+          "title": "Financiar por marcos",
+          "text": "Um investidor bloqueia EURC no escrow. Cada marco é pago ao laboratório quando a prova é submetida e o prazo de contestação termina; um árbitro resolve os desacordos.",
+          "note": "Escrow com prazo de contestação"
+        },
+        "payouts": {
+          "title": "Acompanhar os pagamentos",
+          "text": "Quando um licenciado paga royalties, estes são repartidos entre a universidade, os seus inventores e os investidores numa única transação que qualquer pessoa pode verificar.",
+          "note": "Repartição visível no stellar.expert"
+        }
+      }
+    },
+    "count_one": "{{count}} licença publicada",
+    "count_other": "{{count}} licenças publicadas",
+    "table": {
+      "licence": "Licença",
+      "field": "Área",
+      "territory": "Território",
+      "term": "Duração",
+      "type": "Tipo",
+      "funding": "Financiamento"
+    },
+    "licenceNumber": "Licença n.º {{id}}",
+    "openLicence": "Abrir a licença {{title}}",
+    "emptyText": "Uma universidade regista uma patente em três passos curtos. A primeira licença aparecerá aqui.",
+    "licenceLine": "{{licence}} · {{territory}} · {{duration}}",
+    "exclusiveLicence": "Licença exclusiva",
+    "nonExclusiveLicence": "Licença não exclusiva"
   },
   "newLicence": {
     "windows": {

@@ -80,35 +80,67 @@
     "done": "All milestones settled"
   },
   "marketplace": {
-    "licenceLine": "{{licence}} · {{territory}} · {{duration}}",
-    "exclusiveLicence": "Exclusive licence",
-    "nonExclusiveLicence": "Non-exclusive licence",
     "released": "{{released}} released of {{total}}",
     "noRound": "No funding round yet",
-    "heroEyebrow": "For university labs, investors and industry",
-    "heroTitle": "Fund research without selling the patent.",
-    "heroText": "BioLicensing turns a university patent into a licence on Stellar: funded in euros, released milestone by milestone, with royalties shared automatically.",
+    "heroTitle": "Give research a future.",
+    "heroText": "Explore patent licences, fund research milestone by milestone and follow how royalties are shared, on Stellar.",
     "listPatent": "List a patent",
-    "browse": "Browse licences",
-    "eyebrow": "Marketplace",
-    "title": "Licences on Stellar",
+    "title": "Licences on Stellar testnet",
     "empty": "No licence listed yet",
     "emptyCta": "List the first patent",
-    "points": {
-      "licence": {
-        "title": "A licence, not a sale",
-        "text": "The university keeps the patent. Investors fund a licence whose terms and dossier fingerprint are recorded on-chain."
+    "heroNote": "Live demo on Stellar testnet: amounts are test EURC, no real money moves.",
+    "explore": "Explore licences",
+    "builtFor": "Built for",
+    "audiences": {
+      "labs": {
+        "title": "University labs",
+        "text": "License a patent you keep, and get funded step by step."
       },
-      "milestones": {
-        "title": "Paid by milestones",
-        "text": "EURC stays in escrow and is released only when the lab proves each milestone. The investor can dispute."
+      "investors": {
+        "title": "Research investors",
+        "text": "Fund milestones in EURC and earn a share of royalties."
       },
-      "royalties": {
-        "title": "Royalties shared automatically",
-        "text": "One payment from the licensee is split between the university, its inventors and investors."
+      "industry": {
+        "title": "Industry partners",
+        "text": "License the technology and pay royalties on-chain."
       }
     },
-    "emptyText": "A university lists a patent in three short steps. The first licence will appear here."
+    "how": {
+      "title": "How funding reaches the lab",
+      "steps": {
+        "publish": {
+          "title": "Publish a licence",
+          "text": "A verified university lists a licence on its patent. It keeps ownership, and its scientific dossier stays private: only its fingerprint is recorded.",
+          "note": "IP-NFT with a SHA-256 fingerprint"
+        },
+        "fund": {
+          "title": "Fund by milestones",
+          "text": "An investor locks EURC in escrow. Each milestone is paid to the lab once its proof is submitted and the dispute window closes; an arbiter settles disagreements.",
+          "note": "Escrow with a challenge window"
+        },
+        "payouts": {
+          "title": "Follow the payouts",
+          "text": "When a licensee pays a royalty, it is split between the university, its inventors and investors in a single transaction anyone can check.",
+          "note": "Royalty split, visible on stellar.expert"
+        }
+      }
+    },
+    "count_one": "{{count}} licence listed",
+    "count_other": "{{count}} licences listed",
+    "table": {
+      "licence": "Licence",
+      "field": "Field",
+      "territory": "Territory",
+      "term": "Term",
+      "type": "Type",
+      "funding": "Funding"
+    },
+    "licenceNumber": "Licence #{{id}}",
+    "openLicence": "Open licence {{title}}",
+    "emptyText": "A university lists a patent in three short steps. The first licence will appear here.",
+    "licenceLine": "{{licence}} · {{territory}} · {{duration}}",
+    "exclusiveLicence": "Exclusive licence",
+    "nonExclusiveLicence": "Non-exclusive licence"
   },
   "newLicence": {
     "windows": {
