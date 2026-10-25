@@ -374,5 +374,8 @@
     "balance": "EURC insuficiente nesta conta.",
     "trustline": "Esta conta ainda não tem trustline de EURC.",
     "cancelled": "Transação cancelada na carteira."
+  },
+  "header": {
+    "testnet": "Testnet"
   }
 }

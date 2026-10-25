@@ -374,5 +374,8 @@
     "balance": "Pas assez d'EURC sur ce compte.",
     "trustline": "Ce compte n'a pas encore de trustline EURC.",
     "cancelled": "Transaction annulée dans le wallet."
+  },
+  "header": {
+    "testnet": "Testnet"
   }
 }
