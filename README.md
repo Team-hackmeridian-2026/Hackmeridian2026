@@ -170,6 +170,7 @@ EURC_MODE=circle ./scripts/setup-accounts.sh   # testnet accounts, EURC trustlin
 ./scripts/deploy.sh                            # build, deploy and wire the 3 contracts
 ./scripts/sync-frontend-config.sh              # copy the new IDs to the front-end
 ./scripts/seed-demo.sh                         # demo licences in every state (~4 min, rerunnable)
+./scripts/jury-accounts.sh                     # ready-made jury accounts (institution, KYC, 5 EURC)
 ```
 
 ### Environment variables
@@ -188,6 +189,45 @@ Deployment state lives in `deployments/testnet.env` (gitignored, see
 
 ## Demo
 
+### For the jury: ready-made test accounts
+
+Browsing needs no wallet. To sign transactions yourself, import one of these
+accounts into [Freighter](https://www.freighter.app) (**Settings → Network:
+Testnet**, then **Import a Stellar secret key**). Each juror account is already
+a verified institution, on the KYC allowlist, and holds 5 test EURC.
+
+> These are **testnet-only** keys created for the jury. They hold no real
+> value; please do not reuse them anywhere else.
+
+| Account | Role | Address | Secret key (testnet) |
+| --- | --- | --- | --- |
+| Juror 1 | Lab and investor | `GA5VVZ5YYKUTCW6B3DEU6AK45QQVFEX2PFMJ6FMLKEMLSQ2CE7766XUL` | `SABBMNYKKTGJOR3PPJIPG4J4ECLZ3DDBR3BTDPI573WHX4MZADUREI7K` |
+| Juror 2 | Lab and investor | `GBJL53EHJXAUAVLCDJNNX333BJFP4ZKMRMMMXHPAX3JEHIXA3KHLRM7Q` | `SBJQCWRJV5UXZXJG7VYX7V5AEENQJMDA4COYLFDDQCJ4Z6ZPC3HLCW2L` |
+| Juror 3 | Lab and investor | `GA2KN3QOYYU7SWDPLAZ6HQ7GS3CFXVLPAQFDSWIUEGOVC2DJLNM6KCVD` | `SAM7QD2BP37KDJRF3DOOYWHQIN2NN2BGMQRKJ4XGH66YS2QHOFKFYWCU` |
+| Jury arbiter | Arbiter (shared) | `GDREHWU6C7XZXEEYNEISEDIBZPTVSESBUPB5APUBNUSQ6TZ2ZNCY7I3T` | `SDONNHC2QNNE4TLFGQI7DQVZ22W73PC5V53Y3ZIYTVWWD67ZWFFY6DZL` |
+
+The contract refuses an arbiter who is also the investor, so import the jury
+arbiter as a second Freighter account if you want to try a dispute.
+
+#### Happy path (about 5 minutes), connected as your juror account
+
+1. **List a patent**. In the funding section, set the **investor** to your own
+   juror address and the **arbiter** to the jury arbiter address; choose the
+   1-minute challenge window and two milestones of 1 EURC.
+2. On the licence page, **Fund**: 2 EURC are locked in escrow and shares are
+   minted to you.
+3. **Submit proof** of milestone 1, wait one minute, then **Release the funds**
+   (0.99 EURC to the lab after the 1 % fee).
+4. **Pay in EURC** a royalty in the Royalties panel, then **Withdraw** your
+   university and investor shares.
+
+#### Dispute and partial resolution
+
+1. **Submit proof** of milestone 2, then **Dispute** it within the minute.
+2. Switch Freighter to the jury arbiter, reload, and use the arbiter slider
+   (for example 60 % to the lab): the milestone shows **Split**, 40 % is
+   refunded and your investor shares shrink accordingly.
+
 ### With your own wallet (public demo)
 
 1. In Freighter, switch to **Testnet** and fund the account with Friendbot.
@@ -196,7 +236,7 @@ Deployment state lives in `deployments/testnet.env` (gitignored, see
 3. Open the app and click **Connect wallet**.
 4. To list a patent or to invest, an admin must first verify your address
    (page **Admin**: verified institutions, KYC allowlist). Anyone holding EURC
-   can pay royalties.
+   can pay royalties. The jury accounts above skip this step.
 
 ### Full scenario (about 3 minutes)
 
