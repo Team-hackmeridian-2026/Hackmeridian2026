@@ -158,6 +158,7 @@ cargo test           # 30 tests, including the full demo scenario
 EURC_MODE=circle ./scripts/setup-accounts.sh   # testnet accounts, EURC trustlines, SAC
 ./scripts/deploy.sh                            # build, deploy and wire the 3 contracts
 ./scripts/sync-frontend-config.sh              # copy the new IDs to the front-end
+./scripts/seed-demo.sh                         # demo licences in every state (~4 min, rerunnable)
 ```
 
 ### Environment variables
