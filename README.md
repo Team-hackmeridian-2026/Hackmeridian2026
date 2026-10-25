@@ -27,7 +27,7 @@ Built for **HackMeridian** (Lisbon, 25–26 October 2026).
 
 ## Prior work (disclosed)
 
-Prepared before HackMeridian (22–24 October 2026), marked by the
+Prepared before HackMeridian, marked by the
 [`pre-hackathon`](../../tree/pre-hackathon) tag:
 
 - Three Soroban contracts with 26 passing tests: `ip_license_nft`,
