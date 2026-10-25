@@ -36,11 +36,11 @@ export function LogoMark({ className = "size-8", title }: { className?: string; 
 }
 
 /** Mark + "BioLicensing" wordmark. The wordmark colour follows the theme (light or dark). */
-export function Logo({ className = "" }: { className?: string }) {
+export function Logo({ className = "", wordmarkClassName = "" }: { className?: string; wordmarkClassName?: string }) {
   return (
     <span className={`inline-flex items-center gap-2.5 ${className}`}>
       <LogoMark className="size-8 shrink-0" />
-      <span className="font-display text-xl font-extrabold tracking-tight text-ink">BioLicensing</span>
+      <span className={`font-display text-xl font-extrabold tracking-tight text-ink ${wordmarkClassName}`}>BioLicensing</span>
     </span>
   );
 }

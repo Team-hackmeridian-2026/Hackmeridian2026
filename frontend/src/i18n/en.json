@@ -33,6 +33,7 @@
     "balance": "Balance",
     "disconnect": "Disconnect",
     "connect": "Connect wallet",
+    "connectShort": "Connect",
     "trustlineHint": "Add a trustline to Circle EURC in your wallet, then get test EURC on <link>faucet.circle.com</link>."
   },
   "footer": {

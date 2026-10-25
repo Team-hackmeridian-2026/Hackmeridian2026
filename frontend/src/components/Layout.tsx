@@ -220,7 +220,8 @@ export function Layout() {
           <div className="flex items-center justify-between gap-4 py-3 min-[1280px]:grid min-[1280px]:grid-cols-[auto_1fr_auto] min-[1280px]:py-3.5">
             <div className="flex min-w-0 items-center gap-3">
               <NavLink to="/" aria-label={t("brand.home")} className="shrink-0">
-                <Logo />
+                {/* Below 360px only the mark fits next to the wallet button and the menu. */}
+                <Logo wordmarkClassName="max-[359px]:hidden" />
               </NavLink>
               <span className="hidden sm:inline-flex">
                 <TestnetBadge />
@@ -240,8 +241,8 @@ export function Layout() {
             ) : (
               <div className="flex items-center gap-2">
                 {!signer && (
-                  <Button variant="secondary" size="sm" busy={connecting} onClick={connectWallet}>
-                    {t("wallet.connect")}
+                  <Button variant="secondary" size="sm" busy={connecting} onClick={connectWallet} className="whitespace-nowrap">
+                    {t("wallet.connectShort")}
                   </Button>
                 )}
                 <button
