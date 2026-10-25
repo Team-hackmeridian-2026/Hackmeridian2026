@@ -8,6 +8,7 @@ import { useAsync } from "../lib/useAsync";
 import { eurc, formatDate, formatDuration, sha256, shortAddress, toHex } from "../lib/format";
 import { Address, Badge, Button, Card, ErrorBox, Input, Spinner, StatusIcon, buttonClass, type BadgeTone } from "../components/ui";
 import { FundingProgress } from "../components/Funding";
+import { BurstHeading } from "../components/BurstHeading";
 
 // Decorative helix next to the title (Three.js is shared with the home page chunk).
 const DnaHelix = lazy(() => import("../components/DnaHelix"));
@@ -522,7 +523,11 @@ export function LicenceDetail() {
           </div>
           <div className="relative">
             <p className="text-sm font-semibold text-muted">{t("licence.eyebrow", { id: String(l.id), field: l.terms.field })}</p>
-            <h1 className="mt-2 max-w-3xl font-display text-4xl leading-[0.98] font-extrabold tracking-[-0.04em] text-balance sm:text-6xl">{l.title}</h1>
+            <BurstHeading
+              as="h1"
+              className="mt-2 max-w-3xl font-display text-4xl leading-[0.98] font-extrabold tracking-[-0.04em] text-balance sm:text-6xl"
+              text={l.title}
+            />
             <dl className="mt-8 grid grid-cols-2 gap-x-6 gap-y-4 sm:grid-cols-4">
               {facts.map(([label, value]) => (
                 <div key={label} className="border-l-2 border-brand/35 pl-3">

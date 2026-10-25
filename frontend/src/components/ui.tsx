@@ -3,6 +3,7 @@ import { useTranslation } from "react-i18next";
 import { explorer } from "../config";
 import { shortAddress } from "../lib/format";
 import { isNetworkError } from "../lib/errors";
+import { BurstHeading } from "./BurstHeading";
 
 const cx = (...classes: (string | false | undefined)[]) => classes.filter(Boolean).join(" ");
 
@@ -112,7 +113,7 @@ export function SectionTitle({ eyebrow, title, children }: { eyebrow?: string; t
     <header className="flex flex-col gap-4">
       <div>
         {eyebrow && <p className="text-sm font-semibold text-muted">{eyebrow}</p>}
-        <h1 className="mt-2 font-display text-5xl leading-[0.95] font-extrabold tracking-[-0.04em] text-balance sm:text-6xl">{title}</h1>
+        <BurstHeading as="h1" className="mt-2 font-display text-5xl leading-[0.95] font-extrabold tracking-[-0.04em] text-balance sm:text-6xl" text={title} />
       </div>
       {children && <div className="max-w-2xl text-lg leading-relaxed text-muted">{children}</div>}
     </header>
