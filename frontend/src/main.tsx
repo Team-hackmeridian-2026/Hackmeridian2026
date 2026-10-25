@@ -9,6 +9,7 @@ import { Marketplace } from "./pages/Marketplace";
 import { NewLicence } from "./pages/NewLicence";
 import { LicenceDetail } from "./pages/LicenceDetail";
 import { Admin } from "./pages/Admin";
+import { CashOut } from "./pages/CashOut";
 import "./index.css";
 
 // stellar-sdk expects Node's Buffer in the browser.
@@ -22,6 +23,7 @@ const router = createBrowserRouter([
       { path: "/new", element: <NewLicence /> },
       { path: "/licence/:id", element: <LicenceDetail /> },
       { path: "/admin", element: <Admin /> },
+      { path: "/cash-out", element: <CashOut /> },
     ],
   },
 ]);
