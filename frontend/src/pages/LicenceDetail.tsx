@@ -39,7 +39,7 @@ function DossierCheck({ license }: { license: License }) {
             setResult(toHex(await sha256(f)) === expected ? "match" : "mismatch");
           }}
         />
-        {result === "match" && <Badge tone="teal">{t("licence.match")}</Badge>}
+        {result === "match" && <Badge tone="brand">{t("licence.match")}</Badge>}
         {result === "mismatch" && <Badge tone="danger">{t("licence.mismatch")}</Badge>}
       </label>
     </div>
@@ -63,9 +63,9 @@ function DataRoom({ license, signer }: { license: License; signer: Signer | null
         <p className="text-sm text-muted">{t("licence.connectToAccess")}</p>
       ) : signed.data ? (
         <div className="flex flex-col gap-1 text-sm">
-          <Badge tone="teal">{t("licence.ndaSigned")}</Badge>
+          <Badge tone="brand">{t("licence.ndaSigned")}</Badge>
           {license.metadata_uri ? (
-            <a href={license.metadata_uri} className="break-all text-teal-dark hover:underline">
+            <a href={license.metadata_uri} className="break-all text-brand-ink hover:underline">
               {license.metadata_uri}
             </a>
           ) : (
@@ -95,7 +95,7 @@ const STATUS_TONE = {
   Pending: "neutral",
   Submitted: "amber",
   Disputed: "danger",
-  Released: "teal",
+  Released: "brand",
   Refunded: "navy",
   Split: "amber",
 } as const;
@@ -133,11 +133,11 @@ function ArbiterPanel({
           step={5}
           value={labPct}
           onChange={(e) => setLabPct(Number(e.target.value))}
-          className="accent-teal-dark"
+          className="accent-brand-ink"
           aria-label={t("licence.labShare", { lab: labPct, refund: 100 - labPct })}
         />
         <div className="flex h-2 overflow-hidden rounded-full">
-          <div className="bg-teal-dark" style={{ width: `${labPct}%` }} />
+          <div className="bg-brand-ink" style={{ width: `${labPct}%` }} />
           <div className="bg-navy" style={{ width: `${100 - labPct}%` }} />
         </div>
         <div className="flex flex-wrap items-center justify-between gap-2">
@@ -370,8 +370,8 @@ function Royalties({ license, signer, version }: { license: License; signer: Sig
         ? t("licence.inventor", { address: shortAddress(addr) })
         : shortAddress(addr);
   const parts = [
-    ...d.config.fixed.map((b, i) => ({ label: name(b.addr), bps: b.bps, color: i === 0 ? "bg-teal" : "bg-amber" })),
-    { label: t("licence.investorsProRata"), bps: d.config.investors_bps, color: "bg-lime" },
+    ...d.config.fixed.map((b, i) => ({ label: name(b.addr), bps: b.bps, color: i === 0 ? "bg-brand" : "bg-amber" })),
+    { label: t("licence.investorsProRata"), bps: d.config.investors_bps, color: "bg-rose" },
   ].filter((p) => p.bps > 0);
 
   return (
@@ -456,7 +456,7 @@ export function LicenceDetail() {
 
   return (
     <div className="flex flex-col gap-8">
-      <Link to="/" className="text-sm font-semibold text-teal-dark hover:underline">{t("licence.back")}</Link>
+      <Link to="/" className="text-sm font-semibold text-brand-ink hover:underline">{t("licence.back")}</Link>
       <SectionTitle eyebrow={t("licence.eyebrow", { id: String(l.id), field: l.terms.field })} title={l.title}>
         <div className="flex flex-wrap gap-2">
           <Badge tone="navy">{l.terms.exclusive ? t("common.exclusive") : t("common.nonExclusive")}</Badge>

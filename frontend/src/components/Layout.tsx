@@ -9,7 +9,6 @@ import { useAsync } from "../lib/useAsync";
 import { formatNumber, shortAddress } from "../lib/format";
 import { Button } from "./ui";
 import { Logo } from "./Logo";
-import { BioBackground } from "./BioBackground";
 import { useTheme } from "../lib/theme";
 
 const NAV = [
@@ -33,7 +32,7 @@ function LanguageSwitcher() {
             title={lang.name}
             aria-pressed={active}
             onClick={() => i18n.changeLanguage(lang.code)}
-            className={`rounded-md px-2 py-1 transition ${active ? "bg-teal text-navy" : "text-paper/70 hover:text-paper"}`}
+            className={`rounded-md px-2 py-1 transition ${active ? "bg-brand text-navy" : "text-paper/70 hover:text-paper"}`}
           >
             {lang.label}
           </button>
@@ -107,7 +106,7 @@ function ThemeToggle() {
       onClick={() => setTheme(next)}
       aria-label={label}
       title={label}
-      className="flex size-9 items-center justify-center rounded-lg border border-white/15 text-paper/80 transition duration-200 hover:border-teal hover:text-paper"
+      className="flex size-9 items-center justify-center rounded-lg border border-white/15 text-paper/80 transition duration-200 hover:border-brand hover:text-paper"
     >
       {theme === "dark" ? (
         // Sun: switch to light.
@@ -140,7 +139,7 @@ function useIsDesktop(): boolean {
 
 const linkClass = (stacked: boolean) => ({ isActive }: { isActive: boolean }) =>
   `rounded-lg px-3 py-2 text-sm font-medium transition duration-200 ${stacked ? "block text-base" : ""} ${
-    isActive ? "bg-teal/15 text-paper ring-1 ring-inset ring-teal/40" : "text-paper/70 hover:bg-white/5 hover:text-paper"
+    isActive ? "bg-brand/15 text-paper ring-1 ring-inset ring-brand/40" : "text-paper/70 hover:bg-white/5 hover:text-paper"
   }`;
 
 export function Layout() {
@@ -171,7 +170,6 @@ export function Layout() {
 
   return (
     <div className="relative isolate flex min-h-screen flex-col">
-      <BioBackground />
       <header className="sticky top-0 z-40 border-b border-white/10 bg-navy/95 text-paper backdrop-blur-md">
         <div className="mx-auto max-w-6xl px-4 sm:px-6">
           <div className="flex items-center justify-between gap-4 py-3 lg:py-4">
@@ -204,7 +202,7 @@ export function Layout() {
                   aria-expanded={menuOpen}
                   aria-controls="mobile-menu"
                   aria-label={t(menuOpen ? "nav.closeMenu" : "nav.openMenu")}
-                  className="flex size-10 items-center justify-center rounded-lg border border-white/15 text-paper transition duration-200 hover:border-teal"
+                  className="flex size-10 items-center justify-center rounded-lg border border-white/15 text-paper transition duration-200 hover:border-brand"
                 >
                   <svg viewBox="0 0 24 24" className="size-5" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden>
                     {menuOpen ? <path d="M6 6l12 12M18 6 6 18" /> : <path d="M4 7h16M4 12h16M4 17h16" />}
@@ -236,7 +234,7 @@ export function Layout() {
           <p className="flex flex-wrap gap-3">
             {t("footer.contracts")}
             {(["nft", "escrow", "splitter"] as const).map((key) => (
-              <a key={key} href={explorer.contract(CONTRACTS[key])} target="_blank" rel="noreferrer" className="text-teal-dark hover:underline">
+              <a key={key} href={explorer.contract(CONTRACTS[key])} target="_blank" rel="noreferrer" className="text-brand-ink hover:underline">
                 {key}
               </a>
             ))}

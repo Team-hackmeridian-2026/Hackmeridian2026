@@ -22,7 +22,7 @@ async function loadListings(): Promise<Listing[]> {
 export function fundingStatus(
   t: TFunction,
   project?: Project,
-): { label: string; tone: "neutral" | "teal" | "amber" | "navy" } {
+): { label: string; tone: "neutral" | "brand" | "amber" | "navy" } {
   if (!project) return { label: t("funding.awaiting"), tone: "neutral" };
   if (!project.funded) return { label: t("funding.open"), tone: "amber" };
   const settled = project.milestones.filter((m) => isSettled(m.status)).length;
@@ -30,7 +30,7 @@ export function fundingStatus(
     const allPaid = project.milestones.every((m) => m.status === "Released");
     return { label: t(allPaid ? "funding.full" : "funding.done"), tone: "navy" };
   }
-  return { label: t("funding.milestone", { current: settled + 1, total: project.milestones.length }), tone: "teal" };
+  return { label: t("funding.milestone", { current: settled + 1, total: project.milestones.length }), tone: "brand" };
 }
 
 function ListingCard({ license, project }: Listing) {
@@ -42,7 +42,7 @@ function ListingCard({ license, project }: Listing) {
 
   return (
     <Link to={`/licence/${license.id}`} className="group">
-      <Card className="flex h-full flex-col gap-4 transition group-hover:border-teal-dark">
+      <Card className="flex h-full flex-col gap-4 transition group-hover:border-brand-ink">
         <div className="flex items-start justify-between gap-3">
           <Badge tone="neutral">{license.terms.field}</Badge>
           <Badge tone={status.tone}>{status.label}</Badge>
@@ -57,7 +57,7 @@ function ListingCard({ license, project }: Listing) {
         </p>
         <div className="mt-auto flex flex-col gap-2">
           <div className="h-2 overflow-hidden rounded-full bg-line">
-            <div className="h-full rounded-full bg-teal" style={{ width: `${pct}%` }} />
+            <div className="h-full rounded-full bg-brand" style={{ width: `${pct}%` }} />
           </div>
           <p className="text-xs text-muted">
             {project ? t("marketplace.released", { released: eurc(released), total: eurc(total) }) : t("marketplace.noRound")}
@@ -98,9 +98,9 @@ export function Marketplace() {
   return (
     <div className="flex flex-col gap-12">
       <section className="relative overflow-hidden rounded-3xl border border-white/10 bg-navy px-6 py-10 text-paper sm:px-10 sm:py-12 md:px-12">
-        <div aria-hidden className="pointer-events-none absolute -top-24 -right-24 size-80 rounded-full bg-teal/20 blur-3xl" />
+        <div aria-hidden className="pointer-events-none absolute -top-24 -right-24 size-80 rounded-full bg-brand/20 blur-3xl" />
         <div className="relative flex flex-col gap-6">
-          <p className="text-xs font-semibold uppercase tracking-widest text-teal">{t("marketplace.heroEyebrow")}</p>
+          <p className="text-xs font-semibold uppercase tracking-widest text-brand">{t("marketplace.heroEyebrow")}</p>
           <h1 className="max-w-3xl break-words font-display text-3xl font-bold leading-tight sm:text-4xl md:text-5xl">{t("marketplace.heroTitle")}</h1>
           <p className="max-w-2xl text-paper/75">{t("marketplace.heroText")}</p>
           <div className="flex flex-wrap items-center gap-5">
@@ -114,7 +114,7 @@ export function Marketplace() {
           <ul className="mt-4 grid gap-5 border-t border-white/10 pt-8 md:grid-cols-3">
             {POINTS.map((point) => (
               <li key={point.key} className="flex gap-3">
-                <span className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-teal/15 text-teal ring-1 ring-inset ring-teal/30">
+                <span className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-brand/15 text-brand ring-1 ring-inset ring-brand/30">
                   <svg viewBox="0 0 24 24" className="size-5" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
                     <path d={point.icon} />
                   </svg>
@@ -131,13 +131,13 @@ export function Marketplace() {
 
       <section id="licences" className="flex scroll-mt-24 flex-col gap-6" aria-busy={loading}>
         <div>
-          <p className="text-xs font-semibold uppercase tracking-widest text-teal-dark">{t("marketplace.eyebrow")}</p>
+          <p className="text-xs font-semibold uppercase tracking-widest text-brand-ink">{t("marketplace.eyebrow")}</p>
           <h2 className="font-display text-2xl font-semibold">{t("marketplace.title")}</h2>
         </div>
         {error && <ErrorBox message={error} onRetry={reload} />}
         {data && data.length === 0 && (
           <Card className="flex flex-col items-center gap-3 py-12 text-center">
-            <span className="flex size-12 items-center justify-center rounded-full bg-teal/15 text-teal-dark ring-1 ring-inset ring-teal/30">
+            <span className="flex size-12 items-center justify-center rounded-full bg-brand/15 text-brand-ink ring-1 ring-inset ring-brand/30">
               <svg viewBox="0 0 24 24" className="size-6" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" aria-hidden>
                 <path d="M7 3h7l5 5v13H7z M14 3v5h5 M10 13h6 M10 17h4" />
               </svg>

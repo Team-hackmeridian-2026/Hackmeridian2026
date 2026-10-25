@@ -53,7 +53,7 @@ function assetHint(t: TFunction, asset: AnchorAsset) {
       <Trans
         i18nKey="cashOut.hints.usdc"
         components={{
-          link: <a href={CIRCLE_FAUCET_URL} target="_blank" rel="noreferrer" className="font-semibold text-teal-dark underline" />,
+          link: <a href={CIRCLE_FAUCET_URL} target="_blank" rel="noreferrer" className="font-semibold text-brand-ink underline" />,
         }}
       />
     );
@@ -185,9 +185,9 @@ export function CashOut() {
                   <span
                     className={`flex size-7 items-center justify-center rounded-full text-xs font-semibold ${
                       i < active || (i === 3 && tx?.status === "completed")
-                        ? "bg-teal text-navy"
+                        ? "bg-brand text-navy"
                         : i === active
-                          ? "bg-teal/15 text-teal-dark ring-1 ring-teal"
+                          ? "bg-brand/15 text-brand-ink ring-1 ring-brand"
                           : "bg-line text-muted"
                     }`}
                   >
@@ -247,7 +247,7 @@ export function CashOut() {
               )}
               {token && !tx && (
                 <>
-                  <Badge tone="teal">{t("cashOut.signedIn", { domain: ANCHOR_DOMAIN })}</Badge>
+                  <Badge tone="brand">{t("cashOut.signedIn", { domain: ANCHOR_DOMAIN })}</Badge>
                   <Button busy={busy === "start"} onClick={start} className="self-start">
                     {t("cashOut.withdraw")}
                   </Button>
@@ -257,12 +257,12 @@ export function CashOut() {
               {tx && (
                 <div className="flex flex-col gap-3 text-sm">
                   <div className="flex flex-wrap items-center gap-2">
-                    <Badge tone={tx.status === "completed" ? "teal" : TERMINAL.includes(tx.status) ? "danger" : "amber"}>
+                    <Badge tone={tx.status === "completed" ? "brand" : TERMINAL.includes(tx.status) ? "danger" : "amber"}>
                       {tx.status}
                     </Badge>
                     <span>{STATUS_TEXT.includes(tx.status) ? t(`cashOut.status.${tx.status}`) : (tx.message ?? "")}</span>
                     {!TERMINAL.includes(tx.status) && (
-                      <span className="size-3 animate-spin rounded-full border-2 border-teal-dark border-t-transparent" />
+                      <span className="size-3 animate-spin rounded-full border-2 border-brand-ink border-t-transparent" />
                     )}
                   </div>
                   {tx.status === "pending_user_transfer_start" && !paymentHash && (
@@ -279,7 +279,7 @@ export function CashOut() {
                   )}
                   {tx.external_transaction_id && <p className="text-muted">{t("cashOut.bankRef", { ref: tx.external_transaction_id })}</p>}
                   {tx.more_info_url && (
-                    <a href={tx.more_info_url} target="_blank" rel="noreferrer" className="font-semibold text-teal-dark hover:underline">
+                    <a href={tx.more_info_url} target="_blank" rel="noreferrer" className="font-semibold text-brand-ink hover:underline">
                       {t("cashOut.receipt")}
                     </a>
                   )}
