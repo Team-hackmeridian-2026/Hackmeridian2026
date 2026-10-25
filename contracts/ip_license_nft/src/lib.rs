@@ -150,10 +150,10 @@ impl IpLicenseNft {
         let key = DataKey::License(id);
         env.storage().persistent().set(&key, &license);
         bump(&env, &key);
+        // Pas d'extend_ttl sur l'instance ici : elle prolonge aussi le code du
+        // contrat et coûtait ~1 000 XLM de loyer par appel sur le testnet.
+        // L'instance se prolonge à part avec `stellar contract extend`.
         env.storage().instance().set(&DataKey::NextId, &(id + 1));
-        env.storage()
-            .instance()
-            .extend_ttl(TTL_THRESHOLD, TTL_EXTEND_TO);
 
         LicenseMinted {
             id,

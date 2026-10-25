@@ -212,10 +212,8 @@ impl MilestoneEscrow {
         }
 
         let id: u64 = env.storage().instance().get(&DataKey::NextId).unwrap();
+        // Instance prolongée à part (voir ip_license_nft::mint).
         env.storage().instance().set(&DataKey::NextId, &(id + 1));
-        env.storage()
-            .instance()
-            .extend_ttl(TTL_THRESHOLD, TTL_EXTEND_TO);
 
         save(
             &env,
