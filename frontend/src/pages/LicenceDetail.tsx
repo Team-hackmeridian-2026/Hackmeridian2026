@@ -1,4 +1,4 @@
-import { Suspense, lazy, useEffect, useState, type ReactNode } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 import { Link, useParams } from "react-router-dom";
 import { Trans, useTranslation } from "react-i18next";
 import { escrow, isSettled, nft, splitter, type License, type Milestone, type Project } from "../stellar/contracts";
@@ -12,7 +12,6 @@ import { FundingProgress } from "../components/Funding";
 import { useDocumentTitle } from "../lib/useDocumentTitle";
 
 // Decorative helix behind the page (Three.js is shared with the home page chunk).
-const DnaHelix = lazy(() => import("../components/DnaHelix"));
 
 /** Card section with the Figma heading style; `id` is the target of the page sub-navigation. */
 function Section({ id, title, children, className = "" }: { id: string; title: string; children: ReactNode; className?: string }) {
@@ -514,14 +513,6 @@ export function LicenceDetail() {
 
   return (
     <div className="flex flex-col gap-8">
-      {/* Big binary DNA behind the whole page, corner to corner: fixed (always on screen, so
-          always moving), faded, never in the way (cards stay opaque on top). */}
-      <div aria-hidden className="pointer-events-none fixed inset-0 -z-10 overflow-hidden opacity-35 dark:opacity-45">
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_25%_75%,color-mix(in_oklab,var(--color-dna-violet)_45%,transparent),transparent_55%),radial-gradient(ellipse_at_75%_25%,color-mix(in_oklab,var(--color-dna-peach)_40%,transparent),transparent_55%)] opacity-50 blur-3xl" />
-        <Suspense fallback={null}>
-          <DnaHelix fill />
-        </Suspense>
-      </div>
       <Link to="/" className="self-start text-sm font-semibold text-brand-ink hover:underline">{t("licence.back")}</Link>
 
       <section className="grid gap-8 lg:grid-cols-[1fr_360px] lg:items-end">
