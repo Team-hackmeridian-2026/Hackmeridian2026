@@ -180,7 +180,11 @@ function buildGeometry(small: boolean, palette: Palette) {
   return geometry;
 }
 
-export default function DnaHelix({ className = "" }: { className?: string }) {
+/**
+ * `fill`: instead of the hero framing, the helix runs corner to corner of its box (lean
+ * and camera distance follow the box's aspect ratio), for full-page backgrounds.
+ */
+export default function DnaHelix({ className = "", fill = false }: { className?: string; fill?: boolean }) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [failed, setFailed] = useState(false);
 
@@ -246,8 +250,17 @@ export default function DnaHelix({ className = "" }: { className?: string }) {
       renderer.setPixelRatio(dpr);
       renderer.setSize(w, h, false);
       camera.aspect = w / h;
-      // Keep the whole leaning helix in frame, even in narrow boxes.
-      camera.position.z = Math.max(2700, 1600 / (w / h));
+      if (fill) {
+        // Corner to corner: lean along the box diagonal and come close enough for the
+        // helix to overrun the diagonal by about 10 %.
+        const aspect = w / h;
+        group.rotation.z = -Math.atan(aspect);
+        const visibleHeight = HEIGHT / (1.1 * Math.sqrt(aspect * aspect + 1));
+        camera.position.z = visibleHeight / (2 * Math.tan((camera.fov * Math.PI) / 360));
+      } else {
+        // Keep the whole leaning helix in frame, even in narrow boxes.
+        camera.position.z = Math.max(2700, 1600 / (w / h));
+      }
       camera.updateProjectionMatrix();
       material.uniforms.uCamZ.value = camera.position.z;
       material.uniforms.uAspect.value = w / h;
@@ -350,7 +363,7 @@ export default function DnaHelix({ className = "" }: { className?: string }) {
       one.dispose();
       renderer.dispose();
     };
-  }, []);
+  }, [fill]);
 
   if (failed) return null;
   return <canvas ref={canvasRef} className={`size-full ${className}`} />;
