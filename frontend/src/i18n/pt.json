@@ -33,6 +33,7 @@
     "balance": "Saldo",
     "disconnect": "Desligar",
     "connect": "Ligar carteira",
+    "connectShort": "Ligar",
     "trustlineHint": "Adicione uma trustline para o EURC da Circle na sua carteira e obtenha EURC de teste em <link>faucet.circle.com</link>."
   },
   "footer": {
