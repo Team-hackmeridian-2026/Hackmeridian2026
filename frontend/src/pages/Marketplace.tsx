@@ -1,11 +1,10 @@
 import { Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
-import type { TFunction } from "i18next";
-import { escrow, isSettled, nft, paidToLab, type License, type Project } from "../stellar/contracts";
+import { escrow, nft, type License, type Project } from "../stellar/contracts";
 import { useAsync } from "../lib/useAsync";
-import { eurc } from "../lib/format";
 import { ErrorBox, Skeleton, buttonClass } from "../components/ui";
 import { HeroVisual } from "../components/HeroVisual";
+import { FundingProgress, fundingStatus } from "../components/Funding";
 import { Molecule } from "../components/Molecule";
 
 type Listing = { license: License; project?: Project };
@@ -21,41 +20,12 @@ async function loadListings(): Promise<Listing[]> {
   );
 }
 
-export function fundingStatus(
-  t: TFunction,
-  project?: Project,
-): { label: string; tone: "neutral" | "brand" | "amber" | "navy" } {
-  if (!project) return { label: t("funding.awaiting"), tone: "neutral" };
-  if (!project.funded) return { label: t("funding.open"), tone: "amber" };
-  const settled = project.milestones.filter((m) => isSettled(m.status)).length;
-  if (settled === project.milestones.length) {
-    const allPaid = project.milestones.every((m) => m.status === "Released");
-    return { label: t(allPaid ? "funding.full" : "funding.done"), tone: "navy" };
-  }
-  return { label: t("funding.milestone", { current: settled + 1, total: project.milestones.length }), tone: "brand" };
-}
-
-const TONE_TEXT = { neutral: "text-muted", amber: "text-amber-dark", brand: "text-brand-ink", navy: "text-ink" } as const;
-
-/** Small progress ring next to the funding status. */
-function StatusRing({ pct, className }: { pct: number; className: string }) {
-  const c = 2 * Math.PI * 7;
-  return (
-    <svg viewBox="0 0 18 18" className={`size-4 shrink-0 -rotate-90 ${className}`} aria-hidden>
-      <circle cx="9" cy="9" r="7" fill="none" stroke="currentColor" strokeOpacity="0.25" strokeWidth="2" />
-      <circle cx="9" cy="9" r="7" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeDasharray={`${Math.max(pct, 8) / 100 * c} ${c}`} />
-    </svg>
-  );
-}
+export { fundingStatus };
 
 const COLUMNS = "md:grid md:grid-cols-[minmax(0,2.3fr)_minmax(0,1fr)_minmax(0,1fr)_minmax(0,1fr)_minmax(0,1fr)_minmax(0,2.2fr)_1.5rem] md:items-center md:gap-6";
 
 export function ListingRow({ license, project }: Listing) {
   const { t } = useTranslation();
-  const total = project?.milestones.reduce((sum, m) => sum + m.amount, 0n) ?? 0n;
-  const released = project?.milestones.reduce((s, m) => s + paidToLab(m), 0n) ?? 0n;
-  const status = fundingStatus(t, project);
-  const pct = total ? Number((released * 100n) / total) : 0;
   const term = t("common.years", { count: license.terms.duration_years });
   const type = license.terms.exclusive ? t("common.exclusive") : t("common.nonExclusive");
 
@@ -82,18 +52,7 @@ export function ListingRow({ license, project }: Listing) {
         <p className="hidden truncate md:block">{license.terms.territory}</p>
         <p className="hidden md:block">{term}</p>
         <p className="hidden md:block">{type}</p>
-        <div className="flex flex-col gap-2">
-          <p className={`flex items-center gap-2 text-sm font-semibold ${TONE_TEXT[status.tone]}`}>
-            <StatusRing pct={pct} className={TONE_TEXT[status.tone]} />
-            {status.label}
-          </p>
-          <div className="h-1.5 overflow-hidden rounded-full bg-line">
-            <div className="h-full rounded-full bg-brand transition-[width] duration-500" style={{ width: `${pct}%` }} />
-          </div>
-          <p className="text-sm text-muted">
-            {project ? t("marketplace.released", { released: eurc(released), total: eurc(total) }) : t("marketplace.noRound")}
-          </p>
-        </div>
+        <FundingProgress project={project} />
         <svg viewBox="0 0 24 24" className="hidden size-5 text-brand-ink transition duration-200 group-hover:translate-x-0.5 md:block" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
           <path d="m9 6 6 6-6 6" />
         </svg>

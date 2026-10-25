@@ -294,7 +294,16 @@
     "arbiterTitle": "Décision de l'arbitre",
     "arbiterHelp": "La recherche peut échouer sans faute de personne. Payez le labo pour le travail réalisé et remboursez le reste.",
     "labShare": "Labo : {{lab}} % · Remboursement investisseur : {{refund}} %",
-    "split": "Appliquer ce partage"
+    "split": "Appliquer ce partage",
+    "terms": "Conditions",
+    "dossier": "Dossier scientifique",
+    "fundingTitle": "Financement et jalons",
+    "funding": "Financement",
+    "goToMilestones": "Voir les jalons",
+    "verifyHelp": "Choisissez une copie du dossier : son empreinte est calculée dans votre navigateur et rien n'est envoyé.",
+    "chooseFile": "Choisir un fichier",
+    "milestoneN": "Jalon {{n}}",
+    "sections": "Sur cette page"
   },
   "admin": {
     "address": "Adresse Stellar",

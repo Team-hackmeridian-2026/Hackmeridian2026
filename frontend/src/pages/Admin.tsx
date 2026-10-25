@@ -4,7 +4,7 @@ import { ACCOUNTS } from "../config";
 import { nft, splitter, type TxResult } from "../stellar/contracts";
 import { useWallet } from "../stellar/wallet";
 import { useToasts } from "../components/toasts";
-import { Badge, Button, Card, Field, Input, Notice, SectionTitle } from "../components/ui";
+import { Badge, Button, Card, Field, Input, Notice, SectionTitle, StatusIcon } from "../components/ui";
 
 function Registry({
   title,
@@ -39,10 +39,10 @@ function Registry({
   }
 
   return (
-    <Card className="flex flex-col gap-4">
+    <Card className="flex flex-col gap-5">
       <div>
-        <h3 className="font-display text-lg font-semibold">{title}</h3>
-        <p className="text-sm text-muted">{description}</p>
+        <h2 className="font-display text-2xl font-bold tracking-tight">{title}</h2>
+        <p className="mt-1 text-sm text-muted">{description}</p>
       </div>
       <Field label={t("admin.address")}>
         <Input
@@ -55,8 +55,14 @@ function Registry({
           className="font-mono"
         />
       </Field>
-      {status !== null && <Badge tone={status ? "brand" : "neutral"}>{status ? t("admin.verified") : t("admin.notVerified")}</Badge>}
-      <div className="flex gap-2">
+      {status !== null && (
+        <span className="self-start">
+          <Badge tone={status ? "success" : "neutral"} icon={<StatusIcon kind={status ? "done" : "pending"} />}>
+            {status ? t("admin.verified") : t("admin.notVerified")}
+          </Badge>
+        </span>
+      )}
+      <div className="mt-auto flex justify-between gap-2 border-t border-line pt-5">
         <Button busy={busy} disabled={who.length !== 56} onClick={() => set(true)}>
           {t("admin.verify")}
         </Button>
@@ -76,7 +82,7 @@ export function Admin() {
   return (
     <div className="flex flex-col gap-8">
       <SectionTitle eyebrow={t("admin.eyebrow")} title={t("admin.title")}>
-        <p className="max-w-md text-sm text-muted">{t("admin.intro")}</p>
+        <p>{t("admin.intro")}</p>
       </SectionTitle>
       {!isAdmin && <Notice>{t("admin.notAdmin")}</Notice>}
       {signer && (

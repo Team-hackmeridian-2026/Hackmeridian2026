@@ -8,7 +8,7 @@ import { useToasts } from "../components/toasts";
 import { DIRECTORY, PersonPicker, type PersonKind } from "../components/people";
 import { useAsync } from "../lib/useAsync";
 import { formatNumber, sha256, toHex } from "../lib/format";
-import { Badge, Button, Card, ErrorBox, Field, Input, Notice, SectionTitle, TxLink } from "../components/ui";
+import { Badge, Button, Card, ErrorBox, Field, Input, Notice, SectionTitle, StatusIcon, TxLink } from "../components/ui";
 
 const WINDOWS = [
   { key: "minute", seconds: 60 },
@@ -44,38 +44,41 @@ function splitEvenly(addresses: string[], total: number): Beneficiary[] {
   return addresses.map((addr, i) => ({ addr, bps: each + (i === 0 ? total - each * addresses.length : 0) }));
 }
 
+// Step badges from the Figma: lavender, pink, peach.
+const STEP_COLORS = ["bg-dna-violet/25", "bg-dna-pink/30", "bg-dna-peach/30"];
+
 function CardTitle({ n, title, subtitle }: { n: number; title: string; subtitle: string }) {
   return (
-    <div className="flex items-start gap-3">
-      <span className="flex size-8 shrink-0 items-center justify-center rounded-full bg-brand/15 font-display text-sm font-semibold text-brand-ink ring-1 ring-brand/40">
+    <div className="flex items-start gap-4">
+      <span className={`flex size-11 shrink-0 items-center justify-center rounded-xl font-display text-lg font-bold text-ink ${STEP_COLORS[(n - 1) % 3]}`}>
         {n}
       </span>
       <div>
-        <h3 className="font-display text-lg font-semibold">{title}</h3>
+        <h3 className="font-display text-2xl font-bold tracking-tight">{title}</h3>
         <p className="text-sm text-muted">{subtitle}</p>
       </div>
     </div>
   );
 }
 
-function SplitPreview({ parts }: { parts: { label: string; pct: number; color: string }[] }) {
+function SplitPreview({ parts }: { parts: { label: string; pct: number; color: string; text: string }[] }) {
   const { t } = useTranslation();
   const total = parts.reduce((s, p) => s + (Number.isFinite(p.pct) ? p.pct : 0), 0);
   return (
     <div className="flex flex-col items-start gap-2">
-      <div className="flex h-7 w-full overflow-hidden rounded-lg bg-line">
+      <div className="flex h-8 w-full gap-0.5 overflow-hidden rounded-xl bg-line">
         {parts.map((p) =>
           p.pct > 0 ? (
-            <div key={p.label} className={`${p.color} flex items-center justify-center text-xs font-semibold text-navy`} style={{ width: `${Math.min(p.pct, 100)}%` }}>
+            <div key={p.label} className={`${p.color} ${p.text} flex items-center justify-center text-xs font-semibold`} style={{ width: `${Math.min(p.pct, 100)}%` }}>
               {p.pct}%
             </div>
           ) : null,
         )}
       </div>
       {total === 100 ? (
-        <Badge tone="brand">{t("newLicence.splitOk")}</Badge>
+        <Badge tone="success" icon={<StatusIcon kind="done" />}>{t("newLicence.splitOk")}</Badge>
       ) : (
-        <Badge tone="danger">{t("newLicence.splitBad", { total })}</Badge>
+        <Badge tone="danger" icon={<StatusIcon kind="error" />}>{t("newLicence.splitBad", { total })}</Badge>
       )}
     </div>
   );
@@ -213,7 +216,7 @@ export function NewLicence() {
   return (
     <div className="flex flex-col gap-8">
       <SectionTitle eyebrow={t("newLicence.eyebrow")} title={t("newLicence.title")}>
-        <p className="max-w-md text-sm text-muted">{t("newLicence.intro")}</p>
+        <p>{t("newLicence.intro")}</p>
       </SectionTitle>
 
       <form onSubmit={submit} className="grid gap-6 lg:grid-cols-[1fr_340px]">
@@ -236,7 +239,7 @@ export function NewLicence() {
             </div>
             <div className="flex flex-col gap-2">
               <span className="text-sm font-semibold">{t("newLicence.licenceType")}</span>
-              <div className="grid gap-3 sm:grid-cols-2">
+              <div role="radiogroup" aria-label={t("newLicence.licenceType")} className="grid gap-3 sm:grid-cols-2">
                 {[
                   { value: true, title: t("common.exclusive"), text: t("newLicence.exclusiveText") },
                   { value: false, title: t("common.nonExclusive"), text: t("newLicence.nonExclusiveText") },
@@ -245,12 +248,22 @@ export function NewLicence() {
                     key={o.title}
                     type="button"
                     onClick={() => setExclusive(o.value)}
-                    className={`rounded-xl border p-3 text-left text-sm transition ${
-                      exclusive === o.value ? "border-brand-ink bg-brand/10" : "border-line bg-field hover:border-brand-ink"
+                    role="radio"
+                    aria-checked={exclusive === o.value}
+                    className={`flex items-start gap-3 rounded-2xl border p-4 text-left text-sm transition duration-200 ${
+                      exclusive === o.value ? "border-brand bg-brand/5 ring-1 ring-brand" : "border-line bg-field hover:border-ink/25"
                     }`}
                   >
-                    <p className="font-semibold">{o.title}</p>
-                    <p className="text-muted">{o.text}</p>
+                    <span
+                      aria-hidden
+                      className={`mt-0.5 flex size-4 shrink-0 items-center justify-center rounded-full border-2 ${exclusive === o.value ? "border-brand" : "border-line"}`}
+                    >
+                      {exclusive === o.value && <span className="size-2 rounded-full bg-brand" />}
+                    </span>
+                    <span>
+                      <span className="block font-semibold">{o.title}</span>
+                      <span className="block text-muted">{o.text}</span>
+                    </span>
                   </button>
                 ))}
               </div>
@@ -340,9 +353,9 @@ export function NewLicence() {
               </div>
               <SplitPreview
                 parts={[
-                  { label: t("newLicence.university"), pct: universityPct, color: "bg-brand" },
-                  { label: t("newLicence.inventors"), pct: inventorsPct, color: "bg-amber" },
-                  { label: t("newLicence.investors"), pct: investorsPct, color: "bg-rose" },
+                  { label: t("newLicence.university"), pct: universityPct, color: "bg-brand", text: "text-on-brand" },
+                  { label: t("newLicence.inventors"), pct: inventorsPct, color: "bg-rose", text: "text-navy" },
+                  { label: t("newLicence.investors"), pct: investorsPct, color: "bg-amber", text: "text-navy" },
                 ]}
               />
               <FieldError message={fieldError("split")} />
@@ -364,19 +377,23 @@ export function NewLicence() {
               <span className="text-sm font-semibold">{t("newLicence.milestones")}</span>
               <p className="text-xs text-muted">{t("newLicence.milestonesHint")}</p>
               {milestones.map((m, i) => (
-                <div key={i} className="flex flex-wrap items-center gap-x-3 gap-y-1">
+                <div key={i} className="flex flex-wrap items-center gap-x-4 gap-y-2 rounded-2xl bg-subtle px-4 py-2.5">
                   <span className="w-24 text-sm text-muted">{t("newLicence.milestone", { n: i + 1 })}</span>
-                  <Input
-                    type="number"
-                    min={0}
-                    step="any"
-                    value={m}
-                    onChange={(e) => setMilestones((all) => all.map((x, j) => (j === i ? e.target.value : x)))}
-                    aria-invalid={!(Number(m) > 0)}
-                    aria-label={t("newLicence.milestone", { n: i + 1 })}
-                    className={`w-32 ${Number(m) > 0 ? "" : "border-danger/60"}`}
-                  />
-                  <span className="text-sm">EURC</span>
+                  <div className="relative">
+                    <Input
+                      type="number"
+                      min={0}
+                      step="any"
+                      value={m}
+                      onChange={(e) => setMilestones((all) => all.map((x, j) => (j === i ? e.target.value : x)))}
+                      aria-invalid={!(Number(m) > 0)}
+                      aria-label={t("newLicence.milestone", { n: i + 1 })}
+                      className={`w-36 pr-14 ${Number(m) > 0 ? "" : "border-danger/60"}`}
+                    />
+                    <span aria-hidden className="pointer-events-none absolute top-1/2 right-3.5 -translate-y-1/2 text-xs font-semibold text-muted">
+                      EURC
+                    </span>
+                  </div>
                   {milestones.length > 1 && (
                     <Button type="button" variant="ghost" onClick={() => setMilestones((all) => all.filter((_, j) => j !== i))}>
                       {t("common.remove")}
@@ -413,22 +430,27 @@ export function NewLicence() {
 
         <div className="flex flex-col gap-4 lg:sticky lg:top-6 lg:self-start">
           <Card className="flex flex-col gap-4">
-            <h3 className="font-display text-lg font-semibold">{t("newLicence.summary")}</h3>
-            <dl className="flex flex-col gap-1 text-sm">
+            <h3 className="font-display text-2xl font-bold tracking-tight">{t("newLicence.summary")}</h3>
+            <dl className="flex flex-col text-sm [&>div]:border-b [&>div]:border-line [&>div]:py-2.5 [&>div:first-child]:pt-0">
               <div className="flex justify-between gap-3"><dt className="text-muted">{t("newLicence.summaryLicence")}</dt><dd className="text-right">{exclusive ? t("common.exclusive") : t("common.nonExclusive")}, {t("common.years", { count: Number(years) })}</dd></div>
               <div className="flex justify-between gap-3"><dt className="text-muted">{t("newLicence.summaryFunding")}</dt><dd>{t("newLicence.summaryFundingValue", { amount: formatNumber(total), count: milestones.length })}</dd></div>
               <div className="flex justify-between gap-3"><dt className="text-muted">{t("newLicence.summaryRoyalties")}</dt><dd>{universityPct} / {inventorsPct} / {investorsPct} %</dd></div>
               <div className="flex justify-between gap-3"><dt className="text-muted">{t("newLicence.summaryDossier")}</dt><dd>{hash ? t("newLicence.fingerprinted") : t("newLicence.missing")}</dd></div>
             </dl>
-            <div className="border-t border-line pt-4">
+            <div>
               <p className="mb-3 text-sm font-semibold">{t("newLicence.walletWillAsk")}</p>
               <ol className="flex flex-col gap-3">
                 {steps.map((s, i) => (
                   <li key={s.key} className="flex flex-col gap-1">
                     <div className="flex items-center justify-between gap-2 text-sm">
-                      <span>{i + 1}. {t(`newLicence.steps.${s.key}`)}</span>
+                      <span className="flex items-center gap-2.5">
+                        <span className={s.state === "done" ? "text-success" : s.state === "error" ? "text-danger" : s.state === "running" ? "text-amber-dark" : "text-muted"}>
+                          <StatusIcon kind={s.state === "todo" ? "pending" : s.state} className="size-4" />
+                        </span>
+                        {i + 1}. {t(`newLicence.steps.${s.key}`)}
+                      </span>
                       {s.state === "running" && <Badge tone="amber">{t("newLicence.confirmInWallet")}</Badge>}
-                      {s.state === "done" && <Badge tone="brand">{t("newLicence.done")}</Badge>}
+                      {s.state === "done" && <Badge tone="success">{t("newLicence.done")}</Badge>}
                       {s.state === "error" && <Badge tone="danger">{t("newLicence.failed")}</Badge>}
                     </div>
                     {s.hash && <TxLink hash={s.hash} />}
@@ -437,10 +459,10 @@ export function NewLicence() {
               </ol>
             </div>
             {formError && !errorField && <ErrorBox message={formError} />}
-            <Button type="submit" busy={busy} disabled={Boolean(blocker)}>
+            {blocker && <Notice tone="warning">{blocker}</Notice>}
+            <Button type="submit" busy={busy} disabled={Boolean(blocker)} className="w-full">
               {t("newLicence.submit")}
             </Button>
-            {blocker && <Notice>{blocker}</Notice>}
           </Card>
         </div>
       </form>
