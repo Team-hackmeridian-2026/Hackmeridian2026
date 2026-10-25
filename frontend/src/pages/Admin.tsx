@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import { ACCOUNTS } from "../config";
 import { nft, splitter, type TxResult } from "../stellar/contracts";
 import { useWallet } from "../stellar/wallet";
@@ -20,6 +21,7 @@ function Registry({
   yes: string;
   no: string;
 }) {
+  const { t } = useTranslation();
   const { run } = useToasts();
   const [who, setWho] = useState("");
   const [status, setStatus] = useState<boolean | null>(null);
@@ -42,7 +44,7 @@ function Registry({
         <h3 className="font-display text-lg font-semibold">{title}</h3>
         <p className="text-sm text-muted">{description}</p>
       </div>
-      <Field label="Stellar address">
+      <Field label={t("admin.address")}>
         <Input
           value={who}
           onChange={(e) => {
@@ -53,13 +55,13 @@ function Registry({
           className="font-mono"
         />
       </Field>
-      {status !== null && <Badge tone={status ? "teal" : "neutral"}>{status ? "Verified" : "Not verified"}</Badge>}
+      {status !== null && <Badge tone={status ? "teal" : "neutral"}>{status ? t("admin.verified") : t("admin.notVerified")}</Badge>}
       <div className="flex gap-2">
         <Button busy={busy} disabled={who.length !== 56} onClick={() => set(true)}>
-          Verify
+          {t("admin.verify")}
         </Button>
         <Button variant="danger" busy={busy} disabled={who.length !== 56} onClick={() => set(false)}>
-          Revoke
+          {t("admin.revoke")}
         </Button>
       </div>
     </Card>
@@ -67,34 +69,33 @@ function Registry({
 }
 
 export function Admin() {
+  const { t } = useTranslation();
   const { signer } = useWallet();
   const isAdmin = signer?.address === ACCOUNTS.admin;
 
   return (
     <div className="flex flex-col gap-8">
-      <SectionTitle eyebrow="Compliance" title="Platform administration">
-        <p className="max-w-md text-sm text-muted">
-          Only verified institutions can list patents, and only investors who passed KYC can hold revenue shares.
-        </p>
+      <SectionTitle eyebrow={t("admin.eyebrow")} title={t("admin.title")}>
+        <p className="max-w-md text-sm text-muted">{t("admin.intro")}</p>
       </SectionTitle>
-      {!isAdmin && <ErrorBox message="Connect the platform admin account to change these registries. Anyone can look up a status." />}
+      {!isAdmin && <ErrorBox message={t("admin.notAdmin")} />}
       {signer && (
         <div className="grid gap-6 md:grid-cols-2">
           <Registry
-            title="Verified institutions"
-            description="Universities, labs and tech transfer offices allowed to mint licences."
+            title={t("admin.institutionsTitle")}
+            description={t("admin.institutionsText")}
             check={nft.isInstitution}
             grant={(who, value) => nft.setInstitution(signer, who, value)}
-            yes="Institution verified"
-            no="Institution revoked"
+            yes={t("admin.institutionVerified")}
+            no={t("admin.institutionRevoked")}
           />
           <Registry
-            title="KYC allowlist"
-            description="Investors allowed to hold, buy or sell revenue shares."
+            title={t("admin.kycTitle")}
+            description={t("admin.kycText")}
             check={splitter.isAllowed}
             grant={(who, value) => splitter.setAllowed(signer, who, value)}
-            yes="Investor verified"
-            no="Investor revoked"
+            yes={t("admin.investorVerified")}
+            no={t("admin.investorRevoked")}
           />
         </div>
       )}

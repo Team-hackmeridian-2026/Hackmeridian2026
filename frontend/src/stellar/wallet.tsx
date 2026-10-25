@@ -16,6 +16,8 @@ export type Signer = {
   /** "wallet" = Freighter & co. via Stellar Wallets Kit, "demo" = local testnet key. */
   kind: "wallet" | "demo";
   label: string;
+  /** Set in demo mode, so the header can show the role in the current language. */
+  role?: DemoRole;
 };
 
 export const DEMO_ROLES = ["lab", "fund", "pharma", "arbiter", "inventor", "admin"] as const;
@@ -90,6 +92,7 @@ export function WalletProvider({ children }: { children: ReactNode }) {
       address: keypair.publicKey(),
       kind: "demo",
       label: ROLE_LABELS[role],
+      role,
       sign: async (xdr) => {
         const tx = TransactionBuilder.fromXDR(xdr, NETWORK_PASSPHRASE);
         tx.sign(keypair);

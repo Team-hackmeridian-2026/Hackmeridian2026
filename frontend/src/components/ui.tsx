@@ -1,4 +1,5 @@
 import type { ButtonHTMLAttributes, InputHTMLAttributes, ReactNode } from "react";
+import { useTranslation } from "react-i18next";
 import { explorer } from "../config";
 import { shortAddress } from "../lib/format";
 
@@ -79,10 +80,11 @@ export function Address({ value, label }: { value: string; label?: string }) {
 }
 
 export function TxLink({ hash }: { hash: string }) {
+  const { t } = useTranslation();
   if (!hash) return null;
   return (
     <a href={explorer.tx(hash)} target="_blank" rel="noreferrer" className="text-xs font-semibold text-teal-dark hover:underline">
-      View on stellar.expert ↗
+      {t("common.viewTx")}
     </a>
   );
 }
@@ -99,11 +101,12 @@ export function SectionTitle({ eyebrow, title, children }: { eyebrow?: string; t
   );
 }
 
-export function Spinner({ label = "Loading from Stellar testnet…" }: { label?: string }) {
+export function Spinner({ label }: { label?: string }) {
+  const { t } = useTranslation();
   return (
     <div className="flex items-center gap-3 py-10 text-sm text-muted">
       <span className="size-4 animate-spin rounded-full border-2 border-teal-dark border-t-transparent" />
-      {label}
+      {label ?? t("common.loading")}
     </div>
   );
 }

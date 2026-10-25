@@ -10,6 +10,7 @@ import { NewLicence } from "./pages/NewLicence";
 import { LicenceDetail } from "./pages/LicenceDetail";
 import { Admin } from "./pages/Admin";
 import { CashOut } from "./pages/CashOut";
+import "./i18n";
 import "./index.css";
 
 // stellar-sdk expects Node's Buffer in the browser.

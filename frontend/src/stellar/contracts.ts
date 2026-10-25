@@ -2,6 +2,7 @@ import { Buffer } from "buffer";
 import { contract } from "@stellar/stellar-sdk";
 import { CONTRACTS, EURC_CODE, EURC_ISSUER, HORIZON_URL, NETWORK_PASSPHRASE, RPC_URL } from "../config";
 import { toUnits } from "../lib/format";
+import i18n from "../i18n";
 import type { Signer } from "./wallet";
 
 // ---------- On-chain types (mirror the Rust contracts) ----------
@@ -99,46 +100,23 @@ async function write<T>(contractId: string, method: string, args: object, signer
 
 // ---------- Errors ----------
 
-const ERRORS: Record<string, Record<number, string>> = {
-  [CONTRACTS.nft]: {
-    1: "This address is not a verified institution.",
-    2: "Licence not found.",
-    3: "You already signed the NDA for this licence.",
-    4: "Invalid licence terms.",
-    5: "Only the licence owner can do this.",
-  },
-  [CONTRACTS.splitter]: {
-    1: "Invalid split: shares must add up to 100 %.",
-    2: "Royalty split already configured.",
-    3: "Royalty split not configured yet.",
-    4: "This address has not passed KYC.",
-    5: "Amount must be positive.",
-    6: "Not enough shares.",
-    7: "No share issuer configured.",
-    8: "Nothing to claim yet.",
-  },
-  [CONTRACTS.escrow]: {
-    1: "Invalid milestones.",
-    2: "Configure the royalty split before creating a funding round.",
-    3: "Funding round not found.",
-    4: "Already funded.",
-    5: "Not funded yet.",
-    6: "Unknown milestone.",
-    7: "This action is not possible at this stage.",
-    8: "Previous milestones must be settled first.",
-    9: "The challenge window is closed.",
-    10: "The challenge window is still open.",
-    11: "Invalid configuration.",
-  },
+// Messages live in src/i18n/<lang>.json under errors.<contract>.<code>.
+const ERRORS: Record<string, string> = {
+  [CONTRACTS.nft]: "errors.nft",
+  [CONTRACTS.splitter]: "errors.splitter",
+  [CONTRACTS.escrow]: "errors.escrow",
 };
 
 function explainError(contractId: string, err: unknown): string {
   const raw = err instanceof Error ? err.message : String(err);
   const code = /Error\(Contract, #(\d+)\)/.exec(raw)?.[1];
-  if (code) return ERRORS[contractId]?.[Number(code)] ?? `Contract error #${code}`;
-  if (/balance|underfunded|insufficient/i.test(raw)) return "Not enough EURC on this account.";
-  if (/trustline/i.test(raw)) return "This account has no EURC trustline yet.";
-  if (/reject|declin|cancel/i.test(raw)) return "Transaction cancelled in the wallet.";
+  if (code) {
+    const key = `${ERRORS[contractId]}.${code}`;
+    return ERRORS[contractId] && i18n.exists(key) ? i18n.t(key) : i18n.t("errors.contract", { code });
+  }
+  if (/balance|underfunded|insufficient/i.test(raw)) return i18n.t("errors.balance");
+  if (/trustline/i.test(raw)) return i18n.t("errors.trustline");
+  if (/reject|declin|cancel/i.test(raw)) return i18n.t("errors.cancelled");
   return raw.length > 240 ? raw.slice(0, 240) + "…" : raw;
 }
 

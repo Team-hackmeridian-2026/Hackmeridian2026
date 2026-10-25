@@ -1,17 +1,19 @@
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import { ACCOUNTS } from "../config";
 import { shortAddress } from "../lib/format";
 import { Input } from "./ui";
 
-export type Person = { name: string; role: string; address: string };
+export type PersonKind = "inventor" | "investor" | "arbiter" | "licensee" | "institution";
+export type Person = { name: string; kind: PersonKind; address: string };
 
 /** Demo accounts deployed by scripts/setup-accounts.sh, shown by name instead of raw addresses. */
 export const DIRECTORY: Person[] = [
-  { name: "Dr. Inventor", role: "Inventor · demo account", address: ACCOUNTS.inventor },
-  { name: "Horizon Bio Fund", role: "Investor · demo account", address: ACCOUNTS.fund },
-  { name: "Tech Transfer Board", role: "Arbiter · demo account", address: ACCOUNTS.arbiter },
-  { name: "PharmaCo", role: "Licensee · demo account", address: ACCOUNTS.pharma },
-  { name: "University lab", role: "Institution · demo account", address: ACCOUNTS.lab },
+  { name: "Dr. Inventor", kind: "inventor", address: ACCOUNTS.inventor },
+  { name: "Horizon Bio Fund", kind: "investor", address: ACCOUNTS.fund },
+  { name: "Tech Transfer Board", kind: "arbiter", address: ACCOUNTS.arbiter },
+  { name: "PharmaCo", kind: "licensee", address: ACCOUNTS.pharma },
+  { name: "University lab", kind: "institution", address: ACCOUNTS.lab },
 ];
 
 const OTHER = "__other__";
@@ -30,6 +32,7 @@ export function PersonPicker({
   onChange: (address: string) => void;
   suggested: Person[];
 }) {
+  const { t } = useTranslation();
   const known = suggested.some((p) => p.address === value);
   const [other, setOther] = useState(!known && value !== "");
 
@@ -48,20 +51,20 @@ export function PersonPicker({
           }
         }}
       >
-        {!known && !other && <option value="">Choose…</option>}
+        {!known && !other && <option value="">{t("people.choose")}</option>}
         {suggested.map((p) => (
           <option key={p.address} value={p.address}>
-            {p.name} ({p.role})
+            {p.name} ({t("people.demoAccount", { role: t(`people.kinds.${p.kind}`) })})
           </option>
         ))}
-        <option value={OTHER}>Other Stellar address…</option>
+        <option value={OTHER}>{t("people.other")}</option>
       </select>
       {other ? (
         <Input
           autoFocus
           value={value}
           onChange={(e) => onChange(e.target.value.trim())}
-          placeholder="G… (56 characters)"
+          placeholder={t("people.placeholder")}
           className="font-mono"
         />
       ) : (

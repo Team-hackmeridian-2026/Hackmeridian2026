@@ -1,4 +1,5 @@
 import { createContext, useCallback, useContext, useState, type ReactNode } from "react";
+import { useTranslation } from "react-i18next";
 import { TxLink } from "./ui";
 import type { TxResult } from "../stellar/contracts";
 
@@ -13,6 +14,7 @@ type ToastApi = {
 const ToastContext = createContext<ToastApi | null>(null);
 
 export function ToastProvider({ children }: { children: ReactNode }) {
+  const { t } = useTranslation();
   const [toasts, setToasts] = useState<Toast[]>([]);
 
   const remove = (id: number) => setToasts((all) => all.filter((t) => t.id !== id));
@@ -27,38 +29,38 @@ export function ToastProvider({ children }: { children: ReactNode }) {
     async <T,>(label: string, action: () => Promise<TxResult<T>>) => {
       try {
         const res = await action();
-        push({ kind: "success", text: `${label}: confirmed on Stellar`, hash: res.hash });
+        push({ kind: "success", text: t("common.confirmed", { label }), hash: res.hash });
         return res;
       } catch (err) {
-        push({ kind: "error", text: `${label}: ${err instanceof Error ? err.message : String(err)}` });
+        push({ kind: "error", text: t("common.failed", { label, message: err instanceof Error ? err.message : String(err) }) });
         return null;
       }
     },
-    [push],
+    [push, t],
   );
 
   return (
     <ToastContext.Provider value={{ push, run }}>
       {children}
       <div className="fixed right-4 bottom-4 z-50 flex w-96 max-w-[calc(100vw-2rem)] flex-col gap-2">
-        {toasts.map((t) => (
+        {toasts.map((toast) => (
           <div
-            key={t.id}
+            key={toast.id}
             className={`rounded-xl border px-4 py-3 text-sm shadow-lg ${
-              t.kind === "error"
+              toast.kind === "error"
                 ? "border-danger/30 bg-white text-danger"
-                : t.kind === "success"
+                : toast.kind === "success"
                   ? "border-teal/40 bg-white text-ink"
                   : "border-line bg-white text-ink"
             }`}
           >
             <div className="flex items-start justify-between gap-3">
-              <p>{t.text}</p>
-              <button onClick={() => remove(t.id)} className="text-muted hover:text-ink" aria-label="Close">
+              <p>{toast.text}</p>
+              <button onClick={() => remove(toast.id)} className="text-muted hover:text-ink" aria-label={t("common.close")}>
                 ×
               </button>
             </div>
-            {t.hash && <TxLink hash={t.hash} />}
+            {toast.hash && <TxLink hash={toast.hash} />}
           </div>
         ))}
       </div>
