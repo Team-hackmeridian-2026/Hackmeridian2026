@@ -1,4 +1,6 @@
 import { Link } from "react-router-dom";
+import { useTranslation } from "react-i18next";
+import type { TFunction } from "i18next";
 import { escrow, nft, type License, type Project } from "../stellar/contracts";
 import { useAsync } from "../lib/useAsync";
 import { eurc } from "../lib/format";
@@ -17,18 +19,22 @@ async function loadListings(): Promise<Listing[]> {
   );
 }
 
-export function fundingStatus(project?: Project): { label: string; tone: "neutral" | "teal" | "amber" | "navy" } {
-  if (!project) return { label: "Awaiting funding round", tone: "neutral" };
-  if (!project.funded) return { label: "Open for funding", tone: "amber" };
+export function fundingStatus(
+  t: TFunction,
+  project?: Project,
+): { label: string; tone: "neutral" | "teal" | "amber" | "navy" } {
+  if (!project) return { label: t("funding.awaiting"), tone: "neutral" };
+  if (!project.funded) return { label: t("funding.open"), tone: "amber" };
   const released = project.milestones.filter((m) => m.status === "Released").length;
-  if (released === project.milestones.length) return { label: "Fully funded", tone: "navy" };
-  return { label: `Milestone ${released + 1} of ${project.milestones.length}`, tone: "teal" };
+  if (released === project.milestones.length) return { label: t("funding.full"), tone: "navy" };
+  return { label: t("funding.milestone", { current: released + 1, total: project.milestones.length }), tone: "teal" };
 }
 
 function ListingCard({ license, project }: Listing) {
+  const { t } = useTranslation();
   const total = project?.milestones.reduce((sum, m) => sum + m.amount, 0n) ?? 0n;
   const released = project?.milestones.filter((m) => m.status === "Released").reduce((s, m) => s + m.amount, 0n) ?? 0n;
-  const status = fundingStatus(project);
+  const status = fundingStatus(t, project);
   const pct = total ? Number((released * 100n) / total) : 0;
 
   return (
@@ -40,15 +46,18 @@ function ListingCard({ license, project }: Listing) {
         </div>
         <h3 className="font-display text-xl font-semibold leading-snug">{license.title}</h3>
         <p className="text-sm text-muted">
-          {license.terms.exclusive ? "Exclusive" : "Non-exclusive"} licence · {license.terms.territory} ·{" "}
-          {license.terms.duration_years} years
+          {t("marketplace.licenceLine", {
+            licence: license.terms.exclusive ? t("marketplace.exclusiveLicence") : t("marketplace.nonExclusiveLicence"),
+            territory: license.terms.territory,
+            duration: t("common.years", { count: license.terms.duration_years }),
+          })}
         </p>
         <div className="mt-auto flex flex-col gap-2">
           <div className="h-2 overflow-hidden rounded-full bg-line">
             <div className="h-full rounded-full bg-teal" style={{ width: `${pct}%` }} />
           </div>
           <p className="text-xs text-muted">
-            {project ? `${eurc(released)} released of ${eurc(total)}` : "No funding round yet"}
+            {project ? t("marketplace.released", { released: eurc(released), total: eurc(total) }) : t("marketplace.noRound")}
           </p>
         </div>
       </Card>
@@ -57,26 +66,22 @@ function ListingCard({ license, project }: Listing) {
 }
 
 export function Marketplace() {
+  const { t } = useTranslation();
   const { data, error, loading } = useAsync(loadListings, []);
 
   return (
     <div className="flex flex-col gap-12">
       <section className="flex flex-col gap-6 rounded-3xl bg-navy px-8 py-12 text-paper md:px-12">
-        <p className="text-xs font-semibold uppercase tracking-widest text-teal">Funding European research</p>
-        <h1 className="max-w-3xl font-display text-4xl font-bold leading-tight md:text-5xl">
-          Turn a patent into a programmable licence: funded in euros, released by milestones, paid out automatically.
-        </h1>
-        <p className="max-w-2xl text-paper/70">
-          Universities keep ownership. Investors fund in EURC through an escrow that only pays out when milestones are
-          met. Royalties are split between the university, its inventors and investors in a single transaction.
-        </p>
+        <p className="text-xs font-semibold uppercase tracking-widest text-teal">{t("marketplace.heroEyebrow")}</p>
+        <h1 className="max-w-3xl break-words font-display text-3xl font-bold leading-tight sm:text-4xl md:text-5xl">{t("marketplace.heroTitle")}</h1>
+        <p className="max-w-2xl text-paper/70">{t("marketplace.heroText")}</p>
         <div className="flex flex-wrap gap-3">
           <Link to="/new">
-            <Button className="bg-teal text-navy hover:bg-teal/90">List a patent</Button>
+            <Button className="bg-teal text-navy hover:bg-teal/90">{t("marketplace.listPatent")}</Button>
           </Link>
           <a href="#licences">
             <Button variant="secondary" className="border-white/20 bg-transparent text-paper hover:border-teal">
-              Browse licences
+              {t("marketplace.browse")}
             </Button>
           </a>
         </div>
@@ -84,14 +89,17 @@ export function Marketplace() {
 
       <section id="licences" className="flex flex-col gap-6">
         <div>
-          <p className="text-xs font-semibold uppercase tracking-widest text-teal-dark">Marketplace</p>
-          <h2 className="font-display text-2xl font-semibold">Licences on Stellar</h2>
+          <p className="text-xs font-semibold uppercase tracking-widest text-teal-dark">{t("marketplace.eyebrow")}</p>
+          <h2 className="font-display text-2xl font-semibold">{t("marketplace.title")}</h2>
         </div>
         {loading && <Spinner />}
         {error && <ErrorBox message={error} />}
         {data && data.length === 0 && (
           <Card className="text-sm text-muted">
-            No licence yet. <Link to="/new" className="font-semibold text-teal-dark">List the first patent →</Link>
+            {t("marketplace.empty")}{" "}
+            <Link to="/new" className="font-semibold text-teal-dark">
+              {t("marketplace.emptyCta")}
+            </Link>
           </Card>
         )}
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">

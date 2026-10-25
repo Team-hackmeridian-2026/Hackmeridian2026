@@ -1,4 +1,6 @@
 import { useEffect, useState } from "react";
+import { Trans, useTranslation } from "react-i18next";
+import type { TFunction } from "i18next";
 import { CIRCLE_FAUCET_URL } from "../config";
 import {
   addTrustline,
@@ -17,24 +19,26 @@ import {
 import { useWallet } from "../stellar/wallet";
 import { useToasts } from "../components/toasts";
 import { useAsync } from "../lib/useAsync";
+import { formatNumber } from "../lib/format";
 import { Badge, Button, Card, ErrorBox, SectionTitle, Spinner, TxLink } from "../components/ui";
 
 const TERMINAL: AnchorStatus[] = ["completed", "refunded", "expired", "error", "no_market", "too_small", "too_large"];
 
-const STATUS_TEXT: Partial<Record<AnchorStatus, string>> = {
-  incomplete: "Fill in the form in the anchor's window",
-  pending_user_transfer_start: "The anchor is waiting for your payment",
-  pending_user_transfer_complete: "Payment received by the anchor",
-  pending_anchor: "The anchor is processing the withdrawal",
-  pending_stellar: "Waiting for the Stellar network",
-  pending_external: "Bank transfer in progress",
-  completed: "Completed: the bank transfer has been sent",
-  refunded: "Refunded",
-  expired: "Expired",
-  error: "Error",
-};
+/** SEP-24 statuses with a translated explanation in cashOut.status.*; the raw status code stays untranslated. */
+const STATUS_TEXT: AnchorStatus[] = [
+  "incomplete",
+  "pending_user_transfer_start",
+  "pending_user_transfer_complete",
+  "pending_anchor",
+  "pending_stellar",
+  "pending_external",
+  "completed",
+  "refunded",
+  "expired",
+  "error",
+];
 
-const STEPS = ["Sign in to the anchor", "Fill in your bank details", "Send the funds", "Bank transfer"];
+const STEPS = ["signIn", "details", "send", "transfer"] as const;
 
 function currentStep(token: string | null, tx: AnchorTransaction | null): number {
   if (!token) return 0;
@@ -43,22 +47,22 @@ function currentStep(token: string | null, tx: AnchorTransaction | null): number
   return 3;
 }
 
-function assetHint(asset: AnchorAsset) {
+function assetHint(t: TFunction, asset: AnchorAsset) {
   if (asset.code === "USDC")
     return (
-      <>
-        Get test USDC on{" "}
-        <a href={CIRCLE_FAUCET_URL} target="_blank" rel="noreferrer" className="font-semibold text-teal-dark underline">
-          faucet.circle.com
-        </a>{" "}
-        (Stellar testnet).
-      </>
+      <Trans
+        i18nKey="cashOut.hints.usdc"
+        components={{
+          link: <a href={CIRCLE_FAUCET_URL} target="_blank" rel="noreferrer" className="font-semibold text-teal-dark underline" />,
+        }}
+      />
     );
-  if (asset.code === "native") return "Every testnet account already holds XLM from Friendbot.";
-  return `Get ${asset.code} through a deposit on ${ANCHOR_DOMAIN}.`;
+  if (asset.code === "native") return t("cashOut.hints.native");
+  return t("cashOut.hints.other", { code: asset.code, domain: ANCHOR_DOMAIN });
 }
 
 export function CashOut() {
+  const { t } = useTranslation();
   const { signer } = useWallet();
   const { push } = useToasts();
   const config = useAsync(anchorConfig, []);
@@ -95,12 +99,13 @@ export function CashOut() {
     return () => clearInterval(t);
   }, [token, tx]);
 
-  async function step<T>(label: string, action: () => Promise<T>): Promise<T | null> {
-    setBusy(label);
+  async function step<T>(key: "signIn" | "start" | "send" | "trust", action: () => Promise<T>): Promise<T | null> {
+    setBusy(key);
     try {
       return await action();
     } catch (err) {
-      push({ kind: "error", text: `${label}: ${err instanceof Error ? err.message : String(err)}` });
+      const message = err instanceof Error ? err.message : String(err);
+      push({ kind: "error", text: t("common.failed", { label: t(`cashOut.actions.${key}`), message }) });
       return null;
     } finally {
       setBusy(null);
@@ -109,10 +114,10 @@ export function CashOut() {
 
   async function signIn() {
     if (!signer) return;
-    const t = await step("Sign in", () => authenticate(signer));
-    if (t) {
-      setToken(t);
-      push({ kind: "success", text: `Signed in to ${ANCHOR_DOMAIN} with SEP-10` });
+    const jwt = await step("signIn", () => authenticate(signer));
+    if (jwt) {
+      setToken(jwt);
+      push({ kind: "success", text: t("cashOut.signedInToast", { domain: ANCHOR_DOMAIN }) });
     }
   }
 
@@ -120,7 +125,7 @@ export function CashOut() {
     if (!signer || !token || !asset) return;
     // Open the window during the click so the browser does not block it.
     const popup = window.open("", "anchor", "width=500,height=750");
-    const started = await step("Start withdrawal", () => startWithdrawal(token, asset, signer.address));
+    const started = await step("start", () => startWithdrawal(token, asset, signer.address));
     if (!started) return popup?.close();
     if (popup) popup.location.href = started.url;
     else window.open(started.url, "_blank");
@@ -129,18 +134,18 @@ export function CashOut() {
 
   async function pay() {
     if (!signer || !tx || !asset) return;
-    const hash = await step("Send to the anchor", () => payAnchor(signer, asset, tx));
+    const hash = await step("send", () => payAnchor(signer, asset, tx));
     if (hash) {
       setPaymentHash(hash);
-      push({ kind: "success", text: `${tx.amount_in} ${displayCode(asset)} sent to the anchor`, hash });
+      push({ kind: "success", text: t("cashOut.sentToast", { amount: tx.amount_in, code: displayCode(asset) }), hash });
     }
   }
 
   async function trust() {
     if (!signer || !asset) return;
-    const hash = await step("Add trustline", () => addTrustline(signer, asset));
+    const hash = await step("trust", () => addTrustline(signer, asset));
     if (hash) {
-      push({ kind: "success", text: `${displayCode(asset)} enabled on your account`, hash });
+      push({ kind: "success", text: t("cashOut.trustToast", { code: displayCode(asset) }), hash });
       balance.reload();
     }
   }
@@ -149,29 +154,24 @@ export function CashOut() {
 
   return (
     <div className="flex flex-col gap-8">
-      <SectionTitle eyebrow="For labs · SEP-10 + SEP-24" title="Cash out to a bank account">
-        <p className="max-w-md text-sm text-muted">
-          Milestone funds and royalties arrive on Stellar. A regulated anchor turns them into a bank transfer: the lab
-          never has to deal with crypto.
-        </p>
+      <SectionTitle eyebrow={t("cashOut.eyebrow")} title={t("cashOut.title")}>
+        <p className="max-w-md text-sm text-muted">{t("cashOut.intro")}</p>
       </SectionTitle>
 
       <Card className="border-amber/40 bg-amber/5 text-sm">
-        <strong>Testnet:</strong> this demo uses the Stellar reference anchor ({ANCHOR_DOMAIN}). It does not list EURC
-        and sends no real money, so the withdrawal runs with one of the assets it supports. In production the same
-        SEP-24 flow points at an anchor that converts EURC into a SEPA transfer.
+        <Trans i18nKey="cashOut.testnetNote" values={{ domain: ANCHOR_DOMAIN }} components={{ strong: <strong /> }} />
       </Card>
 
-      {!signer && <ErrorBox message="Connect the lab's wallet to cash out." />}
-      {config.loading && <Spinner label={`Reading ${ANCHOR_DOMAIN}/.well-known/stellar.toml…`} />}
+      {!signer && <ErrorBox message={t("cashOut.connect")} />}
+      {config.loading && <Spinner label={t("cashOut.reading", { domain: ANCHOR_DOMAIN })} />}
       {config.error && <ErrorBox message={config.error} />}
 
       {signer && config.data && asset && (
         <div className="grid gap-6 lg:grid-cols-[280px_1fr]">
           <Card className="flex flex-col gap-4 lg:self-start">
             <ol className="flex flex-col gap-3">
-              {STEPS.map((label, i) => (
-                <li key={label} className="flex items-center gap-3 text-sm">
+              {STEPS.map((key, i) => (
+                <li key={key} className="flex items-center gap-3 text-sm">
                   <span
                     className={`flex size-7 items-center justify-center rounded-full text-xs font-semibold ${
                       i < active || (i === 3 && tx?.status === "completed")
@@ -183,7 +183,7 @@ export function CashOut() {
                   >
                     {i + 1}
                   </span>
-                  <span className={i === active ? "font-semibold" : "text-muted"}>{label}</span>
+                  <span className={i === active ? "font-semibold" : "text-muted"}>{t(`cashOut.steps.${key}`)}</span>
                 </li>
               ))}
             </ol>
@@ -192,7 +192,7 @@ export function CashOut() {
           <Card className="flex flex-col gap-5">
             <div className="flex flex-wrap items-end gap-4">
               <label className="flex flex-col gap-1.5 text-sm">
-                <span className="font-semibold">Asset to withdraw</span>
+                <span className="font-semibold">{t("cashOut.asset")}</span>
                 <select
                   className="rounded-lg border border-line bg-white px-3 py-2"
                   value={asset.code}
@@ -207,41 +207,41 @@ export function CashOut() {
                 </select>
               </label>
               <div className="text-sm">
-                <p className="text-muted">Your balance</p>
+                <p className="text-muted">{t("cashOut.balance")}</p>
                 <p className="font-semibold">
-                  {balance.data ? `${Number(balance.data.balance).toLocaleString("en-US")} ${displayCode(asset)}` : "—"}
+                  {balance.data ? `${formatNumber(balance.data.balance)} ${displayCode(asset)}` : "—"}
                 </p>
               </div>
               <p className="text-xs text-muted">
-                Anchor limits: {asset.min} to {asset.max} {displayCode(asset)} per withdrawal.
+                {t("cashOut.limits", { min: asset.min, max: asset.max, code: displayCode(asset) })}
               </p>
             </div>
 
             {balance.data && !balance.data.trusted ? (
               <div className="flex flex-col gap-2 text-sm">
-                <p>Your account cannot hold {displayCode(asset)} yet.</p>
-                <Button variant="secondary" busy={busy === "Add trustline"} onClick={trust} className="self-start">
-                  Enable {displayCode(asset)} on my account
+                <p>{t("cashOut.cannotHold", { code: displayCode(asset) })}</p>
+                <Button variant="secondary" busy={busy === "trust"} onClick={trust} className="self-start">
+                  {t("cashOut.enable", { code: displayCode(asset) })}
                 </Button>
               </div>
             ) : (
               balance.data &&
-              Number(balance.data.balance) < asset.min && <p className="text-sm text-amber-dark">{assetHint(asset)}</p>
+              Number(balance.data.balance) < asset.min && <p className="text-sm text-amber-dark">{assetHint(t, asset)}</p>
             )}
 
             <div className="flex flex-col gap-3 border-t border-line pt-5">
               {!token && (
-                <Button busy={busy === "Sign in"} onClick={signIn} className="self-start">
-                  Sign in to the anchor (SEP-10)
+                <Button busy={busy === "signIn"} onClick={signIn} className="self-start">
+                  {t("cashOut.signInButton")}
                 </Button>
               )}
               {token && !tx && (
                 <>
-                  <Badge tone="teal">Signed in to {ANCHOR_DOMAIN}</Badge>
-                  <Button busy={busy === "Start withdrawal"} onClick={start} className="self-start">
-                    Withdraw to my bank account
+                  <Badge tone="teal">{t("cashOut.signedIn", { domain: ANCHOR_DOMAIN })}</Badge>
+                  <Button busy={busy === "start"} onClick={start} className="self-start">
+                    {t("cashOut.withdraw")}
                   </Button>
-                  <p className="text-xs text-muted">The anchor opens a window to collect the amount and bank details.</p>
+                  <p className="text-xs text-muted">{t("cashOut.windowHint")}</p>
                 </>
               )}
               {tx && (
@@ -250,32 +250,32 @@ export function CashOut() {
                     <Badge tone={tx.status === "completed" ? "teal" : TERMINAL.includes(tx.status) ? "danger" : "amber"}>
                       {tx.status}
                     </Badge>
-                    <span>{STATUS_TEXT[tx.status] ?? tx.message ?? ""}</span>
+                    <span>{STATUS_TEXT.includes(tx.status) ? t(`cashOut.status.${tx.status}`) : (tx.message ?? "")}</span>
                     {!TERMINAL.includes(tx.status) && (
                       <span className="size-3 animate-spin rounded-full border-2 border-teal-dark border-t-transparent" />
                     )}
                   </div>
                   {tx.status === "pending_user_transfer_start" && !paymentHash && (
-                    <Button busy={busy === "Send to the anchor"} onClick={pay} className="self-start">
-                      Send {tx.amount_in} {displayCode(asset)} to the anchor
+                    <Button busy={busy === "send"} onClick={pay} className="self-start">
+                      {t("cashOut.sendButton", { amount: tx.amount_in, code: displayCode(asset) })}
                     </Button>
                   )}
                   {paymentHash && <TxLink hash={paymentHash} />}
                   {tx.amount_out && (
                     <p>
-                      Amount sent to the bank: <strong>{tx.amount_out}</strong>
-                      {tx.amount_fee && <span className="text-muted"> (fee {tx.amount_fee})</span>}
+                      <Trans i18nKey="cashOut.amountOut" values={{ amount: tx.amount_out }} components={{ strong: <strong /> }} />
+                      {tx.amount_fee && <span className="text-muted">{t("cashOut.fee", { fee: tx.amount_fee })}</span>}
                     </p>
                   )}
-                  {tx.external_transaction_id && <p className="text-muted">Bank reference: {tx.external_transaction_id}</p>}
+                  {tx.external_transaction_id && <p className="text-muted">{t("cashOut.bankRef", { ref: tx.external_transaction_id })}</p>}
                   {tx.more_info_url && (
                     <a href={tx.more_info_url} target="_blank" rel="noreferrer" className="font-semibold text-teal-dark hover:underline">
-                      Withdrawal receipt from the anchor ↗
+                      {t("cashOut.receipt")}
                     </a>
                   )}
                   {TERMINAL.includes(tx.status) && (
                     <Button variant="secondary" onClick={() => (setTx(null), setPaymentHash(""))} className="self-start">
-                      New withdrawal
+                      {t("cashOut.newWithdrawal")}
                     </Button>
                   )}
                 </div>

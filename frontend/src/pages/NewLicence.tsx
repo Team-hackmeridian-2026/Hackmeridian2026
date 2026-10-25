@@ -1,26 +1,27 @@
 import { useState, type FormEvent } from "react";
 import { useNavigate } from "react-router-dom";
+import { Trans, useTranslation } from "react-i18next";
 import { ACCOUNTS } from "../config";
 import { escrow, nft, splitter, type Beneficiary } from "../stellar/contracts";
 import { useWallet } from "../stellar/wallet";
 import { useToasts } from "../components/toasts";
-import { DIRECTORY, PersonPicker } from "../components/people";
+import { DIRECTORY, PersonPicker, type PersonKind } from "../components/people";
 import { useAsync } from "../lib/useAsync";
-import { sha256, toHex } from "../lib/format";
+import { formatNumber, sha256, toHex } from "../lib/format";
 import { Badge, Button, Card, ErrorBox, Field, Input, SectionTitle, TxLink } from "../components/ui";
 
 const WINDOWS = [
-  { label: "1 minute (live demo)", seconds: 60 },
-  { label: "1 day", seconds: 86_400 },
-  { label: "7 days (recommended)", seconds: 604_800 },
-];
+  { key: "minute", seconds: 60 },
+  { key: "day", seconds: 86_400 },
+  { key: "week", seconds: 604_800 },
+] as const;
 
-type Step = { label: string; state: "todo" | "running" | "done" | "error"; hash?: string };
+type Step = { key: "mint" | "split" | "round"; state: "todo" | "running" | "done" | "error"; hash?: string };
 
 const INITIAL_STEPS: Step[] = [
-  { label: "Create the licence", state: "todo" },
-  { label: "Lock the royalty split", state: "todo" },
-  { label: "Open the funding round", state: "todo" },
+  { key: "mint", state: "todo" },
+  { key: "split", state: "todo" },
+  { key: "round", state: "todo" },
 ];
 
 const isAddress = (a: string) => /^G[A-Z2-7]{55}$/.test(a);
@@ -46,6 +47,7 @@ function CardTitle({ n, title, subtitle }: { n: number; title: string; subtitle:
 }
 
 function SplitPreview({ parts }: { parts: { label: string; pct: number; color: string }[] }) {
+  const { t } = useTranslation();
   const total = parts.reduce((s, p) => s + (Number.isFinite(p.pct) ? p.pct : 0), 0);
   return (
     <div className="flex flex-col items-start gap-2">
@@ -59,15 +61,16 @@ function SplitPreview({ parts }: { parts: { label: string; pct: number; color: s
         )}
       </div>
       {total === 100 ? (
-        <Badge tone="teal">Total 100 %: every royalty is fully shared</Badge>
+        <Badge tone="teal">{t("newLicence.splitOk")}</Badge>
       ) : (
-        <Badge tone="danger">Total {total} %: it must be exactly 100 %</Badge>
+        <Badge tone="danger">{t("newLicence.splitBad", { total })}</Badge>
       )}
     </div>
   );
 }
 
 export function NewLicence() {
+  const { t } = useTranslation();
   const { signer } = useWallet();
   const { run } = useToasts();
   const navigate = useNavigate();
@@ -87,7 +90,7 @@ export function NewLicence() {
   const [investor, setInvestor] = useState(ACCOUNTS.fund);
   const [arbiter, setArbiter] = useState(ACCOUNTS.arbiter);
   const [milestones, setMilestones] = useState<string[]>(["2", "2", "2"]);
-  const [challengeWindow, setChallengeWindow] = useState(WINDOWS[0].seconds);
+  const [challengeWindow, setChallengeWindow] = useState<number>(WINDOWS[0].seconds);
 
   const [steps, setSteps] = useState<Step[]>(INITIAL_STEPS);
   const [busy, setBusy] = useState(false);
@@ -100,9 +103,9 @@ export function NewLicence() {
 
   const total = milestones.reduce((s, m) => s + (Number(m) || 0), 0);
   const blocker = !signer
-    ? "Connect the university's wallet first."
+    ? t("newLicence.blockers.connect")
     : institution.data === false
-      ? "This account is not a verified institution yet (see Admin)."
+      ? t("newLicence.blockers.notInstitution")
       : null;
 
   const setStep = (i: number, patch: Partial<Step>) =>
@@ -119,18 +122,18 @@ export function NewLicence() {
     setFormError(undefined);
 
     const inventorList = inventors.filter(Boolean);
-    if (!hash) return setFormError("Add the scientific dossier: only its fingerprint goes on-chain.");
-    if (inventorList.length === 0 || !inventorList.every(isAddress)) return setFormError("Check the inventors' addresses.");
-    if (!isAddress(investor) || !isAddress(arbiter)) return setFormError("Choose an investor and an arbiter.");
-    if (universityPct + inventorsPct + investorsPct !== 100) return setFormError("The royalty split must add up to 100 %.");
+    if (!hash) return setFormError(t("newLicence.errors.dossier"));
+    if (inventorList.length === 0 || !inventorList.every(isAddress)) return setFormError(t("newLicence.errors.inventors"));
+    if (!isAddress(investor) || !isAddress(arbiter)) return setFormError(t("newLicence.errors.parties"));
+    if (universityPct + inventorsPct + investorsPct !== 100) return setFormError(t("newLicence.errors.split"));
     if (milestones.length === 0 || milestones.some((m) => !(Number(m) > 0)))
-      return setFormError("Every milestone needs a positive amount.");
+      return setFormError(t("newLicence.errors.milestones"));
 
     setBusy(true);
     setSteps(INITIAL_STEPS);
     try {
       setStep(0, { state: "running" });
-      const minted = await run("Licence created", () =>
+      const minted = await run(t("newLicence.toasts.mint"), () =>
         nft.mint(signer, {
           title,
           inventors: inventorList,
@@ -148,14 +151,14 @@ export function NewLicence() {
         { addr: signer.address, bps: universityPct * 100 },
         ...splitEvenly(inventorList, inventorsPct * 100),
       ].filter((b) => b.bps > 0);
-      const configured = await run("Royalty split locked", () =>
+      const configured = await run(t("newLicence.toasts.split"), () =>
         splitter.configure(signer, licenseId, { fixed, investors_bps: investorsPct * 100 }),
       );
       if (!configured) return setStep(1, { state: "error" });
       setStep(1, { state: "done", hash: configured.hash });
 
       setStep(2, { state: "running" });
-      const created = await run("Funding round opened", () =>
+      const created = await run(t("newLicence.toasts.round"), () =>
         escrow.create(signer, { licenseId, investor, arbiter, amounts: milestones, challengePeriod: challengeWindow }),
       );
       if (!created) return setStep(2, { state: "error" });
@@ -169,41 +172,38 @@ export function NewLicence() {
     }
   }
 
-  const people = (role: string) => DIRECTORY.filter((p) => p.role.startsWith(role));
+  const people = (kind: PersonKind) => DIRECTORY.filter((p) => p.kind === kind);
 
   return (
     <div className="flex flex-col gap-8">
-      <SectionTitle eyebrow="For universities and labs" title="List a patent">
-        <p className="max-w-md text-sm text-muted">
-          Your university stays the owner: you publish a licence, not the patent. Fill in 3 short sections, then confirm
-          3 times in your wallet.
-        </p>
+      <SectionTitle eyebrow={t("newLicence.eyebrow")} title={t("newLicence.title")}>
+        <p className="max-w-md text-sm text-muted">{t("newLicence.intro")}</p>
       </SectionTitle>
 
       <form onSubmit={submit} className="grid gap-6 lg:grid-cols-[1fr_340px]">
         <div className="flex flex-col gap-6">
           <Card className="flex flex-col gap-5">
-            <CardTitle n={1} title="What are you licensing?" subtitle="The terms an industrial partner will see." />
-            <Field label="Patent title">
+            <CardTitle n={1} title={t("newLicence.card1Title")} subtitle={t("newLicence.card1Subtitle")} />
+            <Field label={t("newLicence.patentTitle")}>
               <Input value={title} onChange={(e) => setTitle(e.target.value)} required />
             </Field>
             <div className="grid gap-4 sm:grid-cols-3">
-              <Field label="Research field">
+              <Field label={t("newLicence.field")}>
                 <Input value={field} onChange={(e) => setField(e.target.value)} required />
               </Field>
-              <Field label="Territory">
+              <Field label={t("newLicence.territory")}>
                 <Input value={territory} onChange={(e) => setTerritory(e.target.value)} required />
               </Field>
-              <Field label="Licence length (years)">
+              <Field label={t("newLicence.years")}>
                 <Input type="number" min={1} value={years} onChange={(e) => setYears(e.target.value)} required />
               </Field>
             </div>
             <div className="flex flex-col gap-2">
-              <span className="text-sm font-semibold">Licence type</span>
+              <span className="text-sm font-semibold">{t("newLicence.licenceType")}</span>
               <div className="grid gap-3 sm:grid-cols-2">
                 {[
-                  { value: true, title: "Exclusive", text: "A single industrial partner can use the patent." },
-                  { value: false, title: "Non-exclusive", text: "Several partners can license it in parallel." },
+                  { value: true, title: t("common.exclusive"), text: t("newLicence.exclusiveText") },
+                  { value: false, title: t("common.nonExclusive"), text: t("newLicence.nonExclusiveText") },
                 ].map((o) => (
                   <button
                     key={o.title}
@@ -220,31 +220,31 @@ export function NewLicence() {
               </div>
             </div>
             <div className="flex flex-col gap-2">
-              <span className="text-sm font-semibold">Inventors</span>
+              <span className="text-sm font-semibold">{t("newLicence.inventors")}</span>
               {inventors.map((addr, i) => (
                 <div key={i} className="flex items-start gap-2">
                   <div className="flex-1">
                     <PersonPicker
                       value={addr}
-                      suggested={people("Inventor")}
+                      suggested={people("inventor")}
                       onChange={(a) => setInventors((all) => all.map((x, j) => (j === i ? a : x)))}
                     />
                   </div>
                   {inventors.length > 1 && (
                     <Button type="button" variant="ghost" onClick={() => setInventors((all) => all.filter((_, j) => j !== i))}>
-                      Remove
+                      {t("common.remove")}
                     </Button>
                   )}
                 </div>
               ))}
               <Button type="button" variant="ghost" className="self-start" onClick={() => setInventors((all) => [...all, ""])}>
-                + Add an inventor
+                {t("newLicence.addInventor")}
               </Button>
             </div>
           </Card>
 
           <Card className="flex flex-col gap-5">
-            <CardTitle n={2} title="Prove the research exists" subtitle="Your dossier stays private; only its fingerprint is public." />
+            <CardTitle n={2} title={t("newLicence.card2Title")} subtitle={t("newLicence.card2Subtitle")} />
             <label
               className={`flex cursor-pointer flex-col items-center gap-2 rounded-xl border-2 border-dashed px-6 py-8 text-center transition ${
                 hash ? "border-teal-dark bg-teal/5" : "border-line bg-white hover:border-teal-dark"
@@ -253,66 +253,63 @@ export function NewLicence() {
               <input type="file" className="hidden" onChange={(e) => onFile(e.target.files?.[0] ?? null)} />
               {hash ? (
                 <>
-                  <Badge tone="teal">Fingerprint ready</Badge>
+                  <Badge tone="teal">{t("newLicence.fingerprintReady")}</Badge>
                   <p className="font-semibold">{file?.name}</p>
                   <p className="break-all font-mono text-xs text-muted">SHA-256 {toHex(hash)}</p>
-                  <p className="text-xs text-teal-dark">Click to choose another file</p>
+                  <p className="text-xs text-teal-dark">{t("newLicence.chooseAnother")}</p>
                 </>
               ) : (
                 <>
-                  <p className="font-semibold">Choose the scientific dossier (PDF, any file)</p>
-                  <p className="text-sm text-muted">
-                    It is fingerprinted in your browser and never uploaded. Anyone can later check a copy against the
-                    fingerprint stored on Stellar.
-                  </p>
+                  <p className="font-semibold">{t("newLicence.chooseDossier")}</p>
+                  <p className="text-sm text-muted">{t("newLicence.dossierText")}</p>
                 </>
               )}
             </label>
-            <Field label="Private data room link (optional)" hint="Revealed only to people who sign the NDA on-chain.">
-              <Input value={metadataUri} onChange={(e) => setMetadataUri(e.target.value)} placeholder="https://… or ipfs://…" />
+            <Field label={t("newLicence.dataRoom")} hint={t("newLicence.dataRoomHint")}>
+              <Input value={metadataUri} onChange={(e) => setMetadataUri(e.target.value)} placeholder={t("newLicence.dataRoomPlaceholder")} />
             </Field>
           </Card>
 
           <Card className="flex flex-col gap-5">
-            <CardTitle n={3} title="How is it funded and who earns what?" subtitle="Funds are released step by step; royalties are shared automatically." />
+            <CardTitle n={3} title={t("newLicence.card3Title")} subtitle={t("newLicence.card3Subtitle")} />
 
             <div className="flex flex-col gap-3">
-              <span className="text-sm font-semibold">Royalty split</span>
+              <span className="text-sm font-semibold">{t("newLicence.royaltySplit")}</span>
               <div className="grid gap-4 sm:grid-cols-3">
-                <Field label="University">
+                <Field label={t("newLicence.university")}>
                   <Input type="number" min={0} max={100} value={universityPct} onChange={(e) => setUniversityPct(Number(e.target.value))} />
                 </Field>
-                <Field label="Inventors">
+                <Field label={t("newLicence.inventors")}>
                   <Input type="number" min={0} max={100} value={inventorsPct} onChange={(e) => setInventorsPct(Number(e.target.value))} />
                 </Field>
-                <Field label="Investors">
+                <Field label={t("newLicence.investors")}>
                   <Input type="number" min={0} max={100} value={investorsPct} onChange={(e) => setInvestorsPct(Number(e.target.value))} />
                 </Field>
               </div>
               <SplitPreview
                 parts={[
-                  { label: "University", pct: universityPct, color: "bg-teal-dark" },
-                  { label: "Inventors", pct: inventorsPct, color: "bg-amber-dark" },
-                  { label: "Investors", pct: investorsPct, color: "bg-navy" },
+                  { label: t("newLicence.university"), pct: universityPct, color: "bg-teal-dark" },
+                  { label: t("newLicence.inventors"), pct: inventorsPct, color: "bg-amber-dark" },
+                  { label: t("newLicence.investors"), pct: investorsPct, color: "bg-navy" },
                 ]}
               />
             </div>
 
             <div className="grid gap-4 sm:grid-cols-2">
-              <Field label="Investor" hint="Must have passed KYC on the platform.">
-                <PersonPicker value={investor} onChange={setInvestor} suggested={people("Investor")} />
+              <Field label={t("newLicence.investor")} hint={t("newLicence.investorHint")}>
+                <PersonPicker value={investor} onChange={setInvestor} suggested={people("investor")} />
               </Field>
-              <Field label="Arbiter" hint="Decides if the investor disputes a milestone.">
-                <PersonPicker value={arbiter} onChange={setArbiter} suggested={people("Arbiter")} />
+              <Field label={t("newLicence.arbiter")} hint={t("newLicence.arbiterHint")}>
+                <PersonPicker value={arbiter} onChange={setArbiter} suggested={people("arbiter")} />
               </Field>
             </div>
 
             <div className="flex flex-col gap-2">
-              <span className="text-sm font-semibold">Funding milestones</span>
-              <p className="text-xs text-muted">Each amount is paid to the lab once you prove that milestone, in order.</p>
+              <span className="text-sm font-semibold">{t("newLicence.milestones")}</span>
+              <p className="text-xs text-muted">{t("newLicence.milestonesHint")}</p>
               {milestones.map((m, i) => (
                 <div key={i} className="flex items-center gap-3">
-                  <span className="w-24 text-sm text-muted">Milestone {i + 1}</span>
+                  <span className="w-24 text-sm text-muted">{t("newLicence.milestone", { n: i + 1 })}</span>
                   <Input
                     type="number"
                     min={0}
@@ -324,22 +321,22 @@ export function NewLicence() {
                   <span className="text-sm">EURC</span>
                   {milestones.length > 1 && (
                     <Button type="button" variant="ghost" onClick={() => setMilestones((all) => all.filter((_, j) => j !== i))}>
-                      Remove
+                      {t("common.remove")}
                     </Button>
                   )}
                 </div>
               ))}
               <div className="flex items-center justify-between">
                 <Button type="button" variant="ghost" onClick={() => setMilestones((all) => [...all, "1"])}>
-                  + Add a milestone
+                  {t("newLicence.addMilestone")}
                 </Button>
                 <p className="text-sm">
-                  Total raised: <strong>{total.toLocaleString("en-US")} EURC</strong>
+                  <Trans i18nKey="newLicence.totalRaised" values={{ amount: formatNumber(total) }} components={{ strong: <strong /> }} />
                 </p>
               </div>
             </div>
 
-            <Field label="Time the investor has to dispute a milestone">
+            <Field label={t("newLicence.window")}>
               <select
                 className="rounded-lg border border-line bg-white px-3 py-2 text-sm"
                 value={challengeWindow}
@@ -347,7 +344,7 @@ export function NewLicence() {
               >
                 {WINDOWS.map((w) => (
                   <option key={w.seconds} value={w.seconds}>
-                    {w.label}
+                    {t(`newLicence.windows.${w.key}`)}
                   </option>
                 ))}
               </select>
@@ -357,23 +354,23 @@ export function NewLicence() {
 
         <div className="flex flex-col gap-4 lg:sticky lg:top-6 lg:self-start">
           <Card className="flex flex-col gap-4">
-            <h3 className="font-display text-lg font-semibold">Summary</h3>
+            <h3 className="font-display text-lg font-semibold">{t("newLicence.summary")}</h3>
             <dl className="flex flex-col gap-1 text-sm">
-              <div className="flex justify-between gap-3"><dt className="text-muted">Licence</dt><dd className="text-right">{exclusive ? "Exclusive" : "Non-exclusive"}, {years} years</dd></div>
-              <div className="flex justify-between gap-3"><dt className="text-muted">Funding</dt><dd>{total.toLocaleString("en-US")} EURC in {milestones.length} steps</dd></div>
-              <div className="flex justify-between gap-3"><dt className="text-muted">Royalties</dt><dd>{universityPct} / {inventorsPct} / {investorsPct} %</dd></div>
-              <div className="flex justify-between gap-3"><dt className="text-muted">Dossier</dt><dd>{hash ? "Fingerprinted" : "Missing"}</dd></div>
+              <div className="flex justify-between gap-3"><dt className="text-muted">{t("newLicence.summaryLicence")}</dt><dd className="text-right">{exclusive ? t("common.exclusive") : t("common.nonExclusive")}, {t("common.years", { count: Number(years) })}</dd></div>
+              <div className="flex justify-between gap-3"><dt className="text-muted">{t("newLicence.summaryFunding")}</dt><dd>{t("newLicence.summaryFundingValue", { amount: formatNumber(total), count: milestones.length })}</dd></div>
+              <div className="flex justify-between gap-3"><dt className="text-muted">{t("newLicence.summaryRoyalties")}</dt><dd>{universityPct} / {inventorsPct} / {investorsPct} %</dd></div>
+              <div className="flex justify-between gap-3"><dt className="text-muted">{t("newLicence.summaryDossier")}</dt><dd>{hash ? t("newLicence.fingerprinted") : t("newLicence.missing")}</dd></div>
             </dl>
             <div className="border-t border-line pt-4">
-              <p className="mb-3 text-sm font-semibold">Your wallet will ask you to confirm:</p>
+              <p className="mb-3 text-sm font-semibold">{t("newLicence.walletWillAsk")}</p>
               <ol className="flex flex-col gap-3">
                 {steps.map((s, i) => (
-                  <li key={s.label} className="flex flex-col gap-1">
+                  <li key={s.key} className="flex flex-col gap-1">
                     <div className="flex items-center justify-between gap-2 text-sm">
-                      <span>{i + 1}. {s.label}</span>
-                      {s.state === "running" && <Badge tone="amber">Confirm in wallet…</Badge>}
-                      {s.state === "done" && <Badge tone="teal">Done</Badge>}
-                      {s.state === "error" && <Badge tone="danger">Failed</Badge>}
+                      <span>{i + 1}. {t(`newLicence.steps.${s.key}`)}</span>
+                      {s.state === "running" && <Badge tone="amber">{t("newLicence.confirmInWallet")}</Badge>}
+                      {s.state === "done" && <Badge tone="teal">{t("newLicence.done")}</Badge>}
+                      {s.state === "error" && <Badge tone="danger">{t("newLicence.failed")}</Badge>}
                     </div>
                     {s.hash && <TxLink hash={s.hash} />}
                   </li>
@@ -382,7 +379,7 @@ export function NewLicence() {
             </div>
             {formError && <ErrorBox message={formError} />}
             <Button type="submit" busy={busy} disabled={Boolean(blocker)}>
-              List the patent
+              {t("newLicence.submit")}
             </Button>
             {blocker && <p className="text-xs text-muted">{blocker}</p>}
           </Card>

@@ -1,4 +1,5 @@
 import { DECIMALS } from "../config";
+import i18n, { currentLocale } from "../i18n";
 
 const UNIT = 10n ** BigInt(DECIMALS);
 
@@ -17,7 +18,9 @@ export function fromUnits(units: bigint): string {
   const abs = negative ? -units : units;
   const whole = abs / UNIT;
   const frac = (abs % UNIT).toString().padStart(DECIMALS, "0").replace(/0+$/, "");
-  return `${negative ? "-" : ""}${whole.toLocaleString("en-US")}${frac ? "." + frac.slice(0, 2) : ""}`;
+  const locale = currentLocale();
+  const decimal = (1.5).toLocaleString(locale).charAt(1);
+  return `${negative ? "-" : ""}${whole.toLocaleString(locale)}${frac ? decimal + frac.slice(0, 2) : ""}`;
 }
 
 export function eurc(units: bigint): string {
@@ -39,7 +42,7 @@ export async function sha256(data: Blob | string): Promise<Uint8Array> {
 }
 
 export function formatDate(seconds: bigint | number): string {
-  return new Date(Number(seconds) * 1000).toLocaleString("en-GB", {
+  return new Date(Number(seconds) * 1000).toLocaleString(currentLocale(), {
     day: "numeric",
     month: "short",
     year: "numeric",
@@ -48,14 +51,20 @@ export function formatDate(seconds: bigint | number): string {
   });
 }
 
+/** A plain number in the current language's format (e.g. "1,234.5" or "1 234,5"). */
+export function formatNumber(value: number | string): string {
+  return Number(value).toLocaleString(currentLocale());
+}
+
 export function formatDuration(seconds: number): string {
-  if (seconds <= 0) return "0 s";
+  const u = (unit: "day" | "hour" | "minute" | "second") => i18n.t(`units.${unit}`);
+  if (seconds <= 0) return `0 ${u("second")}`;
   const d = Math.floor(seconds / 86400);
   const h = Math.floor((seconds % 86400) / 3600);
   const m = Math.floor((seconds % 3600) / 60);
   const s = Math.floor(seconds % 60);
-  if (d) return `${d} d ${h} h`;
-  if (h) return `${h} h ${m} min`;
-  if (m) return `${m} min ${s} s`;
-  return `${s} s`;
+  if (d) return `${d} ${u("day")} ${h} ${u("hour")}`;
+  if (h) return `${h} ${u("hour")} ${m} ${u("minute")}`;
+  if (m) return `${m} ${u("minute")} ${s} ${u("second")}`;
+  return `${s} ${u("second")}`;
 }
