@@ -76,7 +76,8 @@
     "awaiting": "En attente d'une levée",
     "open": "Ouvert au financement",
     "full": "Entièrement financé",
-    "milestone": "Jalon {{current}} sur {{total}}"
+    "milestone": "Jalon {{current}} sur {{total}}",
+    "done": "Tous les jalons réglés"
   },
   "marketplace": {
     "licenceLine": "{{licence}} · {{territory}} · {{duration}}",
@@ -208,7 +209,8 @@
       "Submitted": "Preuve soumise",
       "Disputed": "Contesté",
       "Released": "Fonds débloqués",
-      "Refunded": "Remboursé"
+      "Refunded": "Remboursé",
+      "Split": "Partagé par l'arbitre"
     },
     "proof": "preuve SHA-256 {{hash}}",
     "windowOpen": "Délai de contestation : il reste {{time}} à l'investisseur pour contester.",
@@ -228,7 +230,8 @@
       "refund": "Jalon remboursé",
       "fund": "Fonds bloqués dans l'escrow",
       "pay": "Redevance payée et répartie",
-      "claim": "Redevances retirées"
+      "claim": "Redevances retirées",
+      "split": "Jalon partagé"
     },
     "round": "Levée de fonds n° {{id}}",
     "roundSummary_one": "{{amount}} en {{count}} jalon · délai de contestation {{window}}",
@@ -254,7 +257,12 @@
     "owner": "Propriétaire (université)",
     "inventors": "Inventeurs",
     "listedOn": "Déposée le",
-    "noRound": "Pas encore de levée de fonds."
+    "noRound": "Pas encore de levée de fonds.",
+    "splitResult": "{{lab}} % versés au labo, {{refund}} % remboursés à l'investisseur",
+    "arbiterTitle": "Décision de l'arbitre",
+    "arbiterHelp": "La recherche peut échouer sans faute de personne. Payez le labo pour le travail réalisé et remboursez le reste.",
+    "labShare": "Labo : {{lab}} % · Remboursement investisseur : {{refund}} %",
+    "split": "Appliquer ce partage"
   },
   "admin": {
     "address": "Adresse Stellar",
@@ -359,7 +367,8 @@
       "8": "Les jalons précédents doivent d'abord être réglés.",
       "9": "Le délai de contestation est écoulé.",
       "10": "Le délai de contestation est encore ouvert.",
-      "11": "Configuration invalide."
+      "11": "Configuration invalide.",
+      "12": "La part du labo doit être comprise entre 0 et 100 %."
     },
     "contract": "Erreur du contrat n° {{code}}",
     "balance": "Pas assez d'EURC sur ce compte.",

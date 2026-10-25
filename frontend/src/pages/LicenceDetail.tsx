@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import { Trans, useTranslation } from "react-i18next";
-import { escrow, nft, splitter, type License, type Milestone, type Project } from "../stellar/contracts";
+import { escrow, isSettled, nft, splitter, type License, type Milestone, type Project } from "../stellar/contracts";
 import { useWallet, type Signer } from "../stellar/wallet";
 import { useToasts } from "../components/toasts";
 import { useAsync } from "../lib/useAsync";
@@ -97,7 +97,64 @@ const STATUS_TONE = {
   Disputed: "danger",
   Released: "teal",
   Refunded: "navy",
+  Split: "amber",
 } as const;
+
+/** The arbiter's choice: pay the lab in full, refund in full, or share the milestone. */
+function ArbiterPanel({
+  busy,
+  onDecide,
+}: {
+  busy: string | null;
+  onDecide: (labPct: number) => void;
+}) {
+  const { t } = useTranslation();
+  const [labPct, setLabPct] = useState(50);
+
+  return (
+    <div className="flex w-full flex-col gap-3 rounded-lg border border-amber/40 bg-amber/5 p-4">
+      <div>
+        <p className="text-sm font-semibold">{t("licence.arbiterTitle")}</p>
+        <p className="text-xs text-muted">{t("licence.arbiterHelp")}</p>
+      </div>
+      <div className="flex flex-wrap gap-2">
+        <Button busy={busy === "approve"} onClick={() => onDecide(100)}>
+          {t("licence.approve")}
+        </Button>
+        <Button variant="danger" busy={busy === "refund"} onClick={() => onDecide(0)}>
+          {t("licence.reject")}
+        </Button>
+      </div>
+      <div className="flex flex-col gap-2 border-t border-line pt-3">
+        <input
+          type="range"
+          min={0}
+          max={100}
+          step={5}
+          value={labPct}
+          onChange={(e) => setLabPct(Number(e.target.value))}
+          className="accent-teal-dark"
+          aria-label={t("licence.labShare", { lab: labPct, refund: 100 - labPct })}
+        />
+        <div className="flex h-2 overflow-hidden rounded-full">
+          <div className="bg-teal-dark" style={{ width: `${labPct}%` }} />
+          <div className="bg-navy" style={{ width: `${100 - labPct}%` }} />
+        </div>
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <p className="text-sm">{t("licence.labShare", { lab: labPct, refund: 100 - labPct })}</p>
+          <Button
+            variant="secondary"
+            busy={busy === "split"}
+            disabled={labPct === 0 || labPct === 100}
+            onClick={() => onDecide(labPct)}
+          >
+            {t("licence.split")}
+          </Button>
+        </div>
+      </div>
+    </div>
+  );
+}
 
 function MilestoneRow({
   project,
@@ -125,11 +182,14 @@ function MilestoneRow({
   const isArbiter = me === project.arbiter;
   const previousSettled = project.milestones
     .slice(0, index)
-    .every((m) => m.status === "Released" || m.status === "Refunded");
+    .every((m) => isSettled(m.status));
   const deadline = Number(milestone.submitted_at) + Number(project.challenge_period);
   const windowOpen = milestone.status === "Submitted" && now < deadline;
 
-  async function act(key: "proof" | "dispute" | "release" | "approve" | "refund", action: () => ReturnType<typeof escrow.release>) {
+  async function act(
+    key: "proof" | "dispute" | "release" | "approve" | "refund" | "split",
+    action: () => ReturnType<typeof escrow.release>,
+  ) {
     setBusy(key);
     if (await run(t(`licence.toasts.${key}`), action)) onDone();
     setBusy(null);
@@ -149,6 +209,11 @@ function MilestoneRow({
 
       {milestone.proof_hash && (
         <p className="break-all font-mono text-xs text-muted">{t("licence.proof", { hash: toHex(milestone.proof_hash) })}</p>
+      )}
+      {milestone.status === "Split" && (
+        <p className="text-sm text-muted">
+          {t("licence.splitResult", { lab: milestone.lab_bps / 100, refund: 100 - milestone.lab_bps / 100 })}
+        </p>
       )}
       {milestone.status === "Submitted" && (
         <p className="text-sm text-muted">
@@ -191,18 +256,14 @@ function MilestoneRow({
             </Button>
           )}
           {isArbiter && milestone.status === "Disputed" && (
-            <>
-              <Button busy={busy === "approve"} onClick={() => act("approve", () => escrow.resolve(signer, project.id, index, true))}>
-                {t("licence.approve")}
-              </Button>
-              <Button
-                variant="danger"
-                busy={busy === "refund"}
-                onClick={() => act("refund", () => escrow.resolve(signer, project.id, index, false))}
-              >
-                {t("licence.reject")}
-              </Button>
-            </>
+            <ArbiterPanel
+              busy={busy}
+              onDecide={(labPct) =>
+                act(labPct === 100 ? "approve" : labPct === 0 ? "refund" : "split", () =>
+                  escrow.resolvePartial(signer, project.id, index, labPct),
+                )
+              }
+            />
           )}
         </div>
       )}

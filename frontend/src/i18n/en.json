@@ -76,7 +76,8 @@
     "awaiting": "Awaiting funding round",
     "open": "Open for funding",
     "full": "Fully funded",
-    "milestone": "Milestone {{current}} of {{total}}"
+    "milestone": "Milestone {{current}} of {{total}}",
+    "done": "All milestones settled"
   },
   "marketplace": {
     "licenceLine": "{{licence}} · {{territory}} · {{duration}}",
@@ -208,7 +209,8 @@
       "Submitted": "Proof submitted",
       "Disputed": "Disputed",
       "Released": "Funds released",
-      "Refunded": "Refunded"
+      "Refunded": "Refunded",
+      "Split": "Split by the arbiter"
     },
     "proof": "proof SHA-256 {{hash}}",
     "windowOpen": "Challenge window: {{time}} left for the investor to dispute.",
@@ -228,7 +230,8 @@
       "refund": "Milestone refunded",
       "fund": "Funds locked in escrow",
       "pay": "Royalty paid and split",
-      "claim": "Royalties withdrawn"
+      "claim": "Royalties withdrawn",
+      "split": "Milestone split"
     },
     "round": "Funding round #{{id}}",
     "roundSummary_one": "{{amount}} in {{count}} milestone · challenge window {{window}}",
@@ -254,7 +257,12 @@
     "owner": "Owner (university)",
     "inventors": "Inventors",
     "listedOn": "Listed on",
-    "noRound": "No funding round yet."
+    "noRound": "No funding round yet.",
+    "splitResult": "{{lab}} % paid to the lab, {{refund}} % refunded to the investor",
+    "arbiterTitle": "Arbiter decision",
+    "arbiterHelp": "Research can fail without anyone being at fault. Pay the lab for the work done and refund the rest.",
+    "labShare": "Lab: {{lab}} % · Investor refund: {{refund}} %",
+    "split": "Apply this split"
   },
   "admin": {
     "address": "Stellar address",
@@ -359,7 +367,8 @@
       "8": "Previous milestones must be settled first.",
       "9": "The challenge window is closed.",
       "10": "The challenge window is still open.",
-      "11": "Invalid configuration."
+      "11": "Invalid configuration.",
+      "12": "The lab's share must be between 0 and 100 %."
     },
     "contract": "Contract error #{{code}}",
     "balance": "Not enough EURC on this account.",

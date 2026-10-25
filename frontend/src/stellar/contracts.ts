@@ -25,7 +25,7 @@ export type License = {
   created_at: bigint;
 };
 
-export type MilestoneStatus = "Pending" | "Submitted" | "Disputed" | "Released" | "Refunded";
+export type MilestoneStatus = "Pending" | "Submitted" | "Disputed" | "Released" | "Refunded" | "Split";
 
 export type Milestone = {
   amount: bigint;
@@ -33,7 +33,21 @@ export type Milestone = {
   proof_hash?: Buffer;
   submitted_at: bigint;
   dispute_reason?: Buffer;
+  /** Share of the milestone paid to the lab, in basis points (10 000 = all). */
+  lab_bps: number;
 };
+
+/** A settled milestone no longer blocks the next one. */
+export function isSettled(status: MilestoneStatus): boolean {
+  return status === "Released" || status === "Refunded" || status === "Split";
+}
+
+/** Gross amount of a milestone that went to the lab. */
+export function paidToLab(m: Milestone): bigint {
+  if (m.status === "Released") return m.amount;
+  if (m.status === "Split") return (m.amount * BigInt(m.lab_bps)) / 10_000n;
+  return 0n;
+}
 
 export type Project = {
   id: bigint;
@@ -209,6 +223,9 @@ export const escrow = {
     write(CONTRACTS.escrow, "release", { project_id: projectId, index }, signer),
   resolve: (signer: Signer, projectId: bigint, index: number, approve: boolean) =>
     write(CONTRACTS.escrow, "resolve", { project_id: projectId, index, approve }, signer),
+  /** labPct: share paid to the lab (0–100); the rest is refunded to the investor. */
+  resolvePartial: (signer: Signer, projectId: bigint, index: number, labPct: number) =>
+    write(CONTRACTS.escrow, "resolve_partial", { project_id: projectId, index, lab_bps: Math.round(labPct * 100) }, signer),
 };
 
 export const splitter = {
