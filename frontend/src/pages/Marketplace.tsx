@@ -73,7 +73,7 @@ export function Marketplace() {
     <div className="flex flex-col gap-12">
       <section className="flex flex-col gap-6 rounded-3xl bg-navy px-8 py-12 text-paper md:px-12">
         <p className="text-xs font-semibold uppercase tracking-widest text-teal">{t("marketplace.heroEyebrow")}</p>
-        <h1 className="max-w-3xl font-display text-4xl font-bold leading-tight md:text-5xl">{t("marketplace.heroTitle")}</h1>
+        <h1 className="max-w-3xl break-words font-display text-3xl font-bold leading-tight sm:text-4xl md:text-5xl">{t("marketplace.heroTitle")}</h1>
         <p className="max-w-2xl text-paper/70">{t("marketplace.heroText")}</p>
         <div className="flex flex-wrap gap-3">
           <Link to="/new">

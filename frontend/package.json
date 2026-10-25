@@ -6,7 +6,8 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc --noEmit && vite build",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "test:i18n": "node --test tests/i18n.test.mjs"
   },
   "dependencies": {
     "@creit.tech/stellar-wallets-kit": "2.7.1",

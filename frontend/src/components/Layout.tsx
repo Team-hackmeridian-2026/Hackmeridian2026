@@ -98,12 +98,12 @@ export function Layout() {
     <div className="flex min-h-screen flex-col">
       <header className="bg-navy text-paper">
         <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-4 px-6 py-4">
-          <div className="flex items-center gap-8">
+          <div className="flex min-w-0 flex-wrap items-center gap-4 lg:gap-8">
             <NavLink to="/" className="flex items-center gap-2 font-display text-xl font-bold">
               <span className="inline-block size-3 rounded-full bg-teal" />
               BioLicensing
             </NavLink>
-            <nav className="flex gap-1">
+            <nav className="flex flex-wrap gap-1">
               {NAV.map((item) => (
                 <NavLink
                   key={item.to}
