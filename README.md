@@ -14,6 +14,17 @@ Theme: **Stellar Composed**
 | Demo video | _[link]_ |
 | Network | Stellar **testnet** (all amounts are test assets) |
 
+![BioLicensing home page: hero with the binary DNA helix](docs/screenshots/home.png)
+
+| Licences, funded milestone by milestone | Licence page: terms, dossier, royalties |
+| --- | --- |
+| ![Licence table with funding progress](docs/screenshots/licences.png) | ![Licence page in the light theme](docs/screenshots/licence.png) |
+
+<p align="center"><img src="docs/screenshots/mobile.png" alt="Home page and licence page on a phone" width="560"></p>
+
+<sub>Screenshots taken with sample licences; the live testnet data may differ.
+Dark theme by default, light theme available. English, French and Portuguese.</sub>
+
 ---
 
 ## The problem
@@ -240,8 +251,10 @@ Everything after the `pre-hackathon` tag
   milestone between the lab and the investor (4 new contract tests, slider in
   the arbiter's panel)
 - **UX**: listing form usable without any crypto knowledge
+- **Design**: Figma redesign, dark and light themes, binary DNA helix (Three.js)
+  and interactive molecules made of 0s and 1s, mobile layout
 - **Collaboration**: team workflow ([CONTRIBUTING.md](CONTRIBUTING.md)), i18n
-  and public deployment in progress
+  (English, French, Portuguese) and public deployment on Vercel
 
 ## Team
 
