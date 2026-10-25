@@ -8,6 +8,7 @@ import { useAsync } from "../lib/useAsync";
 import { formatNumber, shortAddress } from "../lib/format";
 import { Button } from "./ui";
 import { Logo } from "./Logo";
+import { BioBackground } from "./BioBackground";
 import { useTheme } from "../lib/theme";
 
 const NAV = [
@@ -126,7 +127,8 @@ function ThemeToggle() {
 export function Layout() {
   const { t } = useTranslation();
   return (
-    <div className="flex min-h-screen flex-col">
+    <div className="relative isolate flex min-h-screen flex-col">
+      <BioBackground />
       <header className="sticky top-0 z-40 border-b border-white/10 bg-navy/95 text-paper backdrop-blur-md">
         <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-4 px-6 py-4">
           <div className="flex min-w-0 flex-wrap items-center gap-4 lg:gap-8">
