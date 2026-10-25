@@ -16,3 +16,6 @@ dist/
 .DS_Store
 .vscode/
 .idea/
+
+# Deployment state (local only)
+deployments/*.env
