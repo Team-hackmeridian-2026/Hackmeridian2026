@@ -296,8 +296,12 @@ Everything after the `pre-hackathon` tag
 ([see the diff](https://github.com/Team-hackmeridian-2026/Hackmeridian2026/compare/pre-hackathon...main)):
 
 - **Front-end**: marketplace, patent listing, licence page (milestones,
-  disputes, arbitration, royalties, NDA, dossier check), admin page
-- **Wallets**: Stellar Wallets Kit integration
+  disputes, arbitration, royalties, NDA, dossier check), admin page with an
+  account checker (funding, EURC trustline, institution, KYC) that works
+  without a wallet
+- **Wallets**: Stellar Wallets Kit integration, wallet kept connected after a
+  refresh, and clear translated messages when Freighter is locked, on the
+  wrong network or on another account
 - **Circle EURC**: switched from a self-issued test token to Circle's official
   testnet EURC
 - **Bank cash-out**: anchor integration (SEP-1, SEP-10, SEP-24)
@@ -310,10 +314,11 @@ Everything after the `pre-hackathon` tag
 - **Design**: Figma redesign, dark and light themes, binary DNA helix (Three.js)
   and interactive molecules made of 0s and 1s, mobile layout
 - **Collaboration**: team workflow ([CONTRIBUTING.md](CONTRIBUTING.md)), i18n
-  (English, French, Portuguese) and public deployment on Vercel
+  (English, French, Portuguese), public deployment on Vercel and link previews
+  for Discord, Slack, X and LinkedIn
 
 ## Team
 
 - **FASSINOU Aziz**: smart contracts, front-end, Stellar integrations
 - **CHAFI Marwane**: multilingual site, pitch
-- **Antoine**: deployment, pitch
+- **Antoine**: deployment, design and front-end, wallet experience, admin tools, pitch
