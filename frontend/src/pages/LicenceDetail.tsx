@@ -32,7 +32,7 @@ function DossierCheck({ license }: { license: License }) {
         <span className="font-semibold">{t("licence.verifyFile")}</span>
         <input
           type="file"
-          className="text-xs"
+          className="text-xs text-muted file:mr-3 file:cursor-pointer file:rounded-full file:border file:border-line file:bg-card file:px-3.5 file:py-1.5 file:text-xs file:font-semibold file:text-ink hover:file:border-ink/25"
           onChange={async (e) => {
             const f = e.target.files?.[0];
             if (!f) return setResult(null);

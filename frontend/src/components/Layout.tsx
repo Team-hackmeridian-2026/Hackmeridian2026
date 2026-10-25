@@ -65,18 +65,24 @@ function WalletArea() {
         </select>
       )}
       {signer ? (
-        <div className="flex items-center gap-3 rounded-full border border-line bg-card py-1.5 pr-4 pl-1.5 text-sm text-ink shadow-pill">
+        <div
+          className="flex items-center gap-2.5 rounded-full border border-line bg-card py-1 pr-1 pl-1 text-sm whitespace-nowrap text-ink shadow-pill"
+          title={signer.role ? t(`roles.${signer.role}`) : t("wallet.wallet")}
+        >
           <span aria-hidden className="size-7 shrink-0 rounded-full bg-[conic-gradient(from_120deg,var(--color-dna-indigo),var(--color-dna-pink),var(--color-dna-yellow),var(--color-dna-indigo))]" />
-          <div className="leading-tight">
-            <p className="text-[11px] text-muted">{signer.role ? t(`roles.${signer.role}`) : t("wallet.wallet")}</p>
-            <p className="font-mono text-xs">{shortAddress(signer.address)}</p>
-          </div>
-          <div className="border-l border-line pl-3 leading-tight">
-            <p className="text-[11px] text-muted">{t("wallet.balance")}</p>
-            <p className="text-xs font-semibold">{balance.data ? `${formatNumber(balance.data.balance)} EURC` : "—"}</p>
-          </div>
-          <button onClick={disconnect} className="text-xs font-medium text-muted transition duration-200 hover:text-ink">
-            {t("wallet.disconnect")}
+          <span className="font-mono text-xs">{shortAddress(signer.address)}</span>
+          <span className="rounded-full bg-subtle px-2.5 py-1 text-xs font-semibold" aria-label={t("wallet.balance")}>
+            {balance.data ? `${formatNumber(balance.data.balance)} EURC` : "—"}
+          </span>
+          <button
+            onClick={disconnect}
+            aria-label={t("wallet.disconnect")}
+            title={t("wallet.disconnect")}
+            className="flex size-7 items-center justify-center rounded-full text-muted transition duration-200 hover:bg-subtle hover:text-ink"
+          >
+            <svg viewBox="0 0 24 24" className="size-4" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+              <path d="M15 4h3a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2h-3M10 17l5-5-5-5M15 12H3" />
+            </svg>
           </button>
         </div>
       ) : (
@@ -125,9 +131,9 @@ function ThemeToggle() {
   );
 }
 
-/** True from the `lg` breakpoint up, where the full header fits on one line. */
+/** True from 1200 px up, where the full header (nav + language + theme + wallet) fits on one line. */
 function useIsDesktop(): boolean {
-  const query = "(min-width: 1024px)";
+  const query = "(min-width: 1200px)";
   const [desktop, setDesktop] = useState(() => window.matchMedia(query).matches);
   useEffect(() => {
     const media = window.matchMedia(query);
@@ -184,7 +190,7 @@ export function Layout() {
     <div className="flex min-h-screen flex-col">
       <header className="sticky top-0 z-40 border-b border-line bg-canvas/85 backdrop-blur-md">
         <div className="mx-auto max-w-6xl px-4 sm:px-6">
-          <div className="flex items-center justify-between gap-4 py-3 lg:grid lg:grid-cols-[1fr_auto_1fr] lg:py-3.5">
+          <div className="flex items-center justify-between gap-4 py-3 min-[1200px]:grid min-[1200px]:grid-cols-[auto_1fr_auto] min-[1200px]:py-3.5">
             <div className="flex min-w-0 items-center gap-3">
               <NavLink to="/" aria-label={t("brand.home")} className="shrink-0">
                 <Logo />
@@ -194,7 +200,7 @@ export function Layout() {
               </span>
             </div>
             {desktop && (
-              <nav aria-label={t("nav.main")} className="flex gap-1 rounded-full bg-subtle p-1">
+              <nav aria-label={t("nav.main")} className="flex gap-1 justify-self-center rounded-full bg-subtle p-1">
                 {links(false)}
               </nav>
             )}
