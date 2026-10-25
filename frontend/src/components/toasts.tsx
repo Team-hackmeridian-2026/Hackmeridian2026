@@ -42,16 +42,16 @@ export function ToastProvider({ children }: { children: ReactNode }) {
   return (
     <ToastContext.Provider value={{ push, run }}>
       {children}
-      <div className="fixed right-4 bottom-4 z-50 flex w-96 max-w-[calc(100vw-2rem)] flex-col gap-2">
+      <div role="status" aria-live="polite" className="fixed right-4 bottom-4 z-50 flex w-96 max-w-[calc(100vw-2rem)] flex-col gap-2">
         {toasts.map((toast) => (
           <div
             key={toast.id}
-            className={`rounded-xl border px-4 py-3 text-sm shadow-lg ${
+            className={`rounded-xl border px-4 py-3 text-sm shadow-card ${
               toast.kind === "error"
-                ? "border-danger/30 bg-white text-danger"
+                ? "border-danger/40 bg-elevated text-danger"
                 : toast.kind === "success"
-                  ? "border-teal/40 bg-white text-ink"
-                  : "border-line bg-white text-ink"
+                  ? "border-teal/40 bg-elevated text-ink"
+                  : "border-line bg-elevated text-ink"
             }`}
           >
             <div className="flex items-start justify-between gap-3">

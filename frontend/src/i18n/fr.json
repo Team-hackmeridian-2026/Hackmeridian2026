@@ -2,6 +2,10 @@
   "language": {
     "label": "Langue"
   },
+  "theme": {
+    "toLight": "Passer au thème clair",
+    "toDark": "Passer au thème sombre"
+  },
   "nav": {
     "marketplace": "Marché",
     "newLicence": "Déposer un brevet",

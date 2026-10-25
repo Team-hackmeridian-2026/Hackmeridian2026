@@ -136,10 +136,10 @@ function MilestoneRow({
   }
 
   return (
-    <li className="flex flex-col gap-3 rounded-xl border border-line bg-white p-4">
+    <li className="flex flex-col gap-3 rounded-xl border border-line bg-field p-4">
       <div className="flex flex-wrap items-center justify-between gap-2">
         <div className="flex items-center gap-3">
-          <span className="flex size-8 items-center justify-center rounded-full bg-paper font-display font-semibold">
+          <span className="flex size-8 items-center justify-center rounded-full bg-subtle font-display font-semibold">
             {index + 1}
           </span>
           <span className="font-semibold">{eurc(milestone.amount)}</span>
@@ -310,7 +310,7 @@ function Royalties({ license, signer, version }: { license: License; signer: Sig
         : shortAddress(addr);
   const parts = [
     ...d.config.fixed.map((b, i) => ({ label: name(b.addr), bps: b.bps, color: i === 0 ? "bg-teal" : "bg-amber" })),
-    { label: t("licence.investorsProRata"), bps: d.config.investors_bps, color: "bg-navy" },
+    { label: t("licence.investorsProRata"), bps: d.config.investors_bps, color: "bg-lime" },
   ].filter((p) => p.bps > 0);
 
   return (
@@ -318,7 +318,7 @@ function Royalties({ license, signer, version }: { license: License; signer: Sig
       <h3 className="font-display text-lg font-semibold">{t("licence.royalties")}</h3>
       <div className="flex h-8 overflow-hidden rounded-lg">
         {parts.map((p) => (
-          <div key={p.label} className={`${p.color} flex items-center px-2 text-xs font-semibold text-white`} style={{ width: `${p.bps / 100}%` }}>
+          <div key={p.label} className={`${p.color} flex items-center px-2 text-xs font-semibold text-navy`} style={{ width: `${p.bps / 100}%` }}>
             {p.bps / 100}%
           </div>
         ))}
@@ -350,7 +350,7 @@ function Royalties({ license, signer, version }: { license: License; signer: Sig
               {t("licence.payInEurc")}
             </Button>
           </div>
-          <div className="flex items-center justify-between gap-3 rounded-lg bg-paper px-3 py-2 text-sm">
+          <div className="flex items-center justify-between gap-3 rounded-lg bg-subtle px-3 py-2 text-sm">
             <span>
               <Trans i18nKey="licence.yourShare" values={{ amount: eurc(d.claimable) }} components={{ strong: <strong /> }} />
               {d.shares > 0n && d.totalShares > 0n && (

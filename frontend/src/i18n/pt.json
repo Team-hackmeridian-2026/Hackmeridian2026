@@ -2,6 +2,10 @@
   "language": {
     "label": "Idioma"
   },
+  "theme": {
+    "toLight": "Mudar para o tema claro",
+    "toDark": "Mudar para o tema escuro"
+  },
   "nav": {
     "marketplace": "Mercado",
     "newLicence": "Registar uma patente",

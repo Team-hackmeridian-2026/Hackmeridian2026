@@ -177,7 +177,7 @@ export function CashOut() {
                       i < active || (i === 3 && tx?.status === "completed")
                         ? "bg-teal text-navy"
                         : i === active
-                          ? "bg-navy text-paper"
+                          ? "bg-teal/15 text-teal-dark ring-1 ring-teal"
                           : "bg-line text-muted"
                     }`}
                   >
@@ -194,7 +194,7 @@ export function CashOut() {
               <label className="flex flex-col gap-1.5 text-sm">
                 <span className="font-semibold">{t("cashOut.asset")}</span>
                 <select
-                  className="rounded-lg border border-line bg-white px-3 py-2"
+                  className="rounded-lg border border-line bg-field px-3 py-2"
                   value={asset.code}
                   disabled={Boolean(tx)}
                   onChange={(e) => setAssetCode(e.target.value)}

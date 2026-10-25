@@ -1,23 +1,101 @@
 @import "tailwindcss";
 
+/*
+ * BioLicensing design tokens.
+ * Light values live in @theme (Tailwind turns them into utilities such as bg-card,
+ * text-muted…); the dark theme, used by default, overrides the same variables.
+ *
+ * Roles:
+ *   canvas      page background
+ *   card        content surfaces (slightly translucent over the animated background)
+ *   elevated    opaque surfaces that float (toasts, menus)
+ *   field       inputs, selects and inner list items
+ *   subtle      small inset chips inside cards
+ *   line        borders and tracks
+ *   ink/muted   main and secondary text
+ *   navy(-2)    strong dark-green surfaces (header, hero), dark in both themes
+ *   paper       light text used on navy surfaces, same in both themes
+ *   teal        brand fill (emerald → mint), with navy text on it
+ *   teal-dark   brand colour for text, links and borders on cards
+ *   amber/lime/danger  status and chart colours
+ */
 @theme {
-  --color-navy: #0f1b2d;
-  --color-navy-2: #17283f;
-  --color-paper: #f4f6f1;
-  --color-card: #fcfdfb;
-  --color-line: #dce3da;
-  --color-ink: #0f1b2d;
-  --color-muted: #44505f;
-  --color-teal: #2ec4a6;
-  --color-teal-dark: #0e7c68;
+  --color-canvas: #f2f7f3;
+  --color-card: rgb(255 255 255 / 0.84);
+  --color-elevated: #ffffff;
+  --color-field: #ffffff;
+  --color-subtle: #e9f2ec;
+  --color-line: #d3e3d8;
+  --color-ink: #0b1f17;
+  --color-muted: #44594d;
+  --color-navy: #072a1e;
+  --color-navy-2: #0e3a2a;
+  --color-paper: #ecf7f1;
+  --color-teal: #10b981;
+  --color-teal-dark: #047857;
   --color-amber: #f2994a;
-  --color-amber-dark: #b35a12;
+  --color-amber-dark: #a14d0c;
+  --color-lime: #84cc16;
   --color-danger: #b42318;
 
   --font-sans: "IBM Plex Sans", ui-sans-serif, system-ui, sans-serif;
   --font-display: "Space Grotesk", ui-sans-serif, system-ui, sans-serif;
+
+  --shadow-card: 0 1px 2px rgb(6 34 24 / 0.06), 0 8px 24px -12px rgb(6 34 24 / 0.18);
+  --shadow-glow: 0 0 0 1px rgb(16 185 129 / 0.25), 0 10px 30px -10px rgb(16 185 129 / 0.45);
+
+  --ease-out-soft: cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+:root[data-theme="dark"] {
+  --color-canvas: #050e0a;
+  --color-card: rgb(12 29 22 / 0.78);
+  --color-elevated: #0f241c;
+  --color-field: #0a1a14;
+  --color-subtle: #11281f;
+  --color-line: #1f3d31;
+  --color-ink: #e6f4ec;
+  --color-muted: #9ab8a9;
+  --color-navy: #0a1f17;
+  --color-navy-2: #133126;
+  --color-teal: #34d399;
+  --color-teal-dark: #6ee7b7;
+  --color-amber: #f6b25a;
+  --color-amber-dark: #fcc77f;
+  --color-lime: #a3e635;
+  --color-danger: #f87171;
+
+  --shadow-card: 0 1px 0 rgb(255 255 255 / 0.03) inset, 0 12px 32px -16px rgb(0 0 0 / 0.6);
+  --shadow-glow: 0 0 0 1px rgb(52 211 153 / 0.3), 0 10px 30px -10px rgb(52 211 153 / 0.35);
+  color-scheme: dark;
+}
+
+:root[data-theme="light"] {
+  color-scheme: light;
 }
 
 body {
-  @apply bg-paper text-ink font-sans antialiased;
+  @apply bg-canvas text-ink font-sans antialiased;
+}
+
+/* Visible keyboard focus everywhere, never on mouse click. */
+:focus-visible {
+  outline: 2px solid var(--color-teal);
+  outline-offset: 2px;
+  border-radius: 0.5rem;
+}
+
+::selection {
+  background: color-mix(in oklab, var(--color-teal) 35%, transparent);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
 }
