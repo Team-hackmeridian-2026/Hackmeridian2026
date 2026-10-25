@@ -25,6 +25,25 @@ Built for **HackMeridian** (Lisbon, 25–26 October 2026).
 - Front-end: React + Vite + TypeScript + Stellar Wallets Kit (`frontend/`)
 - Network: Stellar testnet
 
+## Prior work (disclosed)
+
+Prepared before HackMeridian (22–24 October 2026), marked by the
+[`pre-hackathon`](../../tree/pre-hackathon) tag:
+
+- Three Soroban contracts with 26 passing tests: `ip_license_nft`,
+  `milestone_escrow`, `royalty_splitter` (`contracts/`)
+- Testnet setup and deploy scripts (`scripts/`)
+- Development plan (`docs/PLAN.md`, in French) and pitch deck
+
+## Built during the event
+
+Everything after the `pre-hackathon` tag
+([compare](../../compare/pre-hackathon...main)). Planned:
+
+- Front-end (React + Stellar Wallets Kit) and public deployment
+- Anchor integration (SEP-10 + SEP-24) so labs can cash out to a bank account
+
 ## Status
 
-Work in progress. See [docs/PLAN.md](docs/PLAN.md) for the development plan (in French).
+Work in progress. See [docs/PLAN.md](docs/PLAN.md) for the development plan
+and [CONTRIBUTING.md](CONTRIBUTING.md) for the team workflow.
