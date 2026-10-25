@@ -1,6 +1,7 @@
-import { NavLink, Outlet } from "react-router-dom";
+import { useEffect, useState } from "react";
+import { NavLink, Outlet, useLocation } from "react-router-dom";
 import { Trans, useTranslation } from "react-i18next";
-import { CIRCLE_FAUCET_URL, CONTRACTS, explorer } from "../config";
+import { ACCOUNTS, CIRCLE_FAUCET_URL, CONTRACTS, explorer } from "../config";
 import { eurcBalance } from "../stellar/contracts";
 import { DEMO_ENABLED, DEMO_ROLES, useWallet, type DemoRole } from "../stellar/wallet";
 import { LANGUAGES } from "../i18n";
@@ -124,48 +125,115 @@ function ThemeToggle() {
   );
 }
 
+/** True from the `lg` breakpoint up, where the full header fits on one line. */
+function useIsDesktop(): boolean {
+  const query = "(min-width: 1024px)";
+  const [desktop, setDesktop] = useState(() => window.matchMedia(query).matches);
+  useEffect(() => {
+    const media = window.matchMedia(query);
+    const onChange = () => setDesktop(media.matches);
+    media.addEventListener("change", onChange);
+    return () => media.removeEventListener("change", onChange);
+  }, []);
+  return desktop;
+}
+
+const linkClass = (stacked: boolean) => ({ isActive }: { isActive: boolean }) =>
+  `rounded-lg px-3 py-2 text-sm font-medium transition duration-200 ${stacked ? "block text-base" : ""} ${
+    isActive ? "bg-teal/15 text-paper ring-1 ring-inset ring-teal/40" : "text-paper/70 hover:bg-white/5 hover:text-paper"
+  }`;
+
 export function Layout() {
   const { t } = useTranslation();
+  const { signer, connecting, connectWallet } = useWallet();
+  const { pathname } = useLocation();
+  const desktop = useIsDesktop();
+  const [menuOpen, setMenuOpen] = useState(false);
+
+  // Close the mobile menu on navigation, on Escape, and when the screen widens.
+  useEffect(() => setMenuOpen(false), [pathname, desktop]);
+  useEffect(() => {
+    if (!menuOpen) return;
+    const onKey = (e: KeyboardEvent) => e.key === "Escape" && setMenuOpen(false);
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [menuOpen]);
+
+  // Admin tools only show up for the platform admin wallet; /admin stays reachable by URL.
+  const isAdmin = signer?.address === ACCOUNTS.admin;
+  const nav = NAV.filter((item) => item.to !== "/admin" || isAdmin);
+  const links = (stacked: boolean) =>
+    nav.map((item) => (
+      <NavLink key={item.to} to={item.to} end className={linkClass(stacked)}>
+        {t(item.key)}
+      </NavLink>
+    ));
+
   return (
     <div className="relative isolate flex min-h-screen flex-col">
       <BioBackground />
       <header className="sticky top-0 z-40 border-b border-white/10 bg-navy/95 text-paper backdrop-blur-md">
-        <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-4 px-6 py-4">
-          <div className="flex min-w-0 flex-wrap items-center gap-4 lg:gap-8">
-            <NavLink to="/" aria-label={t("brand.home")} className="shrink-0">
-              <Logo />
-            </NavLink>
-            <nav className="flex flex-wrap gap-1">
-              {NAV.map((item) => (
-                <NavLink
-                  key={item.to}
-                  to={item.to}
-                  end
-                  className={({ isActive }) =>
-                    `rounded-lg px-3 py-2 text-sm font-medium transition duration-200 ${
-                      isActive ? "bg-teal/15 text-paper ring-1 ring-inset ring-teal/40" : "text-paper/70 hover:bg-white/5 hover:text-paper"
-                    }`
-                  }
+        <div className="mx-auto max-w-6xl px-4 sm:px-6">
+          <div className="flex items-center justify-between gap-4 py-3 lg:py-4">
+            <div className="flex min-w-0 items-center gap-8">
+              <NavLink to="/" aria-label={t("brand.home")} className="shrink-0">
+                <Logo />
+              </NavLink>
+              {desktop && (
+                <nav aria-label={t("nav.main")} className="flex gap-1">
+                  {links(false)}
+                </nav>
+              )}
+            </div>
+            {desktop ? (
+              <div className="flex items-center gap-3">
+                <LanguageSwitcher />
+                <ThemeToggle />
+                <WalletArea />
+              </div>
+            ) : (
+              <div className="flex items-center gap-2">
+                {!signer && (
+                  <Button variant="secondary" size="sm" busy={connecting} onClick={connectWallet}>
+                    {t("wallet.connect")}
+                  </Button>
+                )}
+                <button
+                  type="button"
+                  onClick={() => setMenuOpen((open) => !open)}
+                  aria-expanded={menuOpen}
+                  aria-controls="mobile-menu"
+                  aria-label={t(menuOpen ? "nav.closeMenu" : "nav.openMenu")}
+                  className="flex size-10 items-center justify-center rounded-lg border border-white/15 text-paper transition duration-200 hover:border-teal"
                 >
-                  {t(item.key)}
-                </NavLink>
-              ))}
-            </nav>
+                  <svg viewBox="0 0 24 24" className="size-5" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden>
+                    {menuOpen ? <path d="M6 6l12 12M18 6 6 18" /> : <path d="M4 7h16M4 12h16M4 17h16" />}
+                  </svg>
+                </button>
+              </div>
+            )}
           </div>
-          <div className="flex flex-wrap items-center gap-3">
-            <LanguageSwitcher />
-            <ThemeToggle />
-            <WalletArea />
-          </div>
+          {!desktop && menuOpen && (
+            <div id="mobile-menu" className="flex flex-col gap-4 border-t border-white/10 py-4">
+              <nav aria-label={t("nav.main")} className="flex flex-col gap-1">
+                {links(true)}
+              </nav>
+              <div className="flex items-center gap-3">
+                <LanguageSwitcher />
+                <ThemeToggle />
+              </div>
+              {signer && <WalletArea />}
+            </div>
+          )}
         </div>
       </header>
-      <main className="mx-auto w-full max-w-6xl flex-1 px-6 py-10">
+      <main className="mx-auto w-full max-w-6xl flex-1 px-4 py-8 sm:px-6 sm:py-10">
         <Outlet />
       </main>
       <footer className="border-t border-line bg-canvas/70 backdrop-blur-sm">
-        <div className="mx-auto flex max-w-6xl flex-wrap justify-between gap-2 px-6 py-6 text-xs text-muted">
+        <div className="mx-auto flex max-w-6xl flex-wrap justify-between gap-2 px-4 py-6 text-xs text-muted sm:px-6">
           <p>{t("footer.tagline")}</p>
-          <p className="flex gap-3">
+          <p className="flex flex-wrap gap-3">
             {t("footer.contracts")}
             {(["nft", "escrow", "splitter"] as const).map((key) => (
               <a key={key} href={explorer.contract(CONTRACTS[key])} target="_blank" rel="noreferrer" className="text-teal-dark hover:underline">

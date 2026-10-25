@@ -13,7 +13,10 @@
     "marketplace": "Mercado",
     "newLicence": "Registar uma patente",
     "cashOut": "Levantamento",
-    "admin": "Admin"
+    "admin": "Admin",
+    "main": "Navegação principal",
+    "openMenu": "Abrir o menu",
+    "closeMenu": "Fechar o menu"
   },
   "roles": {
     "lab": "Laboratório universitário",
@@ -109,7 +112,7 @@
     "splitBad": "Total {{total}} %: tem de ser exatamente 100 %",
     "blockers": {
       "connect": "Ligue primeiro a carteira da universidade.",
-      "notInstitution": "Esta conta ainda não é uma instituição verificada (ver Admin)."
+      "notInstitution": "Esta conta ainda não é uma instituição verificada: peça ao administrador da plataforma para a verificar."
     },
     "errors": {
       "dossier": "Adicione o dossiê científico: apenas a sua impressão digital vai on-chain.",

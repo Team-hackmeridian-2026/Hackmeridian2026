@@ -7,24 +7,27 @@ const cx = (...classes: (string | false | undefined)[]) => classes.filter(Boolea
 
 type ButtonProps = ButtonHTMLAttributes<HTMLButtonElement> & {
   variant?: "primary" | "secondary" | "danger" | "ghost";
+  size?: "sm" | "md";
   busy?: boolean;
 };
 
-export function Button({ variant = "primary", busy, disabled, className, children, ...rest }: ButtonProps) {
+export function Button({ variant = "primary", size = "md", busy, disabled, className, children, ...rest }: ButtonProps) {
   const styles = {
-    primary: "px-4 py-2 bg-teal text-navy shadow-glow hover:brightness-110 active:brightness-95",
-    secondary: "px-4 py-2 bg-card text-ink border border-line hover:border-teal-dark hover:bg-teal/5",
-    danger: "px-4 py-2 bg-card text-danger border border-danger/40 hover:bg-danger/10",
-    ghost: "px-1 py-1 text-teal-dark hover:underline underline-offset-4",
+    primary: "bg-teal text-navy shadow-glow hover:brightness-110 active:brightness-95",
+    secondary: "bg-card text-ink border border-line hover:border-teal-dark hover:bg-teal/5",
+    danger: "bg-card text-danger border border-danger/40 hover:bg-danger/10",
+    ghost: "text-teal-dark hover:underline underline-offset-4",
   }[variant];
+  const padding = variant === "ghost" ? "px-1 py-1 text-sm" : size === "sm" ? "px-3 py-1.5 text-xs" : "px-4 py-2 text-sm";
   return (
     <button
       {...rest}
       disabled={disabled || busy}
       className={cx(
-        "inline-flex items-center justify-center gap-2 rounded-lg text-sm font-semibold",
+        "inline-flex items-center justify-center gap-2 rounded-lg font-semibold",
         "transition duration-200 ease-out-soft",
         "disabled:cursor-not-allowed disabled:opacity-45 disabled:shadow-none disabled:hover:brightness-100",
+        padding,
         styles,
         className,
       )}

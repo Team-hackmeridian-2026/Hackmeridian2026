@@ -13,7 +13,10 @@
     "marketplace": "Marché",
     "newLicence": "Déposer un brevet",
     "cashOut": "Retrait bancaire",
-    "admin": "Admin"
+    "admin": "Admin",
+    "main": "Navigation principale",
+    "openMenu": "Ouvrir le menu",
+    "closeMenu": "Fermer le menu"
   },
   "roles": {
     "lab": "Laboratoire universitaire",
@@ -109,7 +112,7 @@
     "splitBad": "Total {{total}} % : il doit être exactement de 100 %",
     "blockers": {
       "connect": "Connectez d'abord le wallet de l'université.",
-      "notInstitution": "Ce compte n'est pas encore une institution vérifiée (voir Admin)."
+      "notInstitution": "Ce compte n'est pas encore une institution vérifiée : demandez à l'administrateur de la plateforme de le vérifier."
     },
     "errors": {
       "dossier": "Ajoutez le dossier scientifique : seule son empreinte est inscrite on-chain.",

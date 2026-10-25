@@ -13,7 +13,10 @@
     "marketplace": "Marketplace",
     "newLicence": "List a patent",
     "cashOut": "Cash out",
-    "admin": "Admin"
+    "admin": "Admin",
+    "main": "Main navigation",
+    "openMenu": "Open the menu",
+    "closeMenu": "Close the menu"
   },
   "roles": {
     "lab": "University lab",
@@ -109,7 +112,7 @@
     "splitBad": "Total {{total}} %: it must be exactly 100 %",
     "blockers": {
       "connect": "Connect the university's wallet first.",
-      "notInstitution": "This account is not a verified institution yet (see Admin)."
+      "notInstitution": "This account is not a verified institution yet: ask the platform admin to verify it."
     },
     "errors": {
       "dossier": "Add the scientific dossier: only its fingerprint goes on-chain.",
