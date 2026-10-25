@@ -4,6 +4,7 @@ import { CONTRACTS, EURC_CODE, EURC_ISSUER, HORIZON_URL, NETWORK_PASSPHRASE, RPC
 import { toUnits } from "../lib/format";
 import i18n from "../i18n";
 import type { Signer } from "./wallet";
+import { WalletError } from "./errors";
 
 // ---------- On-chain types (mirror the Rust contracts) ----------
 
@@ -122,7 +123,17 @@ const ERRORS: Record<string, string> = {
 };
 
 function explainError(contractId: string, err: unknown): string {
-  const raw = err instanceof Error ? err.message : String(err);
+  if (err instanceof WalletError) {
+    const short = err.detail ? `${err.detail.slice(0, 4)}…${err.detail.slice(-4)}` : "";
+    return i18n.t(`errors.wallet.${err.kind}`, { address: short });
+  }
+  // Wallets Kit rejects with plain { code, message } objects, not Errors.
+  const raw =
+    err instanceof Error
+      ? err.message
+      : typeof err === "object" && err && "message" in err
+        ? String((err as { message: unknown }).message)
+        : String(err);
   const code = /Error\(Contract, #(\d+)\)/.exec(raw)?.[1];
   if (code) {
     const key = `${ERRORS[contractId]}.${code}`;
@@ -131,6 +142,8 @@ function explainError(contractId: string, err: unknown): string {
   if (/balance|underfunded|insufficient/i.test(raw)) return i18n.t("errors.balance");
   if (/trustline/i.test(raw)) return i18n.t("errors.trustline");
   if (/reject|declin|cancel/i.test(raw)) return i18n.t("errors.cancelled");
+  if (/not connected|not installed|not allowed|request access|locked/i.test(raw)) return i18n.t("errors.wallet.notConnected");
+  if (/network|passphrase/i.test(raw)) return i18n.t("errors.wallet.network");
   return raw.length > 240 ? raw.slice(0, 240) + "…" : raw;
 }
 

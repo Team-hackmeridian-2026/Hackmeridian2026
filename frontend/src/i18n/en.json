@@ -44,7 +44,7 @@
     "viewTx": "View on stellar.expert ↗",
     "close": "Close",
     "confirmed": "{{label}}: confirmed on Stellar",
-    "failed": "{{label}}: {{message}}",
+    "failed": "Failed: {{message}}",
     "remove": "Remove",
     "exclusive": "Exclusive",
     "nonExclusive": "Non-exclusive",
@@ -414,7 +414,12 @@
     "contract": "Contract error #{{code}}",
     "balance": "Not enough EURC on this account.",
     "trustline": "This account has no EURC trustline yet.",
-    "cancelled": "Transaction cancelled in the wallet."
+    "cancelled": "Transaction cancelled in the wallet.",
+    "wallet": {
+      "notConnected": "Your wallet isn't reachable. Turn on and unlock the Freighter extension, then reconnect on this site.",
+      "network": "Your wallet is on another network. Switch Freighter to Testnet, then try again.",
+      "account": "Freighter's active account ({{address}}) isn't the one connected here. Switch accounts in Freighter, or disconnect and reconnect on this site."
+    }
   },
   "header": {
     "testnet": "Testnet"
