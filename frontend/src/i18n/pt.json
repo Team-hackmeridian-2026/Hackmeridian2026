@@ -49,7 +49,9 @@
     "exclusive": "Exclusiva",
     "nonExclusive": "Não exclusiva",
     "years_one": "{{count}} ano",
-    "years_other": "{{count}} anos"
+    "years_other": "{{count}} anos",
+    "retry": "Tentar novamente",
+    "networkError": "Não foi possível contactar a testnet Stellar. Verifique a ligação e tente novamente."
   },
   "units": {
     "day": "d",
@@ -82,15 +84,30 @@
     "nonExclusiveLicence": "Licença não exclusiva",
     "released": "{{released}} libertados de {{total}}",
     "noRound": "Ainda sem ronda de financiamento",
-    "heroEyebrow": "Financiar a investigação europeia",
-    "heroTitle": "Transforme uma patente numa licença programável: financiada em euros, libertada por marcos, paga automaticamente.",
-    "heroText": "As universidades mantêm a propriedade. Os investidores financiam em EURC através de um escrow que só paga quando os marcos são cumpridos. Os royalties são repartidos entre a universidade, os seus inventores e os investidores numa única transação.",
+    "heroEyebrow": "Para laboratórios, investidores e indústria",
+    "heroTitle": "Financie a investigação sem vender a patente.",
+    "heroText": "O BioLicensing transforma uma patente universitária numa licença na Stellar: financiada em euros, libertada marco a marco, com royalties repartidos automaticamente.",
     "listPatent": "Registar uma patente",
     "browse": "Ver licenças",
     "eyebrow": "Mercado",
     "title": "Licenças na Stellar",
-    "empty": "Ainda não há licenças.",
-    "emptyCta": "Registar a primeira patente →"
+    "empty": "Ainda não há licenças",
+    "emptyCta": "Registar a primeira patente",
+    "points": {
+      "licence": {
+        "title": "Uma licença, não uma venda",
+        "text": "A universidade mantém a patente. Os investidores financiam uma licença cujos termos e impressão digital do dossiê ficam registados on-chain."
+      },
+      "milestones": {
+        "title": "Pago por marcos",
+        "text": "Os EURC ficam no escrow e só são libertados quando o laboratório comprova cada marco. O investidor pode contestar."
+      },
+      "royalties": {
+        "title": "Royalties repartidos automaticamente",
+        "text": "Um único pagamento do licenciado é repartido entre a universidade, os seus inventores e os investidores."
+      }
+    },
+    "emptyText": "Uma universidade regista uma patente em três passos curtos. A primeira licença aparecerá aqui."
   },
   "newLicence": {
     "windows": {
