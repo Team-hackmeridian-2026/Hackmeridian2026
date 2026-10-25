@@ -10,6 +10,7 @@ import { formatNumber, shortAddress } from "../lib/format";
 import { Button } from "./ui";
 import { Logo } from "./Logo";
 import { PageHelix } from "./PageHelix";
+import { TX_CONFIRMED_EVENT } from "./toasts";
 import { useTheme } from "../lib/theme";
 
 const NAV = [
@@ -179,6 +180,20 @@ export function Layout() {
   const { t } = useTranslation();
   const { signer, connecting, connectWallet } = useWallet();
   const balance = useAsync(() => (signer ? eurcBalance(signer.address) : Promise.resolve(null)), [signer?.address]);
+  // Refresh the balance after each confirmed transaction; Horizon can lag a ledger behind, so check again shortly after.
+  const reloadBalance = balance.reload;
+  useEffect(() => {
+    const timers: number[] = [];
+    const onTx = () => {
+      reloadBalance();
+      timers.push(window.setTimeout(reloadBalance, 6000));
+    };
+    window.addEventListener(TX_CONFIRMED_EVENT, onTx);
+    return () => {
+      window.removeEventListener(TX_CONFIRMED_EVENT, onTx);
+      timers.forEach(clearTimeout);
+    };
+  }, [reloadBalance]);
   // Live header height as --header-h, for elements that stick right under it (licence page tabs).
   const headerRef = useRef<HTMLElement>(null);
   useEffect(() => {
