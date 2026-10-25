@@ -10,6 +10,7 @@ import {
   PerspectiveCamera,
   Points,
   Scene,
+  SRGBColorSpace,
   ShaderMaterial,
   Vector2,
   WebGLRenderer,
@@ -48,19 +49,32 @@ function digitTexture(digit: string): CanvasTexture {
 type Palette = { strandA: Color; strandB: Color; pairs: Color[]; dark: boolean };
 
 function readPalette(): Palette {
+  const dark = document.documentElement.dataset.theme !== "light";
+  if (!dark) {
+    // Light page: muted mid-tones (no neon on cream), dark enough for the 0s and 1s to read.
+    const c = (hex: string) => new Color(hex);
+    return {
+      strandA: c("#6b60d6"),
+      strandB: c("#cf6f98"),
+      pairs: ["#c98f2a", "#d9774f", "#c9668f", "#5a50c8", "#857ad8"].map(c),
+      dark,
+    };
+  }
   const css = getComputedStyle(document.documentElement);
   const get = (name: string, fallback: string) => new Color(css.getPropertyValue(`--color-dna-${name}`).trim() || fallback);
-  const dark = document.documentElement.dataset.theme !== "light";
   const indigo = get("indigo", "#5a4cf0");
   const violet = get("violet", "#9282f8");
   const pink = get("pink", "#f19cc4");
   const peach = get("peach", "#f6a27d");
   const yellow = get("yellow", "#f2cd6e");
-  // On a light page, slightly deeper tones keep the digits readable.
-  const ink = new Color("#2a1d4a");
-  const tone = (c: Color) => (dark ? c.clone() : c.clone().lerp(ink, 0.12));
-  return { strandA: tone(violet), strandB: tone(pink), pairs: [yellow, peach, pink, indigo, violet].map(tone), dark };
+  return { strandA: violet, strandB: pink, pairs: [yellow, peach, pink, indigo, violet], dark };
 }
+
+/** Per-theme look: on light pages fewer, larger, tidier digits so each 0 and 1 is legible. */
+const LOOK = {
+  dark: { perStrand: [2200, 4500], perRung: [12, 18], thickness: 18, jitter: 10, rungJitter: 5, size: [22, 19], alpha: 0.42 },
+  light: { perStrand: [1300, 2600], perRung: [10, 13], thickness: 10, jitter: 5, rungJitter: 2, size: [30, 27], alpha: 0.7 },
+} as const;
 
 const vertexShader = /* glsl */ `
   uniform vec2 uMouse;
@@ -113,16 +127,20 @@ const fragmentShader = /* glsl */ `
 `;
 
 function buildGeometry(small: boolean, palette: Palette) {
-  const perStrand = small ? 2200 : 4500;
-  const perRung = small ? 12 : 18;
+  const look = LOOK[palette.dark ? "dark" : "light"];
+  const perStrand = look.perStrand[small ? 0 : 1];
+  const perRung = look.perRung[small ? 0 : 1];
   const positions: number[] = [];
   const colors: number[] = [];
   const digits: number[] = [];
   const randoms: number[] = [];
   const kinds: number[] = [];
+  const srgb = { r: 0, g: 0, b: 0 };
   const push = (x: number, y: number, z: number, c: Color, kind = 0) => {
     positions.push(x, y, z);
-    colors.push(c.r, c.g, c.b);
+    // The shader writes colours as-is, so hand it sRGB values (Color stores linear ones).
+    c.getRGB(srgb, SRGBColorSpace);
+    colors.push(srgb.r, srgb.g, srgb.b);
     digits.push(Math.random() > 0.5 ? 1 : 0);
     randoms.push(Math.random());
     kinds.push(kind);
@@ -132,8 +150,8 @@ function buildGeometry(small: boolean, palette: Palette) {
   for (let i = 0; i < perStrand; i++) {
     const y = (Math.random() - 0.5) * HEIGHT;
     const angle = (y / HEIGHT) * TURNS * Math.PI * 2;
-    const r = RADIUS + (Math.random() - 0.5) * 18;
-    const jitter = () => (Math.random() - 0.5) * 10;
+    const r = RADIUS + (Math.random() - 0.5) * look.thickness;
+    const jitter = () => (Math.random() - 0.5) * look.jitter;
     push(Math.cos(angle) * r + jitter(), y + jitter(), Math.sin(angle) * r + jitter(), palette.strandA);
     push(-Math.cos(angle) * r + jitter(), y + jitter(), -Math.sin(angle) * r + jitter(), palette.strandB);
   }
@@ -148,7 +166,8 @@ function buildGeometry(small: boolean, palette: Palette) {
     const right = palette.pairs[(rung + 2) % palette.pairs.length];
     for (let j = 0; j < perRung; j++) {
       const t = (j / (perRung - 1)) * 2 - 1; // -1 … 1 across the rung
-      push(x1 * t + (Math.random() - 0.5) * 5, y + (Math.random() - 0.5) * 5, z1 * t + (Math.random() - 0.5) * 5, t < 0 ? left : right, 1);
+      const k = () => (Math.random() - 0.5) * look.rungJitter;
+      push(x1 * t + k(), y + k(), z1 * t + k(), t < 0 ? left : right, 1);
     }
   }
 
@@ -191,7 +210,8 @@ export default function DnaHelix({ className = "" }: { className?: string }) {
 
     const zero = digitTexture("0");
     const one = digitTexture("1");
-    const geometry = buildGeometry(small, palette);
+    let geometry = buildGeometry(small, palette);
+    const look = () => LOOK[palette.dark ? "dark" : "light"];
     const material = new ShaderMaterial({
       vertexShader,
       fragmentShader,
@@ -200,9 +220,9 @@ export default function DnaHelix({ className = "" }: { className?: string }) {
         uMouseActive: { value: 0 },
         uAspect: { value: 1 },
         uPixelRatio: { value: 1 },
-        uSize: { value: small ? 22 : 19 },
+        uSize: { value: look().size[small ? 0 : 1] },
         uCamZ: { value: 2700 },
-        uBaseAlpha: { value: palette.dark ? 0.5 : 0.95 },
+        uBaseAlpha: { value: look().alpha },
         uZero: { value: zero },
         uOne: { value: one },
       },
@@ -274,11 +294,13 @@ export default function DnaHelix({ className = "" }: { className?: string }) {
     const onLeave = () => (pointer.active = 0);
     const onTheme = () => {
       palette = readPalette();
-      const fresh = buildGeometry(small, palette);
-      geometry.setAttribute("aColor", fresh.getAttribute("aColor"));
-      fresh.dispose();
+      // Each theme has its own density and colours: rebuild the point cloud.
+      geometry.dispose();
+      geometry = buildGeometry(small, palette);
+      points.geometry = geometry;
+      material.uniforms.uSize.value = look().size[small ? 0 : 1];
       material.blending = palette.dark ? AdditiveBlending : NormalBlending;
-      material.uniforms.uBaseAlpha.value = palette.dark ? 0.5 : 0.95;
+      material.uniforms.uBaseAlpha.value = look().alpha;
       material.needsUpdate = true;
       if (!running) frame(performance.now());
     };

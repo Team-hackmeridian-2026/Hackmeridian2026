@@ -137,7 +137,7 @@ export function LicenceTable({ data, loading }: { data?: Listing[]; loading: boo
       </div>
       {data && data.length === 0 ? (
         <div className="flex flex-col items-center gap-3 px-6 py-14 text-center">
-          <Molecule shape="tetra" className="w-16" />
+          <Molecule shape="tetra" className="w-24" />
           <h3 className="font-display text-xl font-bold">{t("marketplace.empty")}</h3>
           <p className="max-w-md text-sm text-muted">{t("marketplace.emptyText")}</p>
           <Link to="/new" className={buttonClass({ className: "mt-2" })}>
@@ -207,7 +207,7 @@ export function Marketplace() {
       <section className="mt-24 sm:mt-32">
         <div className="flex items-end justify-between gap-6">
           <h2 className="max-w-2xl font-display text-4xl font-extrabold tracking-[-0.03em] sm:text-5xl">{t("marketplace.how.title")}</h2>
-          <Molecule shape="ring" className="hidden w-56 shrink-0 animate-[float_10s_ease-in-out_infinite] md:block" />
+          <Molecule shape="ring" className="hidden w-64 shrink-0 animate-[float_10s_ease-in-out_infinite] md:block" />
         </div>
         <ol className="mt-12 grid gap-12 md:grid-cols-3 md:gap-10">
           {STEPS.map((step, i) => (
