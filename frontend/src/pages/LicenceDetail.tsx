@@ -4,11 +4,11 @@ import { Trans, useTranslation } from "react-i18next";
 import { escrow, isSettled, nft, splitter, type License, type Milestone, type Project } from "../stellar/contracts";
 import { useWallet, type Signer } from "../stellar/wallet";
 import { useToasts } from "../components/toasts";
+import { BurstHeading } from "../components/BurstHeading";
 import { useAsync } from "../lib/useAsync";
 import { eurc, formatDate, formatDuration, sha256, shortAddress, toHex } from "../lib/format";
 import { Address, Badge, Button, Card, ErrorBox, Input, Spinner, StatusIcon, buttonClass, type BadgeTone } from "../components/ui";
 import { FundingProgress } from "../components/Funding";
-import { BurstHeading } from "../components/BurstHeading";
 
 // Decorative helix next to the title (Three.js is shared with the home page chunk).
 const DnaHelix = lazy(() => import("../components/DnaHelix"));

@@ -1,12 +1,12 @@
 import { Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { escrow, nft, type License, type Project } from "../stellar/contracts";
+import { BurstHeading } from "../components/BurstHeading";
 import { useAsync } from "../lib/useAsync";
 import { ErrorBox, Skeleton, buttonClass } from "../components/ui";
 import { HeroVisual } from "../components/HeroVisual";
 import { FundingProgress, fundingStatus } from "../components/Funding";
 import { Molecule } from "../components/Molecule";
-import { BurstHeading } from "../components/BurstHeading";
 
 type Listing = { license: License; project?: Project };
 
