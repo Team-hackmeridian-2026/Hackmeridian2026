@@ -216,6 +216,61 @@ Every action shows a link to the transaction on stellar.expert. Locally, the
 
 ---
 
+## Roadmap
+
+What exists today is a working testnet MVP. Below is what we would build next,
+roughly in order.
+
+### Next: harden the platform
+
+- **Several admins with separate roles.** Today one admin key manages every
+  registry. Split it into roles (institution verifier, KYC officer,
+  compliance officer for clawbacks) that can be granted and revoked on-chain,
+  with the most sensitive actions behind a Stellar multisig.
+- **Upgradable contracts.** An admin-gated `upgrade` entry point
+  (`update_current_contract_wasm`) behind a timelock, so fixes ship without
+  changing contract IDs or losing licences and shares.
+- **Gasless for researchers.** Sponsored reserves and fee-bump transactions so
+  a lab never needs XLM, and passkey smart wallets so it never needs a browser
+  extension.
+- **Independent security audit** of the three contracts before mainnet.
+
+### Then: a pilot with real tech transfer offices
+
+- **Real KYC and KYB** through SEP-12 and a regulated provider, replacing the
+  manual allowlist; verifiable credentials for institutions.
+- **Production EURC off-ramp**: the same SEP-10 / SEP-24 code pointed at an
+  anchor that pays EURC out as SEPA transfers, plus SEP-24 deposits so
+  investors can fund a licence straight from their bank.
+- **Syndicated rounds**: several investors per licence, a funding target, and
+  an automatic refund if the target is not reached.
+- **Patent import**: fill the listing form from a patent number with the
+  European Patent Office's public data (OPS).
+- **Private data room**: the dossier stays off-chain, encrypted, and is
+  unlocked for a reader once they sign the NDA on-chain (`sign_nda` already
+  records the signature).
+- **Notifications** when a proof is submitted or a challenge window is about
+  to close.
+- **Mainnet launch.**
+
+### Later: a market for research
+
+- **Secondary market for revenue shares** between KYC-approved investors
+  (`transfer_shares` already enforces the allowlist on-chain), through a
+  Soroban order book or Stellar's built-in DEX.
+- **Expert arbitration panels**: a pool of domain experts instead of a single
+  arbiter, with reputation and conflict-of-interest checks.
+- **Stronger milestone proofs**: attestations signed by contract research
+  organisations or matched against public trial registries.
+- **Multi-currency**: investors pay in USDC or another asset, converted to
+  EURC on the fly with Stellar path payments.
+- **Usage-based royalties**: licensees report sales and royalties stream
+  automatically on a schedule.
+- **Beyond biotech**: medtech, cleantech and any European research patent,
+  with portfolio dashboards for tech transfer offices.
+
+---
+
 ## Repository layout
 
 ```text
