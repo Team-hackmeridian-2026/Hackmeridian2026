@@ -35,7 +35,7 @@ function splitEvenly(addresses: string[], total: number): Beneficiary[] {
 function CardTitle({ n, title, subtitle }: { n: number; title: string; subtitle: string }) {
   return (
     <div className="flex items-start gap-3">
-      <span className="flex size-8 shrink-0 items-center justify-center rounded-full bg-navy font-display text-sm font-semibold text-paper">
+      <span className="flex size-8 shrink-0 items-center justify-center rounded-full bg-teal/15 font-display text-sm font-semibold text-teal-dark ring-1 ring-teal/40">
         {n}
       </span>
       <div>
@@ -54,7 +54,7 @@ function SplitPreview({ parts }: { parts: { label: string; pct: number; color: s
       <div className="flex h-7 w-full overflow-hidden rounded-lg bg-line">
         {parts.map((p) =>
           p.pct > 0 ? (
-            <div key={p.label} className={`${p.color} flex items-center justify-center text-xs font-semibold text-white`} style={{ width: `${Math.min(p.pct, 100)}%` }}>
+            <div key={p.label} className={`${p.color} flex items-center justify-center text-xs font-semibold text-navy`} style={{ width: `${Math.min(p.pct, 100)}%` }}>
               {p.pct}%
             </div>
           ) : null,
@@ -181,7 +181,7 @@ export function NewLicence() {
       </SectionTitle>
 
       <form onSubmit={submit} className="grid gap-6 lg:grid-cols-[1fr_340px]">
-        <div className="flex flex-col gap-6">
+        <div className="flex min-w-0 flex-col gap-6">
           <Card className="flex flex-col gap-5">
             <CardTitle n={1} title={t("newLicence.card1Title")} subtitle={t("newLicence.card1Subtitle")} />
             <Field label={t("newLicence.patentTitle")}>
@@ -210,7 +210,7 @@ export function NewLicence() {
                     type="button"
                     onClick={() => setExclusive(o.value)}
                     className={`rounded-xl border p-3 text-left text-sm transition ${
-                      exclusive === o.value ? "border-teal-dark bg-teal/10" : "border-line bg-white hover:border-teal-dark"
+                      exclusive === o.value ? "border-teal-dark bg-teal/10" : "border-line bg-field hover:border-teal-dark"
                     }`}
                   >
                     <p className="font-semibold">{o.title}</p>
@@ -247,7 +247,7 @@ export function NewLicence() {
             <CardTitle n={2} title={t("newLicence.card2Title")} subtitle={t("newLicence.card2Subtitle")} />
             <label
               className={`flex cursor-pointer flex-col items-center gap-2 rounded-xl border-2 border-dashed px-6 py-8 text-center transition ${
-                hash ? "border-teal-dark bg-teal/5" : "border-line bg-white hover:border-teal-dark"
+                hash ? "border-teal-dark bg-teal/5" : "border-line bg-field hover:border-teal-dark"
               }`}
             >
               <input type="file" className="hidden" onChange={(e) => onFile(e.target.files?.[0] ?? null)} />
@@ -288,9 +288,9 @@ export function NewLicence() {
               </div>
               <SplitPreview
                 parts={[
-                  { label: t("newLicence.university"), pct: universityPct, color: "bg-teal-dark" },
-                  { label: t("newLicence.inventors"), pct: inventorsPct, color: "bg-amber-dark" },
-                  { label: t("newLicence.investors"), pct: investorsPct, color: "bg-navy" },
+                  { label: t("newLicence.university"), pct: universityPct, color: "bg-teal" },
+                  { label: t("newLicence.inventors"), pct: inventorsPct, color: "bg-amber" },
+                  { label: t("newLicence.investors"), pct: investorsPct, color: "bg-lime" },
                 ]}
               />
             </div>
@@ -308,7 +308,7 @@ export function NewLicence() {
               <span className="text-sm font-semibold">{t("newLicence.milestones")}</span>
               <p className="text-xs text-muted">{t("newLicence.milestonesHint")}</p>
               {milestones.map((m, i) => (
-                <div key={i} className="flex items-center gap-3">
+                <div key={i} className="flex flex-wrap items-center gap-x-3 gap-y-1">
                   <span className="w-24 text-sm text-muted">{t("newLicence.milestone", { n: i + 1 })}</span>
                   <Input
                     type="number"
@@ -338,7 +338,7 @@ export function NewLicence() {
 
             <Field label={t("newLicence.window")}>
               <select
-                className="rounded-lg border border-line bg-white px-3 py-2 text-sm"
+                className="rounded-lg border border-line bg-field px-3 py-2 text-sm"
                 value={challengeWindow}
                 onChange={(e) => setChallengeWindow(Number(e.target.value))}
               >
