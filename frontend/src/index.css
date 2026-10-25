@@ -1,77 +1,120 @@
 @import "tailwindcss";
 
+/* `dark:` follows the site theme switch (data-theme), not only the OS setting. */
+@custom-variant dark (&:where([data-theme="dark"], [data-theme="dark"] *));
+
 /*
- * BioLicensing design tokens.
+ * BioLicensing design tokens (Figma, October 2026).
  * Light values live in @theme (Tailwind turns them into utilities such as bg-card,
  * text-muted…); the dark theme, used by default, overrides the same variables.
  *
  * Roles:
- *   canvas      page background
- *   card        content surfaces (slightly translucent over the animated background)
- *   elevated    opaque surfaces that float (toasts, menus)
+ *   canvas      page background (warm off-white / violet black)
+ *   band        alternate full-width section background
+ *   card        content surfaces
+ *   elevated    surfaces that float (toasts, menus)
  *   field       inputs, selects and inner list items
- *   subtle      small inset chips inside cards
+ *   subtle      inset chips and the nav pill track
  *   line        borders and tracks
  *   ink/muted   main and secondary text
- *   navy(-2)    strong dark-green surfaces (header, hero), dark in both themes
- *   paper       light text used on navy surfaces, same in both themes
- *   teal        brand fill (emerald → mint), with navy text on it
- *   teal-dark   brand colour for text, links and borders on cards
- *   amber/lime/danger  status and chart colours
+ *   brand       primary indigo (fills), with on-brand text on it
+ *   brand-ink   brand colour for text, links and borders
+ *   navy/paper  dark surface and its light text, same in both themes
+ *   amber/rose/danger  status and chart colours
+ *   dna-*       illustration palette (DNA, molecules, glows)
  */
 @theme {
-  --color-canvas: #f2f7f3;
-  --color-card: rgb(255 255 255 / 0.84);
-  --color-elevated: #ffffff;
-  --color-field: #ffffff;
-  --color-subtle: #e9f2ec;
-  --color-line: #d3e3d8;
-  --color-ink: #0b1f17;
-  --color-muted: #44594d;
-  --color-navy: #072a1e;
-  --color-navy-2: #0e3a2a;
-  --color-paper: #ecf7f1;
-  --color-teal: #10b981;
-  --color-teal-dark: #047857;
-  --color-amber: #f2994a;
-  --color-amber-dark: #a14d0c;
-  --color-lime: #84cc16;
-  --color-danger: #b42318;
+  /* Light theme: warm, low-glare surfaces (no pure white) and softened ink. */
+  --color-canvas: #f3f0ea;
+  --color-band: #ebe6de;
+  --color-card: #faf8f4;
+  --color-elevated: #fcfbf8;
+  --color-field: #fdfcf9;
+  --color-subtle: #e9e4dc;
+  --color-line: #e0d9ce;
+  --color-ink: #24212c;
+  --color-muted: #5f5b67;
+  --color-brand: #4b40c9;
+  --color-brand-ink: #4136b8;
+  --color-on-brand: #fbfaff;
+  --color-navy: #24212c;
+  --color-navy-2: #322e3b;
+  --color-paper: #f3f0ea;
+  --color-amber: #dba347;
+  --color-amber-dark: #8d5606;
+  --color-rose: #e597b8;
+  --color-danger: #b23a2f;
+
+  --color-dna-indigo: #5a4cf0;
+  --color-dna-violet: #9282f8;
+  --color-dna-pink: #f19cc4;
+  --color-dna-peach: #f6a27d;
+  --color-dna-yellow: #f2cd6e;
+
 
   --font-sans: "IBM Plex Sans", ui-sans-serif, system-ui, sans-serif;
-  --font-display: "Space Grotesk", ui-sans-serif, system-ui, sans-serif;
+  --font-display: "Bricolage Grotesque", "IBM Plex Sans", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
 
-  --shadow-card: 0 1px 2px rgb(6 34 24 / 0.06), 0 8px 24px -12px rgb(6 34 24 / 0.18);
-  --shadow-glow: 0 0 0 1px rgb(16 185 129 / 0.25), 0 10px 30px -10px rgb(16 185 129 / 0.45);
+  --shadow-card: 0 1px 2px rgb(36 33 44 / 0.04), 0 12px 30px -20px rgb(36 33 44 / 0.14);
+  --shadow-glow: 0 8px 22px -10px rgb(75 64 201 / 0.45);
+  --shadow-pill: 0 1px 2px rgb(24 22 31 / 0.08), 0 2px 8px -2px rgb(24 22 31 / 0.08);
 
   --ease-out-soft: cubic-bezier(0.22, 1, 0.36, 1);
 }
 
+/*
+ * Molecule digits: muted mid-tones on light pages, vivid on dark ones. Declared
+ * outside @theme because no utility uses them, and Tailwind only emits theme
+ * variables that utilities reference.
+ */
+:root {
+  --color-mol-indigo: #5a50c8;
+  --color-mol-violet: #857ad8;
+  --color-mol-pink: #c9668f;
+  --color-mol-peach: #d9774f;
+  --color-mol-yellow: #c98f2a;
+}
+
 :root[data-theme="dark"] {
-  --color-canvas: #050e0a;
-  --color-card: rgb(12 29 22 / 0.78);
-  --color-elevated: #0f241c;
-  --color-field: #0a1a14;
-  --color-subtle: #11281f;
-  --color-line: #1f3d31;
-  --color-ink: #e6f4ec;
-  --color-muted: #9ab8a9;
-  --color-navy: #0a1f17;
-  --color-navy-2: #133126;
-  --color-teal: #34d399;
-  --color-teal-dark: #6ee7b7;
-  --color-amber: #f6b25a;
-  --color-amber-dark: #fcc77f;
-  --color-lime: #a3e635;
+  --color-canvas: #15131b;
+  --color-band: #19171f;
+  --color-card: #1d1b24;
+  --color-elevated: #23202b;
+  --color-field: #19171f;
+  --color-subtle: #24212d;
+  --color-line: #2d2a37;
+  --color-ink: #f2f0f6;
+  --color-muted: #a8a4b3;
+  --color-brand: #8c7cf7;
+  --color-brand-ink: #a99dff;
+  --color-on-brand: #16141c;
+  --color-navy: #0f0d14;
+  --color-navy-2: #221f2a;
+  --color-paper: #f2f0f6;
+  --color-amber: #f0b955;
+  --color-amber-dark: #f5c97c;
+  --color-rose: #f2a7c9;
   --color-danger: #f87171;
 
-  --shadow-card: 0 1px 0 rgb(255 255 255 / 0.03) inset, 0 12px 32px -16px rgb(0 0 0 / 0.6);
-  --shadow-glow: 0 0 0 1px rgb(52 211 153 / 0.3), 0 10px 30px -10px rgb(52 211 153 / 0.35);
+  --color-mol-indigo: #8c7cf7;
+  --color-mol-violet: #a99dff;
+  --color-mol-pink: #f19cc4;
+  --color-mol-peach: #f6a27d;
+  --color-mol-yellow: #f2cd6e;
+
+  --shadow-card: 0 1px 0 rgb(255 255 255 / 0.03) inset, 0 16px 36px -20px rgb(0 0 0 / 0.7);
+  --shadow-glow: 0 10px 28px -10px rgb(140 124 247 / 0.55);
+  --shadow-pill: 0 1px 0 rgb(255 255 255 / 0.04) inset, 0 2px 8px -2px rgb(0 0 0 / 0.5);
   color-scheme: dark;
 }
 
 :root[data-theme="light"] {
   color-scheme: light;
+}
+
+html {
+  scroll-behavior: smooth;
 }
 
 body {
@@ -80,22 +123,35 @@ body {
 
 /* Visible keyboard focus everywhere, never on mouse click. */
 :focus-visible {
-  outline: 2px solid var(--color-teal);
+  outline: 2px solid var(--color-brand);
   outline-offset: 2px;
   border-radius: 0.5rem;
 }
 
 ::selection {
-  background: color-mix(in oklab, var(--color-teal) 35%, transparent);
+  background: color-mix(in oklab, var(--color-brand) 30%, transparent);
+}
+
+/* Slow float for the decorative molecules. */
+@keyframes float {
+  0%,
+  100% {
+    transform: translateY(0) rotate(0deg);
+  }
+  50% {
+    transform: translateY(-10px) rotate(4deg);
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
   *,
   *::before,
   *::after {
     animation-duration: 0.01ms !important;
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
-    scroll-behavior: auto !important;
   }
 }

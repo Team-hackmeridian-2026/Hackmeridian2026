@@ -55,7 +55,7 @@ function Registry({
           className="font-mono"
         />
       </Field>
-      {status !== null && <Badge tone={status ? "teal" : "neutral"}>{status ? t("admin.verified") : t("admin.notVerified")}</Badge>}
+      {status !== null && <Badge tone={status ? "brand" : "neutral"}>{status ? t("admin.verified") : t("admin.notVerified")}</Badge>}
       <div className="flex gap-2">
         <Button busy={busy} disabled={who.length !== 56} onClick={() => set(true)}>
           {t("admin.verify")}

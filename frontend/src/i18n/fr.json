@@ -80,35 +80,67 @@
     "done": "Tous les jalons réglés"
   },
   "marketplace": {
-    "licenceLine": "{{licence}} · {{territory}} · {{duration}}",
-    "exclusiveLicence": "Licence exclusive",
-    "nonExclusiveLicence": "Licence non exclusive",
     "released": "{{released}} débloqués sur {{total}}",
     "noRound": "Pas encore de levée",
-    "heroEyebrow": "Pour les laboratoires, les investisseurs et les industriels",
-    "heroTitle": "Financez la recherche sans vendre le brevet.",
-    "heroText": "BioLicensing transforme un brevet universitaire en licence sur Stellar : financée en euros, débloquée jalon par jalon, avec des redevances partagées automatiquement.",
+    "heroTitle": "Donnez un avenir à la recherche.",
+    "heroText": "Explorez des licences de brevets, financez la recherche jalon par jalon et suivez le partage des redevances, sur Stellar.",
     "listPatent": "Déposer un brevet",
-    "browse": "Parcourir les licences",
-    "eyebrow": "Marché",
-    "title": "Licences sur Stellar",
+    "title": "Licences sur le testnet Stellar",
     "empty": "Aucune licence pour l'instant",
     "emptyCta": "Déposer le premier brevet",
-    "points": {
-      "licence": {
-        "title": "Une licence, pas une vente",
-        "text": "L'université garde le brevet. Les investisseurs financent une licence dont les termes et l'empreinte du dossier sont inscrits on-chain."
+    "heroNote": "Démo en direct sur le testnet Stellar : les montants sont en EURC de test, aucun argent réel ne circule.",
+    "explore": "Explorer les licences",
+    "builtFor": "Conçu pour",
+    "audiences": {
+      "labs": {
+        "title": "Laboratoires universitaires",
+        "text": "Licenciez un brevet que vous gardez, et soyez financés étape par étape."
       },
-      "milestones": {
-        "title": "Payé par jalons",
-        "text": "Les EURC restent dans l'escrow et ne sont versés que lorsque le labo prouve chaque jalon. L'investisseur peut contester."
+      "investors": {
+        "title": "Investisseurs en recherche",
+        "text": "Financez des jalons en EURC et touchez une part des redevances."
       },
-      "royalties": {
-        "title": "Redevances partagées automatiquement",
-        "text": "Un seul paiement du licencié est réparti entre l'université, ses inventeurs et les investisseurs."
+      "industry": {
+        "title": "Partenaires industriels",
+        "text": "Licenciez la technologie et payez les redevances on-chain."
       }
     },
-    "emptyText": "Une université dépose un brevet en trois étapes courtes. La première licence apparaîtra ici."
+    "how": {
+      "title": "Comment le financement arrive au labo",
+      "steps": {
+        "publish": {
+          "title": "Publier une licence",
+          "text": "Une université vérifiée publie une licence sur son brevet. Elle en reste propriétaire, et son dossier scientifique reste privé : seule son empreinte est enregistrée.",
+          "note": "IP-NFT avec empreinte SHA-256"
+        },
+        "fund": {
+          "title": "Financer par jalons",
+          "text": "Un investisseur bloque des EURC dans l'escrow. Chaque jalon est versé au labo une fois sa preuve soumise et le délai de contestation écoulé ; un arbitre tranche les désaccords.",
+          "note": "Escrow avec délai de contestation"
+        },
+        "payouts": {
+          "title": "Suivre les versements",
+          "text": "Quand un licencié paie une redevance, elle est répartie entre l'université, ses inventeurs et les investisseurs en une seule transaction vérifiable par tous.",
+          "note": "Répartition visible sur stellar.expert"
+        }
+      }
+    },
+    "count_one": "{{count}} licence publiée",
+    "count_other": "{{count}} licences publiées",
+    "table": {
+      "licence": "Licence",
+      "field": "Domaine",
+      "territory": "Territoire",
+      "term": "Durée",
+      "type": "Type",
+      "funding": "Financement"
+    },
+    "licenceNumber": "Licence n° {{id}}",
+    "openLicence": "Ouvrir la licence {{title}}",
+    "emptyText": "Une université dépose un brevet en trois étapes courtes. La première licence apparaîtra ici.",
+    "licenceLine": "{{licence}} · {{territory}} · {{duration}}",
+    "exclusiveLicence": "Licence exclusive",
+    "nonExclusiveLicence": "Licence non exclusive"
   },
   "newLicence": {
     "windows": {
@@ -374,5 +406,8 @@
     "balance": "Pas assez d'EURC sur ce compte.",
     "trustline": "Ce compte n'a pas encore de trustline EURC.",
     "cancelled": "Transaction annulée dans le wallet."
+  },
+  "header": {
+    "testnet": "Testnet"
   }
 }

@@ -47,7 +47,7 @@ function splitEvenly(addresses: string[], total: number): Beneficiary[] {
 function CardTitle({ n, title, subtitle }: { n: number; title: string; subtitle: string }) {
   return (
     <div className="flex items-start gap-3">
-      <span className="flex size-8 shrink-0 items-center justify-center rounded-full bg-teal/15 font-display text-sm font-semibold text-teal-dark ring-1 ring-teal/40">
+      <span className="flex size-8 shrink-0 items-center justify-center rounded-full bg-brand/15 font-display text-sm font-semibold text-brand-ink ring-1 ring-brand/40">
         {n}
       </span>
       <div>
@@ -73,7 +73,7 @@ function SplitPreview({ parts }: { parts: { label: string; pct: number; color: s
         )}
       </div>
       {total === 100 ? (
-        <Badge tone="teal">{t("newLicence.splitOk")}</Badge>
+        <Badge tone="brand">{t("newLicence.splitOk")}</Badge>
       ) : (
         <Badge tone="danger">{t("newLicence.splitBad", { total })}</Badge>
       )}
@@ -246,7 +246,7 @@ export function NewLicence() {
                     type="button"
                     onClick={() => setExclusive(o.value)}
                     className={`rounded-xl border p-3 text-left text-sm transition ${
-                      exclusive === o.value ? "border-teal-dark bg-teal/10" : "border-line bg-field hover:border-teal-dark"
+                      exclusive === o.value ? "border-brand-ink bg-brand/10" : "border-line bg-field hover:border-brand-ink"
                     }`}
                   >
                     <p className="font-semibold">{o.title}</p>
@@ -290,24 +290,24 @@ export function NewLicence() {
               }}
               onDragLeave={() => setDragging(false)}
               onDrop={onDrop}
-              className={`flex cursor-pointer flex-col items-center gap-2 rounded-xl border-2 border-dashed px-6 py-8 text-center transition duration-200 focus-within:ring-2 focus-within:ring-teal ${
+              className={`flex cursor-pointer flex-col items-center gap-2 rounded-xl border-2 border-dashed px-6 py-8 text-center transition duration-200 focus-within:ring-2 focus-within:ring-brand ${
                 dragging
-                  ? "border-teal bg-teal/10"
+                  ? "border-brand bg-brand/10"
                   : fieldError("dossier")
                     ? "border-danger/60 bg-danger/5"
                     : hash
-                      ? "border-teal-dark bg-teal/5"
-                      : "border-line bg-field hover:border-teal-dark"
+                      ? "border-brand-ink bg-brand/5"
+                      : "border-line bg-field hover:border-brand-ink"
               }`}
             >
               {/* sr-only rather than hidden, so the file picker stays reachable with the keyboard. */}
               <input type="file" className="sr-only" onChange={(e) => onFile(e.target.files?.[0] ?? null)} />
               {hash ? (
                 <>
-                  <Badge tone="teal">{t("newLicence.fingerprintReady")}</Badge>
+                  <Badge tone="brand">{t("newLicence.fingerprintReady")}</Badge>
                   <p className="font-semibold">{file?.name}</p>
                   <p className="break-all font-mono text-xs text-muted">SHA-256 {toHex(hash)}</p>
-                  <p className="text-xs text-teal-dark">{t("newLicence.chooseAnother")}</p>
+                  <p className="text-xs text-brand-ink">{t("newLicence.chooseAnother")}</p>
                 </>
               ) : (
                 <>
@@ -340,9 +340,9 @@ export function NewLicence() {
               </div>
               <SplitPreview
                 parts={[
-                  { label: t("newLicence.university"), pct: universityPct, color: "bg-teal" },
+                  { label: t("newLicence.university"), pct: universityPct, color: "bg-brand" },
                   { label: t("newLicence.inventors"), pct: inventorsPct, color: "bg-amber" },
-                  { label: t("newLicence.investors"), pct: investorsPct, color: "bg-lime" },
+                  { label: t("newLicence.investors"), pct: investorsPct, color: "bg-rose" },
                 ]}
               />
               <FieldError message={fieldError("split")} />
@@ -428,7 +428,7 @@ export function NewLicence() {
                     <div className="flex items-center justify-between gap-2 text-sm">
                       <span>{i + 1}. {t(`newLicence.steps.${s.key}`)}</span>
                       {s.state === "running" && <Badge tone="amber">{t("newLicence.confirmInWallet")}</Badge>}
-                      {s.state === "done" && <Badge tone="teal">{t("newLicence.done")}</Badge>}
+                      {s.state === "done" && <Badge tone="brand">{t("newLicence.done")}</Badge>}
                       {s.state === "error" && <Badge tone="danger">{t("newLicence.failed")}</Badge>}
                     </div>
                     {s.hash && <TxLink hash={s.hash} />}

@@ -53,7 +53,7 @@ export function ToastProvider({ children }: { children: ReactNode }) {
               toast.kind === "error"
                 ? "border-danger/40 bg-elevated text-danger"
                 : toast.kind === "success"
-                  ? "border-teal/40 bg-elevated text-ink"
+                  ? "border-brand/40 bg-elevated text-ink"
                   : "border-line bg-elevated text-ink"
             }`}
           >

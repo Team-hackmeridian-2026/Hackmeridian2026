@@ -4,7 +4,9 @@ import type { TFunction } from "i18next";
 import { escrow, isSettled, nft, paidToLab, type License, type Project } from "../stellar/contracts";
 import { useAsync } from "../lib/useAsync";
 import { eurc } from "../lib/format";
-import { Badge, Card, ErrorBox, Skeleton, buttonClass } from "../components/ui";
+import { ErrorBox, Skeleton, buttonClass } from "../components/ui";
+import { HeroVisual } from "../components/HeroVisual";
+import { Molecule } from "../components/Molecule";
 
 type Listing = { license: License; project?: Project };
 
@@ -22,7 +24,7 @@ async function loadListings(): Promise<Listing[]> {
 export function fundingStatus(
   t: TFunction,
   project?: Project,
-): { label: string; tone: "neutral" | "teal" | "amber" | "navy" } {
+): { label: string; tone: "neutral" | "brand" | "amber" | "navy" } {
   if (!project) return { label: t("funding.awaiting"), tone: "neutral" };
   if (!project.funded) return { label: t("funding.open"), tone: "amber" };
   const settled = project.milestones.filter((m) => isSettled(m.status)).length;
@@ -30,128 +32,216 @@ export function fundingStatus(
     const allPaid = project.milestones.every((m) => m.status === "Released");
     return { label: t(allPaid ? "funding.full" : "funding.done"), tone: "navy" };
   }
-  return { label: t("funding.milestone", { current: settled + 1, total: project.milestones.length }), tone: "teal" };
+  return { label: t("funding.milestone", { current: settled + 1, total: project.milestones.length }), tone: "brand" };
 }
 
-function ListingCard({ license, project }: Listing) {
+const TONE_TEXT = { neutral: "text-muted", amber: "text-amber-dark", brand: "text-brand-ink", navy: "text-ink" } as const;
+
+/** Small progress ring next to the funding status. */
+function StatusRing({ pct, className }: { pct: number; className: string }) {
+  const c = 2 * Math.PI * 7;
+  return (
+    <svg viewBox="0 0 18 18" className={`size-4 shrink-0 -rotate-90 ${className}`} aria-hidden>
+      <circle cx="9" cy="9" r="7" fill="none" stroke="currentColor" strokeOpacity="0.25" strokeWidth="2" />
+      <circle cx="9" cy="9" r="7" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeDasharray={`${Math.max(pct, 8) / 100 * c} ${c}`} />
+    </svg>
+  );
+}
+
+const COLUMNS = "md:grid md:grid-cols-[minmax(0,2.3fr)_minmax(0,1fr)_minmax(0,1fr)_minmax(0,1fr)_minmax(0,1fr)_minmax(0,2.2fr)_1.5rem] md:items-center md:gap-6";
+
+export function ListingRow({ license, project }: Listing) {
   const { t } = useTranslation();
   const total = project?.milestones.reduce((sum, m) => sum + m.amount, 0n) ?? 0n;
   const released = project?.milestones.reduce((s, m) => s + paidToLab(m), 0n) ?? 0n;
   const status = fundingStatus(t, project);
   const pct = total ? Number((released * 100n) / total) : 0;
+  const term = t("common.years", { count: license.terms.duration_years });
+  const type = license.terms.exclusive ? t("common.exclusive") : t("common.nonExclusive");
 
   return (
-    <Link to={`/licence/${license.id}`} className="group">
-      <Card className="flex h-full flex-col gap-4 transition group-hover:border-teal-dark">
-        <div className="flex items-start justify-between gap-3">
-          <Badge tone="neutral">{license.terms.field}</Badge>
-          <Badge tone={status.tone}>{status.label}</Badge>
+    <li>
+      <Link
+        to={`/licence/${license.id}`}
+        aria-label={t("marketplace.openLicence", { title: license.title })}
+        className={`group flex flex-col gap-4 px-5 py-5 transition duration-200 hover:bg-subtle/60 sm:px-7 sm:py-6 ${COLUMNS}`}
+      >
+        <div className="min-w-0">
+          <p className="text-sm text-muted">{t("marketplace.licenceNumber", { id: String(license.id) })}</p>
+          <p className="line-clamp-2 font-display text-xl leading-snug font-bold tracking-tight">{license.title}</p>
+          <p className="mt-1 text-sm text-muted md:hidden">
+            {license.terms.field} ·{" "}
+            {t("marketplace.licenceLine", {
+              licence: license.terms.exclusive ? t("marketplace.exclusiveLicence") : t("marketplace.nonExclusiveLicence"),
+              territory: license.terms.territory,
+              duration: term,
+            })}
+          </p>
         </div>
-        <h3 className="font-display text-xl font-semibold leading-snug">{license.title}</h3>
-        <p className="text-sm text-muted">
-          {t("marketplace.licenceLine", {
-            licence: license.terms.exclusive ? t("marketplace.exclusiveLicence") : t("marketplace.nonExclusiveLicence"),
-            territory: license.terms.territory,
-            duration: t("common.years", { count: license.terms.duration_years }),
-          })}
-        </p>
-        <div className="mt-auto flex flex-col gap-2">
-          <div className="h-2 overflow-hidden rounded-full bg-line">
-            <div className="h-full rounded-full bg-teal" style={{ width: `${pct}%` }} />
+        <p className="hidden truncate md:block">{license.terms.field}</p>
+        <p className="hidden truncate md:block">{license.terms.territory}</p>
+        <p className="hidden md:block">{term}</p>
+        <p className="hidden md:block">{type}</p>
+        <div className="flex flex-col gap-2">
+          <p className={`flex items-center gap-2 text-sm font-semibold ${TONE_TEXT[status.tone]}`}>
+            <StatusRing pct={pct} className={TONE_TEXT[status.tone]} />
+            {status.label}
+          </p>
+          <div className="h-1.5 overflow-hidden rounded-full bg-line">
+            <div className="h-full rounded-full bg-brand transition-[width] duration-500" style={{ width: `${pct}%` }} />
           </div>
-          <p className="text-xs text-muted">
+          <p className="text-sm text-muted">
             {project ? t("marketplace.released", { released: eurc(released), total: eurc(total) }) : t("marketplace.noRound")}
           </p>
         </div>
-      </Card>
-    </Link>
+        <svg viewBox="0 0 24 24" className="hidden size-5 text-brand-ink transition duration-200 group-hover:translate-x-0.5 md:block" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+          <path d="m9 6 6 6-6 6" />
+        </svg>
+      </Link>
+    </li>
   );
 }
 
-const POINTS = [
-  { key: "licence", icon: "M12 3 4 6v6c0 4.5 3.4 8.3 8 9 4.6-.7 8-4.5 8-9V6z M9 12l2 2 4-4" },
-  { key: "milestones", icon: "M4 19h16 M7 19v-5 M12 19V9 M17 19V5" },
-  { key: "royalties", icon: "M12 3v18 M5 8l7-5 7 5 M5 14h4 M15 14h4" },
-] as const;
-
-function ListingSkeleton() {
+function RowSkeleton() {
   return (
-    <Card className="flex h-full flex-col gap-4">
-      <div className="flex justify-between">
-        <Skeleton className="h-5 w-20" />
-        <Skeleton className="h-5 w-28" />
+    <li className={`flex flex-col gap-4 px-5 py-6 sm:px-7 ${COLUMNS}`}>
+      <div className="flex flex-col gap-2">
+        <Skeleton className="h-3 w-16" />
+        <Skeleton className="h-5 w-3/4" />
       </div>
-      <Skeleton className="h-6 w-4/5" />
-      <Skeleton className="h-4 w-3/5" />
-      <div className="mt-6 flex flex-col gap-2">
-        <Skeleton className="h-2 w-full" />
-        <Skeleton className="h-3 w-2/5" />
+      {[0, 1, 2, 3].map((i) => (
+        <Skeleton key={i} className="hidden h-4 w-16 md:block" />
+      ))}
+      <div className="flex flex-col gap-2">
+        <Skeleton className="h-3 w-24" />
+        <Skeleton className="h-1.5 w-full" />
       </div>
-    </Card>
+      <span />
+    </li>
   );
 }
+
+/** The licences listed on-chain, as in the Figma table (stacked cards on phones). */
+export function LicenceTable({ data, loading }: { data?: Listing[]; loading: boolean }) {
+  const { t } = useTranslation();
+  return (
+    <div className="overflow-hidden rounded-3xl border border-line bg-card shadow-card">
+      <div className={`hidden border-b border-line px-7 py-3.5 text-xs font-semibold text-muted ${COLUMNS}`}>
+        <span>{t("marketplace.table.licence")}</span>
+        <span>{t("marketplace.table.field")}</span>
+        <span>{t("marketplace.table.territory")}</span>
+        <span>{t("marketplace.table.term")}</span>
+        <span>{t("marketplace.table.type")}</span>
+        <span>{t("marketplace.table.funding")}</span>
+        <span />
+      </div>
+      {data && data.length === 0 ? (
+        <div className="flex flex-col items-center gap-3 px-6 py-14 text-center">
+          <Molecule shape="tetra" className="w-24" />
+          <h3 className="font-display text-xl font-bold">{t("marketplace.empty")}</h3>
+          <p className="max-w-md text-sm text-muted">{t("marketplace.emptyText")}</p>
+          <Link to="/new" className={buttonClass({ className: "mt-2" })}>
+            {t("marketplace.emptyCta")}
+          </Link>
+        </div>
+      ) : (
+        <ul className="divide-y divide-line">
+          {loading && !data && [0, 1].map((i) => <RowSkeleton key={i} />)}
+          {data?.map((listing) => <ListingRow key={String(listing.license.id)} {...listing} />)}
+        </ul>
+      )}
+    </div>
+  );
+}
+
+const AUDIENCES = ["labs", "investors", "industry"] as const;
+const STEPS = [
+  { key: "publish", line: "from-dna-indigo/70 to-dna-violet/30" },
+  { key: "fund", line: "from-dna-violet/60 to-dna-pink/50" },
+  { key: "payouts", line: "from-dna-pink/50 to-dna-peach/70" },
+] as const;
 
 export function Marketplace() {
   const { t } = useTranslation();
   const { data, error, loading, reload } = useAsync(loadListings, []);
 
   return (
-    <div className="flex flex-col gap-12">
-      <section className="relative overflow-hidden rounded-3xl border border-white/10 bg-navy px-6 py-10 text-paper sm:px-10 sm:py-12 md:px-12">
-        <div aria-hidden className="pointer-events-none absolute -top-24 -right-24 size-80 rounded-full bg-teal/20 blur-3xl" />
-        <div className="relative flex flex-col gap-6">
-          <p className="text-xs font-semibold uppercase tracking-widest text-teal">{t("marketplace.heroEyebrow")}</p>
-          <h1 className="max-w-3xl break-words font-display text-3xl font-bold leading-tight sm:text-4xl md:text-5xl">{t("marketplace.heroTitle")}</h1>
-          <p className="max-w-2xl text-paper/75">{t("marketplace.heroText")}</p>
-          <div className="flex flex-wrap items-center gap-5">
-            <Link to="/new" className={buttonClass()}>
+    <div className="flex flex-col">
+      {/* Hero */}
+      <section className="grid items-center gap-10 lg:grid-cols-[1.1fr_1fr] lg:gap-6">
+        <div className="flex flex-col gap-7 lg:py-10">
+          <p className="flex items-center gap-2.5 text-sm text-muted">
+            <span aria-hidden className="size-2 shrink-0 rounded-full bg-amber ring-4 ring-amber/20" />
+            {t("marketplace.heroNote")}
+          </p>
+          <h1 className="max-w-[12ch] font-display text-5xl leading-[0.95] font-extrabold tracking-[-0.04em] text-balance sm:text-6xl lg:text-[5.4rem]">
+            {t("marketplace.heroTitle")}
+          </h1>
+          <p className="max-w-xl text-lg leading-relaxed text-muted sm:text-xl">{t("marketplace.heroText")}</p>
+          <div className="flex flex-wrap gap-3">
+            <a href="#licences" className={buttonClass()}>
+              {t("marketplace.explore")}
+            </a>
+            <Link to="/new" className={buttonClass({ variant: "secondary" })}>
               {t("marketplace.listPatent")}
             </Link>
-            <a href="#licences" className="text-sm font-semibold text-paper/80 underline-offset-4 transition duration-200 hover:text-paper hover:underline">
-              {t("marketplace.browse")} ↓
-            </a>
           </div>
-          <ul className="mt-4 grid gap-5 border-t border-white/10 pt-8 md:grid-cols-3">
-            {POINTS.map((point) => (
-              <li key={point.key} className="flex gap-3">
-                <span className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-teal/15 text-teal ring-1 ring-inset ring-teal/30">
-                  <svg viewBox="0 0 24 24" className="size-5" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
-                    <path d={point.icon} />
-                  </svg>
-                </span>
-                <div>
-                  <p className="font-semibold">{t(`marketplace.points.${point.key}.title`)}</p>
-                  <p className="text-sm text-paper/70">{t(`marketplace.points.${point.key}.text`)}</p>
-                </div>
-              </li>
-            ))}
-          </ul>
         </div>
+        <HeroVisual />
       </section>
 
-      <section id="licences" className="flex scroll-mt-24 flex-col gap-6" aria-busy={loading}>
-        <div>
-          <p className="text-xs font-semibold uppercase tracking-widest text-teal-dark">{t("marketplace.eyebrow")}</p>
-          <h2 className="font-display text-2xl font-semibold">{t("marketplace.title")}</h2>
+      {/* Built for */}
+      <section className="mt-6 border-t border-line pt-8">
+        <h2 className="text-sm font-semibold text-muted">{t("marketplace.builtFor")}</h2>
+        <ul className="mt-5 grid gap-6 md:grid-cols-3 md:gap-10">
+          {AUDIENCES.map((key) => (
+            <li key={key}>
+              <h3 className="font-display text-xl font-bold tracking-tight">{t(`marketplace.audiences.${key}.title`)}</h3>
+              <p className="mt-1.5 text-sm text-muted">{t(`marketplace.audiences.${key}.text`)}</p>
+            </li>
+          ))}
+        </ul>
+      </section>
+
+      {/* How funding reaches the lab */}
+      <section className="mt-24 sm:mt-32">
+        <div className="flex items-end justify-between gap-6">
+          <h2 className="max-w-2xl font-display text-4xl font-extrabold tracking-[-0.03em] sm:text-5xl">{t("marketplace.how.title")}</h2>
+          <Molecule shape="ring" className="hidden w-64 shrink-0 animate-[float_10s_ease-in-out_infinite] md:block" />
         </div>
-        {error && <ErrorBox message={error} onRetry={reload} />}
-        {data && data.length === 0 && (
-          <Card className="flex flex-col items-center gap-3 py-12 text-center">
-            <span className="flex size-12 items-center justify-center rounded-full bg-teal/15 text-teal-dark ring-1 ring-inset ring-teal/30">
-              <svg viewBox="0 0 24 24" className="size-6" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" aria-hidden>
-                <path d="M7 3h7l5 5v13H7z M14 3v5h5 M10 13h6 M10 17h4" />
-              </svg>
-            </span>
-            <h3 className="font-display text-lg font-semibold">{t("marketplace.empty")}</h3>
-            <p className="max-w-md text-sm text-muted">{t("marketplace.emptyText")}</p>
-            <Link to="/new" className={buttonClass({ className: "mt-2" })}>
-              {t("marketplace.emptyCta")}
-            </Link>
-          </Card>
-        )}
-        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-          {loading && !data && [0, 1, 2].map((i) => <ListingSkeleton key={i} />)}
-          {data?.map((listing) => <ListingCard key={String(listing.license.id)} {...listing} />)}
+        <ol className="mt-12 grid gap-12 md:grid-cols-3 md:gap-10">
+          {STEPS.map((step, i) => (
+            <li key={step.key} className="flex flex-col">
+              <div className="flex items-center gap-6">
+                <span className="font-display text-7xl leading-none font-extrabold tracking-tight text-brand-ink">{i + 1}</span>
+                <span aria-hidden className={`h-px flex-1 bg-gradient-to-r ${step.line}`} />
+              </div>
+              <h3 className="mt-7 font-display text-2xl font-bold tracking-tight">{t(`marketplace.how.steps.${step.key}.title`)}</h3>
+              <p className="mt-3 leading-relaxed text-muted">{t(`marketplace.how.steps.${step.key}.text`)}</p>
+              <p className="mt-5 flex items-center gap-3 text-sm text-muted">
+                <span aria-hidden className="h-px w-5 bg-muted/60" />
+                {t(`marketplace.how.steps.${step.key}.note`)}
+              </p>
+            </li>
+          ))}
+        </ol>
+      </section>
+
+      {/* Licences, on a full-width band that runs into the footer */}
+      <section id="licences" aria-busy={loading} className="relative mt-24 -mb-8 scroll-mt-24 py-16 sm:mt-32 sm:-mb-12 sm:py-24">
+        <div aria-hidden className="absolute inset-y-0 left-1/2 -z-10 w-screen -translate-x-1/2 bg-band" />
+        <div className="flex flex-wrap items-end justify-between gap-6">
+          <div>
+            <h2 className="font-display text-4xl font-extrabold tracking-[-0.03em] sm:text-5xl">{t("marketplace.title")}</h2>
+            {data && <p className="mt-3 text-muted">{t("marketplace.count", { count: data.length })}</p>}
+          </div>
+          <Link to="/new" className={buttonClass({ variant: "secondary" })}>
+            {t("marketplace.listPatent")}
+          </Link>
+        </div>
+        <div className="mt-10 flex flex-col gap-4">
+          {error && <ErrorBox message={error} onRetry={reload} />}
+          {!error && <LicenceTable data={data} loading={loading} />}
         </div>
       </section>
     </div>

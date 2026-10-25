@@ -12,8 +12,8 @@ export function LogoMark({ className = "size-8", title }: { className?: string; 
       {title && <title>{title}</title>}
       <defs>
         <linearGradient id={id} x1="6" y1="4" x2="42" y2="46" gradientUnits="userSpaceOnUse">
-          <stop stopColor="#059669" />
-          <stop offset="1" stopColor="#6ee7b7" />
+          <stop stopColor="#3b2fd9" />
+          <stop offset="1" stopColor="#d77fcf" />
         </linearGradient>
       </defs>
       <path d="M24 3 41 9v13c0 11-7.5 19.5-17 23C14.5 41.5 7 33 7 22V9z" fill={`url(#${id})`} />
@@ -29,10 +29,8 @@ export function LogoMark({ className = "size-8", title }: { className?: string; 
 export function Logo({ className = "" }: { className?: string }) {
   return (
     <span className={`inline-flex items-center gap-2.5 ${className}`}>
-      <LogoMark className="size-8 shrink-0" />
-      <span className="font-display text-xl font-bold tracking-tight text-paper">
-        <span className="text-teal">Bio</span>Licensing
-      </span>
+      <LogoMark className="size-7 shrink-0" />
+      <span className="font-display text-xl font-extrabold tracking-tight text-ink">BioLicensing</span>
     </span>
   );
 }

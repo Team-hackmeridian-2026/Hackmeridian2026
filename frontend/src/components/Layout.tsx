@@ -9,7 +9,6 @@ import { useAsync } from "../lib/useAsync";
 import { formatNumber, shortAddress } from "../lib/format";
 import { Button } from "./ui";
 import { Logo } from "./Logo";
-import { BioBackground } from "./BioBackground";
 import { useTheme } from "../lib/theme";
 
 const NAV = [
@@ -22,7 +21,7 @@ const NAV = [
 function LanguageSwitcher() {
   const { t, i18n } = useTranslation();
   return (
-    <div role="group" aria-label={t("language.label")} className="flex rounded-lg border border-white/20 p-0.5 text-xs font-semibold">
+    <div role="group" aria-label={t("language.label")} className="flex items-center gap-0.5 rounded-full border border-line bg-card p-1 text-xs font-semibold shadow-pill">
       {LANGUAGES.map((lang) => {
         const active = i18n.resolvedLanguage === lang.code;
         return (
@@ -33,7 +32,7 @@ function LanguageSwitcher() {
             title={lang.name}
             aria-pressed={active}
             onClick={() => i18n.changeLanguage(lang.code)}
-            className={`rounded-md px-2 py-1 transition ${active ? "bg-teal text-navy" : "text-paper/70 hover:text-paper"}`}
+            className={`flex size-8 items-center justify-center rounded-full transition duration-200 ${active ? "bg-ink text-canvas" : "text-muted hover:text-ink"}`}
           >
             {lang.label}
           </button>
@@ -52,7 +51,7 @@ function WalletArea() {
     <div className="flex flex-wrap items-center gap-3">
       {DEMO_ENABLED && (
         <select
-          className="rounded-lg border border-white/20 bg-navy-2 px-3 py-2 text-sm text-paper"
+          className="rounded-full border border-line bg-card px-4 py-2 text-sm text-ink shadow-pill"
           value=""
           onChange={(e) => e.target.value && useDemoRole(e.target.value as DemoRole)}
           aria-label={t("wallet.demoRole")}
@@ -66,17 +65,24 @@ function WalletArea() {
         </select>
       )}
       {signer ? (
-        <div className="flex items-center gap-3 rounded-lg bg-navy-2 px-3 py-1.5 text-sm text-paper">
-          <div className="leading-tight">
-            <p className="text-xs text-paper/60">{signer.role ? t(`roles.${signer.role}`) : t("wallet.wallet")}</p>
-            <p className="font-mono">{shortAddress(signer.address)}</p>
-          </div>
-          <div className="border-l border-white/15 pl-3 leading-tight">
-            <p className="text-xs text-paper/60">{t("wallet.balance")}</p>
-            <p className="font-semibold">{balance.data ? `${formatNumber(balance.data.balance)} EURC` : "—"}</p>
-          </div>
-          <button onClick={disconnect} className="text-xs text-paper/60 hover:text-paper">
-            {t("wallet.disconnect")}
+        <div
+          className="flex items-center gap-2.5 rounded-full border border-line bg-card py-1 pr-1 pl-1 text-sm whitespace-nowrap text-ink shadow-pill"
+          title={signer.role ? t(`roles.${signer.role}`) : t("wallet.wallet")}
+        >
+          <span aria-hidden className="size-7 shrink-0 rounded-full bg-[conic-gradient(from_120deg,var(--color-dna-indigo),var(--color-dna-pink),var(--color-dna-yellow),var(--color-dna-indigo))]" />
+          <span className="font-mono text-xs">{shortAddress(signer.address)}</span>
+          <span className="rounded-full bg-subtle px-2.5 py-1 text-xs font-semibold" aria-label={t("wallet.balance")}>
+            {balance.data ? `${formatNumber(balance.data.balance)} EURC` : "—"}
+          </span>
+          <button
+            onClick={disconnect}
+            aria-label={t("wallet.disconnect")}
+            title={t("wallet.disconnect")}
+            className="flex size-7 items-center justify-center rounded-full text-muted transition duration-200 hover:bg-subtle hover:text-ink"
+          >
+            <svg viewBox="0 0 24 24" className="size-4" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+              <path d="M15 4h3a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2h-3M10 17l5-5-5-5M15 12H3" />
+            </svg>
           </button>
         </div>
       ) : (
@@ -85,7 +91,7 @@ function WalletArea() {
         </Button>
       )}
       {signer && balance.data && !balance.data.hasTrustline && (
-        <p className="w-full text-xs text-amber">
+        <p className="w-full text-xs text-amber-dark">
           <Trans
             i18nKey="wallet.trustlineHint"
             components={{ link: <a href={CIRCLE_FAUCET_URL} target="_blank" rel="noreferrer" className="underline" /> }}
@@ -107,7 +113,7 @@ function ThemeToggle() {
       onClick={() => setTheme(next)}
       aria-label={label}
       title={label}
-      className="flex size-9 items-center justify-center rounded-lg border border-white/15 text-paper/80 transition duration-200 hover:border-teal hover:text-paper"
+      className="flex size-10 items-center justify-center rounded-full border border-line bg-card text-ink shadow-pill transition duration-200 hover:border-ink/25"
     >
       {theme === "dark" ? (
         // Sun: switch to light.
@@ -125,9 +131,9 @@ function ThemeToggle() {
   );
 }
 
-/** True from the `lg` breakpoint up, where the full header fits on one line. */
+/** True from 1200 px up, where the full header (nav + language + theme + wallet) fits on one line. */
 function useIsDesktop(): boolean {
-  const query = "(min-width: 1024px)";
+  const query = "(min-width: 1200px)";
   const [desktop, setDesktop] = useState(() => window.matchMedia(query).matches);
   useEffect(() => {
     const media = window.matchMedia(query);
@@ -139,9 +145,20 @@ function useIsDesktop(): boolean {
 }
 
 const linkClass = (stacked: boolean) => ({ isActive }: { isActive: boolean }) =>
-  `rounded-lg px-3 py-2 text-sm font-medium transition duration-200 ${stacked ? "block text-base" : ""} ${
-    isActive ? "bg-teal/15 text-paper ring-1 ring-inset ring-teal/40" : "text-paper/70 hover:bg-white/5 hover:text-paper"
+  `rounded-full px-4 py-1.5 text-sm font-medium transition duration-200 ${stacked ? "block py-2.5 text-base" : ""} ${
+    isActive ? "bg-card text-ink shadow-pill ring-1 ring-inset ring-line" : "text-muted hover:text-ink"
   }`;
+
+/** Reminds every visitor that nothing here moves real money. */
+function TestnetBadge() {
+  const { t } = useTranslation();
+  return (
+    <span className="inline-flex items-center gap-1.5 rounded-full border border-dashed border-amber/80 bg-amber/10 px-2.5 py-0.5 text-xs font-semibold text-amber-dark">
+      <span aria-hidden className="size-1.5 rounded-full bg-amber" />
+      {t("header.testnet")}
+    </span>
+  );
+}
 
 export function Layout() {
   const { t } = useTranslation();
@@ -170,23 +187,25 @@ export function Layout() {
     ));
 
   return (
-    <div className="relative isolate flex min-h-screen flex-col">
-      <BioBackground />
-      <header className="sticky top-0 z-40 border-b border-white/10 bg-navy/95 text-paper backdrop-blur-md">
+    <div className="flex min-h-screen flex-col">
+      <header className="sticky top-0 z-40 border-b border-line bg-canvas/85 backdrop-blur-md">
         <div className="mx-auto max-w-6xl px-4 sm:px-6">
-          <div className="flex items-center justify-between gap-4 py-3 lg:py-4">
-            <div className="flex min-w-0 items-center gap-8">
+          <div className="flex items-center justify-between gap-4 py-3 min-[1200px]:grid min-[1200px]:grid-cols-[auto_1fr_auto] min-[1200px]:py-3.5">
+            <div className="flex min-w-0 items-center gap-3">
               <NavLink to="/" aria-label={t("brand.home")} className="shrink-0">
                 <Logo />
               </NavLink>
-              {desktop && (
-                <nav aria-label={t("nav.main")} className="flex gap-1">
-                  {links(false)}
-                </nav>
-              )}
+              <span className="hidden sm:inline-flex">
+                <TestnetBadge />
+              </span>
             </div>
+            {desktop && (
+              <nav aria-label={t("nav.main")} className="flex gap-1 justify-self-center rounded-full bg-subtle p-1">
+                {links(false)}
+              </nav>
+            )}
             {desktop ? (
-              <div className="flex items-center gap-3">
+              <div className="flex items-center justify-end gap-2">
                 <LanguageSwitcher />
                 <ThemeToggle />
                 <WalletArea />
@@ -204,7 +223,7 @@ export function Layout() {
                   aria-expanded={menuOpen}
                   aria-controls="mobile-menu"
                   aria-label={t(menuOpen ? "nav.closeMenu" : "nav.openMenu")}
-                  className="flex size-10 items-center justify-center rounded-lg border border-white/15 text-paper transition duration-200 hover:border-teal"
+                  className="flex size-10 items-center justify-center rounded-full border border-line bg-card text-ink shadow-pill transition duration-200 hover:border-ink/25"
                 >
                   <svg viewBox="0 0 24 24" className="size-5" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden>
                     {menuOpen ? <path d="M6 6l12 12M18 6 6 18" /> : <path d="M4 7h16M4 12h16M4 17h16" />}
@@ -214,29 +233,30 @@ export function Layout() {
             )}
           </div>
           {!desktop && menuOpen && (
-            <div id="mobile-menu" className="flex flex-col gap-4 border-t border-white/10 py-4">
-              <nav aria-label={t("nav.main")} className="flex flex-col gap-1">
+            <div id="mobile-menu" className="flex flex-col gap-4 border-t border-line py-4">
+              <nav aria-label={t("nav.main")} className="flex flex-col gap-1 rounded-3xl bg-subtle p-1.5">
                 {links(true)}
               </nav>
-              <div className="flex items-center gap-3">
+              <div className="flex items-center gap-2">
                 <LanguageSwitcher />
                 <ThemeToggle />
+                <TestnetBadge />
               </div>
               {signer && <WalletArea />}
             </div>
           )}
         </div>
       </header>
-      <main className="mx-auto w-full max-w-6xl flex-1 px-4 py-8 sm:px-6 sm:py-10">
+      <main className="mx-auto w-full max-w-6xl flex-1 px-4 py-8 sm:px-6 sm:py-12">
         <Outlet />
       </main>
-      <footer className="border-t border-line bg-canvas/70 backdrop-blur-sm">
-        <div className="mx-auto flex max-w-6xl flex-wrap justify-between gap-2 px-4 py-6 text-xs text-muted sm:px-6">
+      <footer className="border-t border-line">
+        <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-3 px-4 py-7 text-sm text-muted sm:px-6">
           <p>{t("footer.tagline")}</p>
-          <p className="flex flex-wrap gap-3">
+          <p className="flex flex-wrap items-center gap-3">
             {t("footer.contracts")}
             {(["nft", "escrow", "splitter"] as const).map((key) => (
-              <a key={key} href={explorer.contract(CONTRACTS[key])} target="_blank" rel="noreferrer" className="text-teal-dark hover:underline">
+              <a key={key} href={explorer.contract(CONTRACTS[key])} target="_blank" rel="noreferrer" className="font-mono text-brand-ink hover:underline">
                 {key}
               </a>
             ))}
