@@ -13,7 +13,10 @@
     "marketplace": "Marketplace",
     "newLicence": "List a patent",
     "cashOut": "Cash out",
-    "admin": "Admin"
+    "admin": "Admin",
+    "main": "Main navigation",
+    "openMenu": "Open the menu",
+    "closeMenu": "Close the menu"
   },
   "roles": {
     "lab": "University lab",
@@ -46,7 +49,9 @@
     "exclusive": "Exclusive",
     "nonExclusive": "Non-exclusive",
     "years_one": "{{count}} year",
-    "years_other": "{{count}} years"
+    "years_other": "{{count}} years",
+    "retry": "Try again",
+    "networkError": "Can't reach the Stellar testnet. Check your connection and try again."
   },
   "units": {
     "day": "d",
@@ -79,15 +84,30 @@
     "nonExclusiveLicence": "Non-exclusive licence",
     "released": "{{released}} released of {{total}}",
     "noRound": "No funding round yet",
-    "heroEyebrow": "Funding European research",
-    "heroTitle": "Turn a patent into a programmable licence: funded in euros, released by milestones, paid out automatically.",
-    "heroText": "Universities keep ownership. Investors fund in EURC through an escrow that only pays out when milestones are met. Royalties are split between the university, its inventors and investors in a single transaction.",
+    "heroEyebrow": "For university labs, investors and industry",
+    "heroTitle": "Fund research without selling the patent.",
+    "heroText": "BioLicensing turns a university patent into a licence on Stellar: funded in euros, released milestone by milestone, with royalties shared automatically.",
     "listPatent": "List a patent",
     "browse": "Browse licences",
     "eyebrow": "Marketplace",
     "title": "Licences on Stellar",
-    "empty": "No licence yet.",
-    "emptyCta": "List the first patent →"
+    "empty": "No licence listed yet",
+    "emptyCta": "List the first patent",
+    "points": {
+      "licence": {
+        "title": "A licence, not a sale",
+        "text": "The university keeps the patent. Investors fund a licence whose terms and dossier fingerprint are recorded on-chain."
+      },
+      "milestones": {
+        "title": "Paid by milestones",
+        "text": "EURC stays in escrow and is released only when the lab proves each milestone. The investor can dispute."
+      },
+      "royalties": {
+        "title": "Royalties shared automatically",
+        "text": "One payment from the licensee is split between the university, its inventors and investors."
+      }
+    },
+    "emptyText": "A university lists a patent in three short steps. The first licence will appear here."
   },
   "newLicence": {
     "windows": {
@@ -109,7 +129,7 @@
     "splitBad": "Total {{total}} %: it must be exactly 100 %",
     "blockers": {
       "connect": "Connect the university's wallet first.",
-      "notInstitution": "This account is not a verified institution yet (see Admin)."
+      "notInstitution": "This account is not a verified institution yet: ask the platform admin to verify it."
     },
     "errors": {
       "dossier": "Add the scientific dossier: only its fingerprint goes on-chain.",

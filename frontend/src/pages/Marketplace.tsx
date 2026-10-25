@@ -4,7 +4,7 @@ import type { TFunction } from "i18next";
 import { escrow, nft, type License, type Project } from "../stellar/contracts";
 import { useAsync } from "../lib/useAsync";
 import { eurc } from "../lib/format";
-import { Badge, Button, Card, ErrorBox, Spinner } from "../components/ui";
+import { Badge, Card, ErrorBox, Skeleton, buttonClass } from "../components/ui";
 
 type Listing = { license: License; project?: Project };
 
@@ -65,44 +65,89 @@ function ListingCard({ license, project }: Listing) {
   );
 }
 
+const POINTS = [
+  { key: "licence", icon: "M12 3 4 6v6c0 4.5 3.4 8.3 8 9 4.6-.7 8-4.5 8-9V6z M9 12l2 2 4-4" },
+  { key: "milestones", icon: "M4 19h16 M7 19v-5 M12 19V9 M17 19V5" },
+  { key: "royalties", icon: "M12 3v18 M5 8l7-5 7 5 M5 14h4 M15 14h4" },
+] as const;
+
+function ListingSkeleton() {
+  return (
+    <Card className="flex h-full flex-col gap-4">
+      <div className="flex justify-between">
+        <Skeleton className="h-5 w-20" />
+        <Skeleton className="h-5 w-28" />
+      </div>
+      <Skeleton className="h-6 w-4/5" />
+      <Skeleton className="h-4 w-3/5" />
+      <div className="mt-6 flex flex-col gap-2">
+        <Skeleton className="h-2 w-full" />
+        <Skeleton className="h-3 w-2/5" />
+      </div>
+    </Card>
+  );
+}
+
 export function Marketplace() {
   const { t } = useTranslation();
-  const { data, error, loading } = useAsync(loadListings, []);
+  const { data, error, loading, reload } = useAsync(loadListings, []);
 
   return (
     <div className="flex flex-col gap-12">
-      <section className="flex flex-col gap-6 rounded-3xl bg-navy px-8 py-12 text-paper md:px-12">
-        <p className="text-xs font-semibold uppercase tracking-widest text-teal">{t("marketplace.heroEyebrow")}</p>
-        <h1 className="max-w-3xl break-words font-display text-3xl font-bold leading-tight sm:text-4xl md:text-5xl">{t("marketplace.heroTitle")}</h1>
-        <p className="max-w-2xl text-paper/70">{t("marketplace.heroText")}</p>
-        <div className="flex flex-wrap gap-3">
-          <Link to="/new">
-            <Button className="bg-teal text-navy hover:bg-teal/90">{t("marketplace.listPatent")}</Button>
-          </Link>
-          <a href="#licences">
-            <Button variant="secondary" className="border-white/20 bg-transparent text-paper hover:border-teal">
-              {t("marketplace.browse")}
-            </Button>
-          </a>
+      <section className="relative overflow-hidden rounded-3xl border border-white/10 bg-navy px-6 py-10 text-paper sm:px-10 sm:py-12 md:px-12">
+        <div aria-hidden className="pointer-events-none absolute -top-24 -right-24 size-80 rounded-full bg-teal/20 blur-3xl" />
+        <div className="relative flex flex-col gap-6">
+          <p className="text-xs font-semibold uppercase tracking-widest text-teal">{t("marketplace.heroEyebrow")}</p>
+          <h1 className="max-w-3xl break-words font-display text-3xl font-bold leading-tight sm:text-4xl md:text-5xl">{t("marketplace.heroTitle")}</h1>
+          <p className="max-w-2xl text-paper/75">{t("marketplace.heroText")}</p>
+          <div className="flex flex-wrap items-center gap-5">
+            <Link to="/new" className={buttonClass()}>
+              {t("marketplace.listPatent")}
+            </Link>
+            <a href="#licences" className="text-sm font-semibold text-paper/80 underline-offset-4 transition duration-200 hover:text-paper hover:underline">
+              {t("marketplace.browse")} ↓
+            </a>
+          </div>
+          <ul className="mt-4 grid gap-5 border-t border-white/10 pt-8 md:grid-cols-3">
+            {POINTS.map((point) => (
+              <li key={point.key} className="flex gap-3">
+                <span className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-teal/15 text-teal ring-1 ring-inset ring-teal/30">
+                  <svg viewBox="0 0 24 24" className="size-5" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+                    <path d={point.icon} />
+                  </svg>
+                </span>
+                <div>
+                  <p className="font-semibold">{t(`marketplace.points.${point.key}.title`)}</p>
+                  <p className="text-sm text-paper/70">{t(`marketplace.points.${point.key}.text`)}</p>
+                </div>
+              </li>
+            ))}
+          </ul>
         </div>
       </section>
 
-      <section id="licences" className="flex flex-col gap-6">
+      <section id="licences" className="flex scroll-mt-24 flex-col gap-6" aria-busy={loading}>
         <div>
           <p className="text-xs font-semibold uppercase tracking-widest text-teal-dark">{t("marketplace.eyebrow")}</p>
           <h2 className="font-display text-2xl font-semibold">{t("marketplace.title")}</h2>
         </div>
-        {loading && <Spinner />}
-        {error && <ErrorBox message={error} />}
+        {error && <ErrorBox message={error} onRetry={reload} />}
         {data && data.length === 0 && (
-          <Card className="text-sm text-muted">
-            {t("marketplace.empty")}{" "}
-            <Link to="/new" className="font-semibold text-teal-dark">
+          <Card className="flex flex-col items-center gap-3 py-12 text-center">
+            <span className="flex size-12 items-center justify-center rounded-full bg-teal/15 text-teal-dark ring-1 ring-inset ring-teal/30">
+              <svg viewBox="0 0 24 24" className="size-6" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" aria-hidden>
+                <path d="M7 3h7l5 5v13H7z M14 3v5h5 M10 13h6 M10 17h4" />
+              </svg>
+            </span>
+            <h3 className="font-display text-lg font-semibold">{t("marketplace.empty")}</h3>
+            <p className="max-w-md text-sm text-muted">{t("marketplace.emptyText")}</p>
+            <Link to="/new" className={buttonClass({ className: "mt-2" })}>
               {t("marketplace.emptyCta")}
             </Link>
           </Card>
         )}
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+          {loading && !data && [0, 1, 2].map((i) => <ListingSkeleton key={i} />)}
           {data?.map((listing) => <ListingCard key={String(listing.license.id)} {...listing} />)}
         </div>
       </section>

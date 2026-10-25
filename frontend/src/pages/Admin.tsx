@@ -4,7 +4,7 @@ import { ACCOUNTS } from "../config";
 import { nft, splitter, type TxResult } from "../stellar/contracts";
 import { useWallet } from "../stellar/wallet";
 import { useToasts } from "../components/toasts";
-import { Badge, Button, Card, ErrorBox, Field, Input, SectionTitle } from "../components/ui";
+import { Badge, Button, Card, Field, Input, Notice, SectionTitle } from "../components/ui";
 
 function Registry({
   title,
@@ -78,7 +78,7 @@ export function Admin() {
       <SectionTitle eyebrow={t("admin.eyebrow")} title={t("admin.title")}>
         <p className="max-w-md text-sm text-muted">{t("admin.intro")}</p>
       </SectionTitle>
-      {!isAdmin && <ErrorBox message={t("admin.notAdmin")} />}
+      {!isAdmin && <Notice>{t("admin.notAdmin")}</Notice>}
       {signer && (
         <div className="grid gap-6 md:grid-cols-2">
           <Registry

@@ -20,7 +20,7 @@ import { useWallet } from "../stellar/wallet";
 import { useToasts } from "../components/toasts";
 import { useAsync } from "../lib/useAsync";
 import { formatNumber } from "../lib/format";
-import { Badge, Button, Card, ErrorBox, SectionTitle, Spinner, TxLink } from "../components/ui";
+import { Badge, Button, Card, ErrorBox, Notice, SectionTitle, Spinner, TxLink } from "../components/ui";
 
 const TERMINAL: AnchorStatus[] = ["completed", "refunded", "expired", "error", "no_market", "too_small", "too_large"];
 
@@ -63,7 +63,7 @@ function assetHint(t: TFunction, asset: AnchorAsset) {
 
 export function CashOut() {
   const { t } = useTranslation();
-  const { signer } = useWallet();
+  const { signer, connecting, connectWallet } = useWallet();
   const { push } = useToasts();
   const config = useAsync(anchorConfig, []);
 
@@ -162,9 +162,19 @@ export function CashOut() {
         <Trans i18nKey="cashOut.testnetNote" values={{ domain: ANCHOR_DOMAIN }} components={{ strong: <strong /> }} />
       </Card>
 
-      {!signer && <ErrorBox message={t("cashOut.connect")} />}
+      {!signer && (
+        <Notice
+          action={
+            <Button size="sm" busy={connecting} onClick={connectWallet}>
+              {t("wallet.connect")}
+            </Button>
+          }
+        >
+          {t("cashOut.connect")}
+        </Notice>
+      )}
       {config.loading && <Spinner label={t("cashOut.reading", { domain: ANCHOR_DOMAIN })} />}
-      {config.error && <ErrorBox message={config.error} />}
+      {config.error && <ErrorBox message={config.error} onRetry={config.reload} />}
 
       {signer && config.data && asset && (
         <div className="grid gap-6 lg:grid-cols-[280px_1fr]">

@@ -13,7 +13,10 @@
     "marketplace": "Marché",
     "newLicence": "Déposer un brevet",
     "cashOut": "Retrait bancaire",
-    "admin": "Admin"
+    "admin": "Admin",
+    "main": "Navigation principale",
+    "openMenu": "Ouvrir le menu",
+    "closeMenu": "Fermer le menu"
   },
   "roles": {
     "lab": "Laboratoire universitaire",
@@ -46,7 +49,9 @@
     "exclusive": "Exclusive",
     "nonExclusive": "Non exclusive",
     "years_one": "{{count}} an",
-    "years_other": "{{count}} ans"
+    "years_other": "{{count}} ans",
+    "retry": "Réessayer",
+    "networkError": "Impossible de joindre le testnet Stellar. Vérifiez votre connexion et réessayez."
   },
   "units": {
     "day": "j",
@@ -79,15 +84,30 @@
     "nonExclusiveLicence": "Licence non exclusive",
     "released": "{{released}} débloqués sur {{total}}",
     "noRound": "Pas encore de levée",
-    "heroEyebrow": "Financer la recherche européenne",
-    "heroTitle": "Transformez un brevet en licence programmable : financée en euros, débloquée par jalons, versée automatiquement.",
-    "heroText": "L'université reste propriétaire. Les investisseurs financent en EURC via un escrow qui ne paie que lorsque les jalons sont atteints. Les redevances sont partagées entre l'université, ses inventeurs et les investisseurs en une seule transaction.",
+    "heroEyebrow": "Pour les laboratoires, les investisseurs et les industriels",
+    "heroTitle": "Financez la recherche sans vendre le brevet.",
+    "heroText": "BioLicensing transforme un brevet universitaire en licence sur Stellar : financée en euros, débloquée jalon par jalon, avec des redevances partagées automatiquement.",
     "listPatent": "Déposer un brevet",
     "browse": "Parcourir les licences",
     "eyebrow": "Marché",
     "title": "Licences sur Stellar",
-    "empty": "Aucune licence pour l'instant.",
-    "emptyCta": "Déposer le premier brevet →"
+    "empty": "Aucune licence pour l'instant",
+    "emptyCta": "Déposer le premier brevet",
+    "points": {
+      "licence": {
+        "title": "Une licence, pas une vente",
+        "text": "L'université garde le brevet. Les investisseurs financent une licence dont les termes et l'empreinte du dossier sont inscrits on-chain."
+      },
+      "milestones": {
+        "title": "Payé par jalons",
+        "text": "Les EURC restent dans l'escrow et ne sont versés que lorsque le labo prouve chaque jalon. L'investisseur peut contester."
+      },
+      "royalties": {
+        "title": "Redevances partagées automatiquement",
+        "text": "Un seul paiement du licencié est réparti entre l'université, ses inventeurs et les investisseurs."
+      }
+    },
+    "emptyText": "Une université dépose un brevet en trois étapes courtes. La première licence apparaîtra ici."
   },
   "newLicence": {
     "windows": {
@@ -109,7 +129,7 @@
     "splitBad": "Total {{total}} % : il doit être exactement de 100 %",
     "blockers": {
       "connect": "Connectez d'abord le wallet de l'université.",
-      "notInstitution": "Ce compte n'est pas encore une institution vérifiée (voir Admin)."
+      "notInstitution": "Ce compte n'est pas encore une institution vérifiée : demandez à l'administrateur de la plateforme de le vérifier."
     },
     "errors": {
       "dossier": "Ajoutez le dossier scientifique : seule son empreinte est inscrite on-chain.",

@@ -1,6 +1,7 @@
 import { createContext, useCallback, useContext, useState, type ReactNode } from "react";
 import { useTranslation } from "react-i18next";
 import { TxLink } from "./ui";
+import { isNetworkError } from "../lib/errors";
 import type { TxResult } from "../stellar/contracts";
 
 type Toast = { id: number; kind: "success" | "error" | "info"; text: string; hash?: string };
@@ -32,7 +33,9 @@ export function ToastProvider({ children }: { children: ReactNode }) {
         push({ kind: "success", text: t("common.confirmed", { label }), hash: res.hash });
         return res;
       } catch (err) {
-        push({ kind: "error", text: t("common.failed", { label, message: err instanceof Error ? err.message : String(err) }) });
+        const raw = err instanceof Error ? err.message : String(err);
+        const message = isNetworkError(raw) ? t("common.networkError") : raw;
+        push({ kind: "error", text: t("common.failed", { label, message }) });
         return null;
       }
     },
