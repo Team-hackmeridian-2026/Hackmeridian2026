@@ -127,8 +127,8 @@ export function Marketplace() {
   return (
     <div className="flex flex-col">
       {/* Hero */}
-      <section className="grid items-center gap-10 lg:grid-cols-[1.1fr_1fr] lg:gap-6">
-        <div className="flex flex-col gap-7 lg:py-10">
+      <section className="relative isolate grid items-center gap-10 lg:grid-cols-[1.1fr_1fr] lg:gap-6">
+        <div className="flex flex-col gap-7 py-6 sm:py-10">
           <p className="flex items-center gap-2.5 text-sm text-muted">
             <span aria-hidden className="size-2 shrink-0 rounded-full bg-amber ring-4 ring-amber/20" />
             {t("marketplace.heroNote")}
