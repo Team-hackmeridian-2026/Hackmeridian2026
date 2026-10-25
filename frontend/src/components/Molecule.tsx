@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState, type RefObject } from "react";
 
 /**
  * Decorative ball-and-stick molecules from the Figma, made of "0" and "1" digits
@@ -6,6 +6,9 @@ import { useEffect, useState } from "react";
  * more opaque in the middle); bonds are dotted lines of small digits. A few digits
  * flip every second or so; nothing moves with prefers-reduced-motion.
  * Colours follow the theme (--color-mol-*).
+ *
+ * Interactive like the helix: digits near the pointer grow, light up, move aside
+ * and flip faster; a click or tap on a molecule makes it burst and settle back.
  */
 type Atom = { x: number; y: number; r: number; color: "indigo" | "violet" | "pink" | "peach" | "yellow" };
 type Shape = { width: number; height: number; atoms: Atom[]; bonds: [number, number][] };
@@ -124,11 +127,143 @@ function useFlipTick(): number {
   return tick;
 }
 
+const REACH_PX = 120; // how far from the pointer digits react, in screen pixels
+
+/**
+ * Pointer interaction, done outside React: one rAF loop per molecule updates the
+ * transform and opacity of each digit, and only runs while something is moving.
+ */
+function useInteraction(svgRef: RefObject<SVGSVGElement | null>, shape: keyof typeof SHAPES) {
+  useEffect(() => {
+    const svg = svgRef.current;
+    if (!svg || window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    const glyphs = LAYOUTS[shape];
+    const els = Array.from(svg.querySelectorAll<SVGTextElement>("text"));
+    if (els.length !== glyphs.length) return;
+    const { width, atoms } = SHAPES[shape];
+    const cx = atoms.reduce((s, a) => s + a.x, 0) / atoms.length;
+    const cy = atoms.reduce((s, a) => s + a.y, 0) / atoms.length;
+
+    const cur = glyphs.map(() => ({ x: 0, y: 0, s: 1, o: 0 }));
+    const pointer = { x: -1e4, y: -1e4, active: false };
+    let burst = 0;
+    let frame = 0;
+
+    function step() {
+      frame = 0;
+      const rect = svg!.getBoundingClientRect();
+      if (!rect.width) return;
+      const scale = rect.width / width; // screen px per SVG unit
+      const px = (pointer.x - rect.left) / scale;
+      const py = (pointer.y - rect.top) / scale;
+      const reach = REACH_PX / scale;
+      let moving = burst > 0.01;
+
+      for (let i = 0; i < glyphs.length; i++) {
+        const g = glyphs[i];
+        let tx = 0;
+        let ty = 0;
+        let ts = 1;
+        let to = 0;
+        if (pointer.active) {
+          const dx = g.x - px;
+          const dy = g.y - py;
+          const d = Math.hypot(dx, dy) || 1;
+          if (d < reach) {
+            const f = (1 - d / reach) ** 2;
+            tx = (dx / d) * f * 9;
+            ty = (dy / d) * f * 9;
+            ts = 1 + f * 0.9;
+            to = f * 0.6;
+            // Near the pointer, digits flip much more often.
+            if (f > 0.35 && Math.random() < 0.06) {
+              const node = els[i].firstChild;
+              if (node) node.nodeValue = node.nodeValue === "0" ? "1" : "0";
+            }
+          }
+        }
+        if (burst > 0.01) {
+          // Burst: every digit flies out from the molecule centre, then settles.
+          const bx = g.x - cx;
+          const by = g.y - cy;
+          const bd = Math.hypot(bx, by) || 1;
+          tx += (bx / bd) * burst * 16;
+          ty += (by / bd) * burst * 16;
+          ts += burst * 0.4;
+        }
+        const c = cur[i];
+        c.x += (tx - c.x) * 0.2;
+        c.y += (ty - c.y) * 0.2;
+        c.s += (ts - c.s) * 0.2;
+        c.o += (to - c.o) * 0.2;
+        if (Math.abs(tx - c.x) + Math.abs(ty - c.y) + Math.abs(ts - c.s) + Math.abs(to - c.o) > 0.01) moving = true;
+        const el = els[i];
+        el.style.transform = `translate(${c.x.toFixed(2)}px, ${c.y.toFixed(2)}px) scale(${c.s.toFixed(3)})`;
+        el.style.opacity = Math.min(1, g.opacity + c.o).toFixed(2);
+      }
+      burst *= 0.88;
+      if (moving) frame = requestAnimationFrame(step);
+    }
+    const kick = () => {
+      if (!frame) frame = requestAnimationFrame(step);
+    };
+
+    const near = (e: PointerEvent) => {
+      const rect = svg.getBoundingClientRect();
+      return (
+        e.clientX > rect.left - REACH_PX && e.clientX < rect.right + REACH_PX &&
+        e.clientY > rect.top - REACH_PX && e.clientY < rect.bottom + REACH_PX
+      );
+    };
+    const onMove = (e: PointerEvent) => {
+      const wasActive = pointer.active;
+      pointer.x = e.clientX;
+      pointer.y = e.clientY;
+      pointer.active = near(e);
+      if (pointer.active || wasActive) kick();
+    };
+    const onDown = (e: PointerEvent) => {
+      const rect = svg.getBoundingClientRect();
+      const inside = e.clientX >= rect.left && e.clientX <= rect.right && e.clientY >= rect.top && e.clientY <= rect.bottom;
+      if (!inside) return;
+      burst = 1;
+      for (const el of els) {
+        const node = el.firstChild;
+        if (node && Math.random() < 0.5) node.nodeValue = node.nodeValue === "0" ? "1" : "0";
+      }
+      kick();
+    };
+    const onLeave = () => {
+      pointer.active = false;
+      kick();
+    };
+
+    // Scale each digit around its own centre.
+    for (const el of els) {
+      el.style.transformBox = "fill-box";
+      el.style.transformOrigin = "center";
+    }
+    window.addEventListener("pointermove", onMove, { passive: true });
+    window.addEventListener("pointerdown", onDown, { passive: true });
+    document.addEventListener("pointerleave", onLeave);
+    window.addEventListener("blur", onLeave);
+    return () => {
+      cancelAnimationFrame(frame);
+      window.removeEventListener("pointermove", onMove);
+      window.removeEventListener("pointerdown", onDown);
+      document.removeEventListener("pointerleave", onLeave);
+      window.removeEventListener("blur", onLeave);
+    };
+  }, [svgRef, shape]);
+}
+
 export function Molecule({ shape, className = "" }: { shape: keyof typeof SHAPES; className?: string }) {
   const tick = useFlipTick();
+  const svgRef = useRef<SVGSVGElement>(null);
+  useInteraction(svgRef, shape);
   const { width, height } = SHAPES[shape];
   return (
-    <svg viewBox={`0 0 ${width} ${height}`} className={className} aria-hidden>
+    <svg ref={svgRef} viewBox={`0 0 ${width} ${height}`} className={`overflow-visible ${className}`} aria-hidden>
       <g style={{ fontFamily: "var(--font-mono)" }} fontWeight="700" textAnchor="middle" dominantBaseline="central">
         {LAYOUTS[shape].map((g) => {
           // About one digit in eight flips on each tick.
