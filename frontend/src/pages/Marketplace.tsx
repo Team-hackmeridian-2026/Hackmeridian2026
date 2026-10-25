@@ -1,6 +1,7 @@
 import { Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { escrow, nft, type License, type Project } from "../stellar/contracts";
+import { BurstHeading } from "../components/BurstHeading";
 import { useAsync } from "../lib/useAsync";
 import { ErrorBox, Skeleton, buttonClass } from "../components/ui";
 import { HeroVisual } from "../components/HeroVisual";
@@ -135,9 +136,11 @@ export function Marketplace() {
             <span aria-hidden className="size-2 shrink-0 rounded-full bg-amber ring-4 ring-amber/20" />
             {t("marketplace.heroNote")}
           </p>
-          <h1 className="max-w-[12ch] font-display text-5xl leading-[0.95] font-extrabold tracking-[-0.04em] text-balance sm:text-6xl lg:text-[5.4rem]">
-            {t("marketplace.heroTitle")}
-          </h1>
+          <BurstHeading
+            as="h1"
+            className="max-w-[12ch] font-display text-5xl leading-[0.95] font-extrabold tracking-[-0.04em] text-balance sm:text-6xl lg:text-[5.4rem]"
+            text={t("marketplace.heroTitle")}
+          />
           <p className="max-w-xl text-lg leading-relaxed text-muted sm:text-xl">{t("marketplace.heroText")}</p>
           <div className="flex flex-wrap gap-3">
             <a href="#licences" className={buttonClass()}>
@@ -167,7 +170,7 @@ export function Marketplace() {
       {/* How funding reaches the lab */}
       <section className="mt-24 sm:mt-32">
         <div className="flex items-end justify-between gap-6">
-          <h2 className="max-w-2xl font-display text-4xl font-extrabold tracking-[-0.03em] sm:text-5xl">{t("marketplace.how.title")}</h2>
+          <BurstHeading className="max-w-2xl font-display text-4xl font-extrabold tracking-[-0.03em] sm:text-5xl" text={t("marketplace.how.title")} />
           <Molecule shape="ring" className="hidden w-64 shrink-0 animate-[float_10s_ease-in-out_infinite] md:block" />
         </div>
         <ol className="mt-12 grid gap-12 md:grid-cols-3 md:gap-10">
@@ -193,7 +196,7 @@ export function Marketplace() {
         <div aria-hidden className="absolute inset-y-0 left-1/2 -z-10 w-screen -translate-x-1/2 bg-band" />
         <div className="flex flex-wrap items-end justify-between gap-6">
           <div>
-            <h2 className="font-display text-4xl font-extrabold tracking-[-0.03em] sm:text-5xl">{t("marketplace.title")}</h2>
+            <BurstHeading className="font-display text-4xl font-extrabold tracking-[-0.03em] sm:text-5xl" text={t("marketplace.title")} />
             {data && <p className="mt-3 text-muted">{t("marketplace.count", { count: data.length })}</p>}
           </div>
           <Link to="/new" className={buttonClass({ variant: "secondary" })}>
