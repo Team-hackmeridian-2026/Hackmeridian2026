@@ -15,27 +15,41 @@ WASM="$ROOT/contracts/target/wasm32v1-none/release"
 # shellcheck disable=SC1090
 source "$ENV_FILE"
 
+# Le RPC testnet renvoie parfois des timeouts : on réessaie jusqu'à 3 fois.
+retry() {
+  local n
+  for n in 1 2 3; do
+    "$@" && return 0
+    echo "  (tentative $n échouée, nouvel essai)" >&2
+    sleep 5
+  done
+  return 1
+}
+
 invoke() {
   local id="$1" source="$2"; shift 2
-  stellar contract invoke --id "$id" --source-account "$source" --network "$NETWORK" -- "$@"
+  retry stellar contract invoke --id "$id" --source-account "$source" --network "$NETWORK" -- "$@"
+}
+
+deploy() {
+  local wasm="$1"; shift
+  retry stellar contract deploy --wasm "$WASM/$wasm.wasm" \
+    --source-account bl-admin --network "$NETWORK" -- "$@"
 }
 
 echo "==> Build"
 (cd "$ROOT/contracts" && stellar contract build >/dev/null)
 
 echo "==> Déploiement"
-NFT_ID="$(stellar contract deploy --wasm "$WASM/ip_license_nft.wasm" \
-  --source-account bl-admin --network "$NETWORK" -- --admin "$ADMIN")"
+NFT_ID="$(deploy ip_license_nft --admin "$ADMIN")"
 echo "  ip_license_nft    $NFT_ID"
 
-SPLITTER_ID="$(stellar contract deploy --wasm "$WASM/royalty_splitter.wasm" \
-  --source-account bl-admin --network "$NETWORK" -- \
+SPLITTER_ID="$(deploy royalty_splitter \
   --admin "$ADMIN" --token "$EURC_CONTRACT" --license_nft "$NFT_ID" \
   --treasury "$ADMIN" --fee_bps "$FEE_BPS")"
 echo "  royalty_splitter  $SPLITTER_ID"
 
-ESCROW_ID="$(stellar contract deploy --wasm "$WASM/milestone_escrow.wasm" \
-  --source-account bl-admin --network "$NETWORK" -- \
+ESCROW_ID="$(deploy milestone_escrow \
   --admin "$ADMIN" --token "$EURC_CONTRACT" --license_nft "$NFT_ID" \
   --splitter "$SPLITTER_ID" --treasury "$ADMIN" --fee_bps "$FEE_BPS")"
 echo "  milestone_escrow  $ESCROW_ID"
