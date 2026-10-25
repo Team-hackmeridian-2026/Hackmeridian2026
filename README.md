@@ -10,7 +10,7 @@ Theme: **Stellar Composed**
 
 | | |
 | --- | --- |
-| Live demo | _[public URL — added after the Vercel deployment]_ |
+| Live demo | [https://biolicensing.vercel.app](https://biolicensing.vercel.app) |
 | Demo video | _[link]_ |
 | Network | Stellar **testnet** (all amounts are test assets) |
 
