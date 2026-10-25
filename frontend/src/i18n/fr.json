@@ -444,7 +444,9 @@
       "notConnected": "Impossible de joindre ton wallet. Active et déverrouille l'extension Freighter, puis reconnecte-toi sur le site.",
       "network": "Ton wallet est sur un autre réseau. Passe Freighter sur Testnet, puis réessaie.",
       "account": "Le compte actif dans Freighter ({{address}}) n'est pas celui connecté ici. Change de compte dans Freighter, ou déconnecte-toi puis reconnecte-toi sur le site."
-    }
+    },
+    "expired": "La transaction a expiré avant d'être signée (limite de 5 minutes). Recommencez et confirmez dans votre wallet en moins de 5 minutes.",
+    "sendFailed": "Le réseau Stellar a refusé la transaction. Elle a peut-être expiré : recommencez et signez en moins de 5 minutes."
   },
   "header": {
     "testnet": "Testnet"

@@ -141,9 +141,13 @@ function explainError(contractId: string, err: unknown): string {
   }
   if (/balance|underfunded|insufficient/i.test(raw)) return i18n.t("errors.balance");
   if (/trustline/i.test(raw)) return i18n.t("errors.trustline");
+  // Transactions are built with a 5-minute validity window; signing later makes the network refuse them.
+  if (/txTooLate|tx_too_late|expired/i.test(raw)) return i18n.t("errors.expired");
   if (/reject|declin|cancel/i.test(raw)) return i18n.t("errors.cancelled");
   if (/not connected|not installed|not allowed|request access|locked/i.test(raw)) return i18n.t("errors.wallet.notConnected");
-  if (/network|passphrase/i.test(raw)) return i18n.t("errors.wallet.network");
+  // Only real wallet network mismatches: the SDK's "Sending the transaction to the network failed!" is not one.
+  if (/passphrase|wrong network|network mismatch|another network/i.test(raw)) return i18n.t("errors.wallet.network");
+  if (/sending the transaction to the network failed/i.test(raw)) return i18n.t("errors.sendFailed");
   return raw.length > 240 ? raw.slice(0, 240) + "…" : raw;
 }
 
