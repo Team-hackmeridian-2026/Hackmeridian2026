@@ -155,7 +155,7 @@ export function CashOut() {
   return (
     <div className="flex flex-col gap-8">
       <SectionTitle eyebrow={t("cashOut.eyebrow")} title={t("cashOut.title")}>
-        <p className="max-w-md text-sm text-muted">{t("cashOut.intro")}</p>
+        <p>{t("cashOut.intro")}</p>
       </SectionTitle>
 
       <Card className="border-amber/40 bg-amber/5 text-sm">
