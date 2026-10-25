@@ -1,0 +1,4 @@
+# Never upload local demo keys or build artefacts
+.env*
+node_modules
+dist
