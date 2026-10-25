@@ -549,7 +549,7 @@ export function LicenceDetail() {
         </Card>
       </section>
 
-      <nav aria-label={t("licence.sections")} className="sticky top-[65px] z-30 -mx-4 border-y border-line bg-canvas/90 px-4 backdrop-blur-md sm:-mx-6 sm:px-6 min-[1200px]:top-[71px]">
+      <nav aria-label={t("licence.sections")} className="sticky top-[var(--header-h,65px)] z-30 -mx-4 border-y border-line bg-canvas/90 px-4 backdrop-blur-md sm:-mx-6 sm:px-6">
         <ul className="flex gap-1 overflow-x-auto py-2 text-sm font-medium whitespace-nowrap text-muted">
           {sections.map(([anchor, label]) => (
             <li key={anchor}>

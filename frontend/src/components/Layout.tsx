@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { NavLink, Outlet, useLocation } from "react-router-dom";
 import { Trans, useTranslation } from "react-i18next";
 import { ACCOUNTS, CIRCLE_FAUCET_URL, CONTRACTS, explorer } from "../config";
@@ -42,10 +42,11 @@ function LanguageSwitcher() {
   );
 }
 
-function WalletArea() {
+type Balance = { balance: string; hasTrustline: boolean } | null | undefined;
+
+function WalletArea({ balance }: { balance: Balance }) {
   const { t } = useTranslation();
   const { signer, connecting, connectWallet, useDemoRole, disconnect } = useWallet();
-  const balance = useAsync(() => (signer ? eurcBalance(signer.address) : Promise.resolve(null)), [signer?.address]);
 
   return (
     <div className="flex flex-wrap items-center gap-3">
@@ -72,7 +73,7 @@ function WalletArea() {
           <span aria-hidden className="size-7 shrink-0 rounded-full bg-[conic-gradient(from_120deg,var(--color-dna-indigo),var(--color-dna-pink),var(--color-dna-yellow),var(--color-dna-indigo))]" />
           <span className="font-mono text-xs">{shortAddress(signer.address)}</span>
           <span className="rounded-full bg-subtle px-2.5 py-1 text-xs font-semibold" aria-label={t("wallet.balance")}>
-            {balance.data ? `${formatNumber(balance.data.balance)} EURC` : "—"}
+            {balance ? `${formatNumber(balance.balance)} EURC` : "—"}
           </span>
           <button
             onClick={disconnect}
@@ -90,14 +91,27 @@ function WalletArea() {
           {t("wallet.connect")}
         </Button>
       )}
-      {signer && balance.data && !balance.data.hasTrustline && (
-        <p className="w-full text-xs text-amber-dark">
+    </div>
+  );
+}
+
+/**
+ * Shown under the header row when the connected wallet cannot hold EURC yet. It used to
+ * sit next to the wallet pill, where its length widened the right-hand column and
+ * squeezed the navigation (links wrapping, Testnet badge cut off).
+ */
+function TrustlineHint() {
+  return (
+    <div className="border-t border-amber/30 bg-amber/10">
+      <p className="mx-auto flex max-w-6xl items-center gap-2 px-4 py-2 text-xs text-amber-dark sm:px-6">
+        <span aria-hidden className="size-1.5 shrink-0 rounded-full bg-amber" />
+        <span>
           <Trans
             i18nKey="wallet.trustlineHint"
-            components={{ link: <a href={CIRCLE_FAUCET_URL} target="_blank" rel="noreferrer" className="underline" /> }}
+            components={{ link: <a href={CIRCLE_FAUCET_URL} target="_blank" rel="noreferrer" className="font-semibold underline" /> }}
           />
-        </p>
-      )}
+        </span>
+      </p>
     </div>
   );
 }
@@ -131,9 +145,9 @@ function ThemeToggle() {
   );
 }
 
-/** True from 1200 px up, where the full header (nav + language + theme + wallet) fits on one line. */
+/** True from 1280 px up, where the full header (nav + language + theme + wallet) fits on one line in every language, with room for a long balance. */
 function useIsDesktop(): boolean {
-  const query = "(min-width: 1200px)";
+  const query = "(min-width: 1280px)";
   const [desktop, setDesktop] = useState(() => window.matchMedia(query).matches);
   useEffect(() => {
     const media = window.matchMedia(query);
@@ -145,7 +159,7 @@ function useIsDesktop(): boolean {
 }
 
 const linkClass = (stacked: boolean) => ({ isActive }: { isActive: boolean }) =>
-  `rounded-full px-4 py-1.5 text-sm font-medium transition duration-200 ${stacked ? "block py-2.5 text-base" : ""} ${
+  `rounded-full px-4 py-1.5 text-sm font-medium whitespace-nowrap transition duration-200 ${stacked ? "block py-2.5 text-base" : ""} ${
     isActive ? "bg-card text-ink shadow-pill ring-1 ring-inset ring-line" : "text-muted hover:text-ink"
   }`;
 
@@ -153,7 +167,7 @@ const linkClass = (stacked: boolean) => ({ isActive }: { isActive: boolean }) =>
 function TestnetBadge() {
   const { t } = useTranslation();
   return (
-    <span className="inline-flex items-center gap-1.5 rounded-full border border-dashed border-amber/80 bg-amber/10 px-2.5 py-0.5 text-xs font-semibold text-amber-dark">
+    <span className="inline-flex shrink-0 items-center gap-1.5 rounded-full border border-dashed border-amber/80 bg-amber/10 px-2.5 py-0.5 text-xs font-semibold whitespace-nowrap text-amber-dark">
       <span aria-hidden className="size-1.5 rounded-full bg-amber" />
       {t("header.testnet")}
     </span>
@@ -163,6 +177,18 @@ function TestnetBadge() {
 export function Layout() {
   const { t } = useTranslation();
   const { signer, connecting, connectWallet } = useWallet();
+  const balance = useAsync(() => (signer ? eurcBalance(signer.address) : Promise.resolve(null)), [signer?.address]);
+  // Live header height as --header-h, for elements that stick right under it (licence page tabs).
+  const headerRef = useRef<HTMLElement>(null);
+  useEffect(() => {
+    const header = headerRef.current;
+    if (!header) return;
+    const update = () => document.documentElement.style.setProperty("--header-h", `${header.offsetHeight}px`);
+    update();
+    const observer = new ResizeObserver(update);
+    observer.observe(header);
+    return () => observer.disconnect();
+  }, []);
   const { pathname } = useLocation();
   const desktop = useIsDesktop();
   const [menuOpen, setMenuOpen] = useState(false);
@@ -188,9 +214,9 @@ export function Layout() {
 
   return (
     <div className="flex min-h-screen flex-col">
-      <header className="sticky top-0 z-40 border-b border-line bg-canvas/85 backdrop-blur-md">
+      <header ref={headerRef} className="sticky top-0 z-40 border-b border-line bg-canvas/85 backdrop-blur-md">
         <div className="mx-auto max-w-6xl px-4 sm:px-6">
-          <div className="flex items-center justify-between gap-4 py-3 min-[1200px]:grid min-[1200px]:grid-cols-[auto_1fr_auto] min-[1200px]:py-3.5">
+          <div className="flex items-center justify-between gap-4 py-3 min-[1280px]:grid min-[1280px]:grid-cols-[auto_1fr_auto] min-[1280px]:py-3.5">
             <div className="flex min-w-0 items-center gap-3">
               <NavLink to="/" aria-label={t("brand.home")} className="shrink-0">
                 <Logo />
@@ -208,7 +234,7 @@ export function Layout() {
               <div className="flex items-center justify-end gap-2">
                 <LanguageSwitcher />
                 <ThemeToggle />
-                <WalletArea />
+                <WalletArea balance={balance.data} />
               </div>
             ) : (
               <div className="flex items-center gap-2">
@@ -242,10 +268,11 @@ export function Layout() {
                 <ThemeToggle />
                 <TestnetBadge />
               </div>
-              {signer && <WalletArea />}
+              {signer && <WalletArea balance={balance.data} />}
             </div>
           )}
         </div>
+        {signer && balance.data && !balance.data.hasTrustline && <TrustlineHint />}
       </header>
       <main className="mx-auto w-full max-w-6xl flex-1 px-4 py-8 sm:px-6 sm:py-12">
         <Outlet />
