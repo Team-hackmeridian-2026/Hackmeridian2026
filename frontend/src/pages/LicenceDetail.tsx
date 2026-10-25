@@ -8,6 +8,7 @@ import { useAsync } from "../lib/useAsync";
 import { eurc, formatDate, formatDuration, sha256, shortAddress, toHex } from "../lib/format";
 import { Address, Badge, Button, Card, ErrorBox, Input, Spinner, StatusIcon, buttonClass, type BadgeTone } from "../components/ui";
 import { FundingProgress } from "../components/Funding";
+import { useDocumentTitle } from "../lib/useDocumentTitle";
 
 // Decorative helix next to the title (Three.js is shared with the home page chunk).
 const DnaHelix = lazy(() => import("../components/DnaHelix"));
@@ -484,6 +485,7 @@ export function LicenceDetail() {
   const { signer } = useWallet();
   const [version, setVersion] = useState(0);
   const license = useAsync(() => nft.get(licenseId), [id]);
+  useDocumentTitle(license.data?.title);
   const projects = useAsync(() => escrow.projectsByLicense(licenseId), [id]);
   // Latest round, for the funding summary next to the title.
   const latest = useAsync(async () => {

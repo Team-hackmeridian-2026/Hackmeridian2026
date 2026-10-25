@@ -5,6 +5,7 @@ import { nft, splitter, type TxResult } from "../stellar/contracts";
 import { useWallet } from "../stellar/wallet";
 import { useToasts } from "../components/toasts";
 import { Badge, Button, Card, Field, Input, Notice, SectionTitle, StatusIcon } from "../components/ui";
+import { useDocumentTitle } from "../lib/useDocumentTitle";
 
 function Registry({
   title,
@@ -76,6 +77,7 @@ function Registry({
 
 export function Admin() {
   const { t } = useTranslation();
+  useDocumentTitle(t("nav.admin"));
   const { signer } = useWallet();
   const isAdmin = signer?.address === ACCOUNTS.admin;
 

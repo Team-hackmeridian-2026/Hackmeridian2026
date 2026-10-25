@@ -9,6 +9,7 @@ import { DIRECTORY, PersonPicker, type PersonKind } from "../components/people";
 import { useAsync } from "../lib/useAsync";
 import { formatNumber, sha256, toHex } from "../lib/format";
 import { Badge, Button, Card, ErrorBox, Field, Input, Notice, SectionTitle, StatusIcon, TxLink } from "../components/ui";
+import { useDocumentTitle } from "../lib/useDocumentTitle";
 
 const WINDOWS = [
   { key: "minute", seconds: 60 },
@@ -86,6 +87,7 @@ function SplitPreview({ parts }: { parts: { label: string; pct: number; color: s
 
 export function NewLicence() {
   const { t } = useTranslation();
+  useDocumentTitle(t("nav.newLicence"));
   const { signer } = useWallet();
   const { run } = useToasts();
   const navigate = useNavigate();
