@@ -4,6 +4,9 @@ import { TxLink } from "./ui";
 import { isNetworkError } from "../lib/errors";
 import type { TxResult } from "../stellar/contracts";
 
+/** Fired on window after every confirmed transaction (any toast that carries a hash). */
+export const TX_CONFIRMED_EVENT = "biolicensing:tx-confirmed";
+
 type Toast = { id: number; kind: "success" | "error" | "info"; text: string; hash?: string };
 
 type ToastApi = {
@@ -23,6 +26,8 @@ export function ToastProvider({ children }: { children: ReactNode }) {
   const push = useCallback((toast: Omit<Toast, "id">) => {
     const id = Date.now() + Math.random();
     setToasts((all) => [...all, { ...toast, id }]);
+    // A confirmed transaction may have moved EURC: let the header refresh its balance.
+    if (toast.hash) window.dispatchEvent(new Event(TX_CONFIRMED_EVENT));
     setTimeout(() => remove(id), toast.kind === "error" ? 9000 : 12000);
   }, []);
 
