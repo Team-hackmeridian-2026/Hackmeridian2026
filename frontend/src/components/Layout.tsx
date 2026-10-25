@@ -9,6 +9,7 @@ import { useAsync } from "../lib/useAsync";
 import { formatNumber, shortAddress } from "../lib/format";
 import { Button } from "./ui";
 import { Logo } from "./Logo";
+import { PageHelix } from "./PageHelix";
 import { useTheme } from "../lib/theme";
 
 const NAV = [
@@ -274,6 +275,7 @@ export function Layout() {
         </div>
         {signer && balance.data && !balance.data.hasTrustline && <TrustlineHint />}
       </header>
+      {pathname !== "/" && <PageHelix />}
       <main className="mx-auto w-full max-w-6xl flex-1 px-4 py-8 sm:px-6 sm:py-12">
         <Outlet />
       </main>
