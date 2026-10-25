@@ -71,7 +71,8 @@
     "awaiting": "A aguardar ronda de financiamento",
     "open": "Aberto a financiamento",
     "full": "Totalmente financiado",
-    "milestone": "Marco {{current}} de {{total}}"
+    "milestone": "Marco {{current}} de {{total}}",
+    "done": "Todos os marcos liquidados"
   },
   "marketplace": {
     "licenceLine": "{{licence}} · {{territory}} · {{duration}}",
@@ -188,7 +189,8 @@
       "Submitted": "Prova submetida",
       "Disputed": "Contestado",
       "Released": "Fundos libertados",
-      "Refunded": "Reembolsado"
+      "Refunded": "Reembolsado",
+      "Split": "Dividido pelo árbitro"
     },
     "proof": "prova SHA-256 {{hash}}",
     "windowOpen": "Prazo de contestação: o investidor tem ainda {{time}} para contestar.",
@@ -208,7 +210,8 @@
       "refund": "Marco reembolsado",
       "fund": "Fundos bloqueados no escrow",
       "pay": "Royalty pago e repartido",
-      "claim": "Royalties levantados"
+      "claim": "Royalties levantados",
+      "split": "Marco dividido"
     },
     "round": "Ronda de financiamento n.º {{id}}",
     "roundSummary_one": "{{amount}} em {{count}} marco · prazo de contestação {{window}}",
@@ -234,7 +237,12 @@
     "owner": "Proprietária (universidade)",
     "inventors": "Inventores",
     "listedOn": "Registada em",
-    "noRound": "Ainda sem ronda de financiamento."
+    "noRound": "Ainda sem ronda de financiamento.",
+    "splitResult": "{{lab}} % pagos ao laboratório, {{refund}} % reembolsados ao investidor",
+    "arbiterTitle": "Decisão do árbitro",
+    "arbiterHelp": "A investigação pode falhar sem culpa de ninguém. Pague ao laboratório o trabalho realizado e reembolse o resto.",
+    "labShare": "Laboratório: {{lab}} % · Reembolso ao investidor: {{refund}} %",
+    "split": "Aplicar esta divisão"
   },
   "admin": {
     "address": "Endereço Stellar",
@@ -339,7 +347,8 @@
       "8": "Os marcos anteriores têm de ser resolvidos primeiro.",
       "9": "O prazo de contestação terminou.",
       "10": "O prazo de contestação ainda está aberto.",
-      "11": "Configuração inválida."
+      "11": "Configuração inválida.",
+      "12": "A parte do laboratório deve estar entre 0 e 100 %."
     },
     "contract": "Erro do contrato n.º {{code}}",
     "balance": "EURC insuficiente nesta conta.",

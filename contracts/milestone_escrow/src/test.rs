@@ -216,6 +216,76 @@ fn dispute_then_arbiter_approves() {
     assert_eq!(status(&s, pid, 0), MilestoneStatus::Released);
 }
 
+fn disputed(s: &Setup) -> u64 {
+    let pid = create(s);
+    s.escrow.fund(&pid);
+    s.escrow.submit_milestone(&pid, &0, &proof(s, 1));
+    s.escrow.dispute(&pid, &0, &proof(s, 2));
+    pid
+}
+
+#[test]
+fn arbiter_splits_a_milestone_after_a_good_faith_failure() {
+    let s = setup(0);
+    let pid = disputed(&s);
+
+    s.escrow.resolve_partial(&pid, &0, &6_000); // 60 % au labo
+    let m = s.escrow.get_project(&pid).milestones.get_unchecked(0);
+    assert_eq!(m.status, MilestoneStatus::Split);
+    assert_eq!(m.lab_bps, 6_000);
+    assert_eq!(s.token.balance(&s.lab), 6_000);
+    assert_eq!(s.token.balance(&s.investor), 1_000_000 - 30_000 + 4_000);
+    assert_eq!(s.token.balance(&s.escrow.address), 20_000);
+    // Les parts suivent l'argent réellement engagé.
+    assert_eq!(s.splitter.shares_of(&s.license_id, &s.investor), 26_000);
+
+    // Un jalon partagé est réglé : le suivant peut être soumis.
+    s.escrow.submit_milestone(&pid, &1, &proof(&s, 3));
+}
+
+#[test]
+fn split_fee_only_applies_to_the_lab_share() {
+    let s = setup(250); // 2,5 %
+    let pid = disputed(&s);
+    s.escrow.resolve_partial(&pid, &0, &5_000);
+    assert_eq!(s.token.balance(&s.treasury), 125);
+    assert_eq!(s.token.balance(&s.lab), 4_875);
+    assert_eq!(s.token.balance(&s.investor), 1_000_000 - 30_000 + 5_000);
+}
+
+#[test]
+fn split_extremes_match_approve_and_refund() {
+    let s = setup(0);
+    let pid = disputed(&s);
+    s.escrow.resolve_partial(&pid, &0, &10_000);
+    assert_eq!(status(&s, pid, 0), MilestoneStatus::Released);
+    assert_eq!(s.token.balance(&s.lab), 10_000);
+
+    s.escrow.submit_milestone(&pid, &1, &proof(&s, 3));
+    s.escrow.dispute(&pid, &1, &proof(&s, 4));
+    s.escrow.resolve_partial(&pid, &1, &0);
+    assert_eq!(status(&s, pid, 1), MilestoneStatus::Refunded);
+    assert_eq!(s.splitter.shares_of(&s.license_id, &s.investor), 20_000);
+}
+
+#[test]
+fn split_rejects_invalid_shares_and_undisputed_milestones() {
+    let s = setup(0);
+    let pid = disputed(&s);
+    assert_eq!(
+        s.escrow.try_resolve_partial(&pid, &0, &10_001),
+        Err(Ok(Error::InvalidShare.into()))
+    );
+
+    let other = create(&s);
+    s.escrow.fund(&other);
+    s.escrow.submit_milestone(&other, &0, &proof(&s, 1));
+    assert_eq!(
+        s.escrow.try_resolve_partial(&other, &0, &5_000),
+        Err(Ok(Error::WrongStatus.into()))
+    );
+}
+
 #[test]
 fn dispute_then_arbiter_refunds_and_burns_shares() {
     let s = setup(0);

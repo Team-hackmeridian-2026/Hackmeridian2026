@@ -38,6 +38,8 @@ pub enum MilestoneStatus {
     Disputed,
     Released,
     Refunded,
+    /// L'arbitre a partagé la tranche : une part au labo, le reste remboursé.
+    Split,
 }
 
 #[contracttype]
@@ -48,6 +50,8 @@ pub struct Milestone {
     pub proof_hash: Option<BytesN<32>>,
     pub submitted_at: u64,
     pub dispute_reason: Option<BytesN<32>>,
+    /// Part de la tranche versée au labo, en points de base (10 000 = tout).
+    pub lab_bps: u32,
 }
 
 #[contracttype]
@@ -91,6 +95,7 @@ pub enum Error {
     ChallengeWindowClosed = 9,
     ChallengeWindowOpen = 10,
     InvalidConfig = 11,
+    InvalidShare = 12,
 }
 
 #[contractevent]
@@ -137,6 +142,18 @@ pub struct MilestoneReleased {
     pub project_id: u64,
     pub index: u32,
     pub to_lab: i128,
+    pub fee: i128,
+}
+
+#[contractevent]
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub struct MilestoneSplit {
+    #[topic]
+    pub project_id: u64,
+    pub index: u32,
+    pub lab_bps: u32,
+    pub to_lab: i128,
+    pub refunded: i128,
     pub fee: i128,
 }
 
@@ -208,6 +225,7 @@ impl MilestoneEscrow {
                 proof_hash: None,
                 submitted_at: 0,
                 dispute_reason: None,
+                lab_bps: 0,
             });
         }
 
@@ -281,7 +299,7 @@ impl MilestoneEscrow {
         }
         for i in 0..index {
             let prev = project.milestones.get_unchecked(i).status;
-            if prev != MilestoneStatus::Released && prev != MilestoneStatus::Refunded {
+            if !is_settled(prev) {
                 panic_with_error!(&env, Error::PreviousNotSettled);
             }
         }
@@ -336,16 +354,28 @@ impl MilestoneEscrow {
     }
 
     pub fn resolve(env: Env, project_id: u64, index: u32, approve: bool) {
+        Self::resolve_partial(env, project_id, index, if approve { BPS_DENOMINATOR as u32 } else { 0 });
+    }
+
+    /// La recherche peut échouer sans faute : l'arbitre attribue `lab_bps` de
+    /// la tranche au labo (travail réalisé) et rembourse le reste à
+    /// l'investisseur, dont les parts sont réduites d'autant.
+    pub fn resolve_partial(env: Env, project_id: u64, index: u32, lab_bps: u32) {
         let project = load(&env, project_id);
         project.arbiter.require_auth();
         let m = milestone(&env, &project, index);
         if m.status != MilestoneStatus::Disputed {
             panic_with_error!(&env, Error::WrongStatus);
         }
-        if approve {
-            pay_lab(&env, project, index, m);
-        } else {
-            refund(&env, project, index, m);
+        if lab_bps as i128 > BPS_DENOMINATOR {
+            panic_with_error!(&env, Error::InvalidShare);
+        }
+        match lab_bps {
+            0 => {
+                refund(&env, project, index, m);
+            }
+            b if b as i128 == BPS_DENOMINATOR => pay_lab(&env, project, index, m),
+            _ => split(&env, project, index, m, lab_bps),
         }
     }
 
@@ -424,19 +454,67 @@ fn total_of(project: &Project) -> i128 {
     project.milestones.iter().map(|m| m.amount).sum()
 }
 
-fn pay_lab(env: &Env, mut project: Project, index: u32, mut m: Milestone) {
+fn is_settled(status: MilestoneStatus) -> bool {
+    matches!(
+        status,
+        MilestoneStatus::Released | MilestoneStatus::Refunded | MilestoneStatus::Split
+    )
+}
+
+/// Verse `gross` au labo, commission de la plateforme déduite. Renvoie (net, commission).
+fn transfer_to_lab(env: &Env, lab: &Address, gross: i128) -> (i128, i128) {
     let fee_bps: u32 = env.storage().instance().get(&DataKey::FeeBps).unwrap();
-    let fee = m.amount * fee_bps as i128 / BPS_DENOMINATOR;
-    let to_lab = m.amount - fee;
+    let fee = gross * fee_bps as i128 / BPS_DENOMINATOR;
     let t = token(env);
     let me = env.current_contract_address();
     if fee > 0 {
         let treasury: Address = env.storage().instance().get(&DataKey::Treasury).unwrap();
         t.transfer(&me, &treasury, &fee);
     }
-    t.transfer(&me, &project.lab, &to_lab);
+    t.transfer(&me, lab, &(gross - fee));
+    (gross - fee, fee)
+}
+
+/// Rembourse `amount` à l'investisseur et brûle les parts correspondantes.
+fn refund_investor(env: &Env, project: &Project, amount: i128) {
+    token(env).transfer(&env.current_contract_address(), &project.investor, &amount);
+    // L'investisseur a pu revendre une partie de ses parts : on ne brûle que
+    // ce qu'il détient encore, pour ne jamais bloquer un remboursement.
+    let s = splitter(env);
+    let burnable = s
+        .shares_of(&project.license_id, &project.investor)
+        .min(amount);
+    if burnable > 0 {
+        s.burn_shares(&project.license_id, &project.investor, &burnable);
+    }
+}
+
+fn split(env: &Env, mut project: Project, index: u32, mut m: Milestone, lab_bps: u32) {
+    let lab_gross = m.amount * lab_bps as i128 / BPS_DENOMINATOR;
+    let refunded = m.amount - lab_gross;
+    let (to_lab, fee) = transfer_to_lab(env, &project.lab, lab_gross);
+    refund_investor(env, &project, refunded);
+
+    m.status = MilestoneStatus::Split;
+    m.lab_bps = lab_bps;
+    project.milestones.set(index, m);
+    save(env, &project);
+    MilestoneSplit {
+        project_id: project.id,
+        index,
+        lab_bps,
+        to_lab,
+        refunded,
+        fee,
+    }
+    .publish(env);
+}
+
+fn pay_lab(env: &Env, mut project: Project, index: u32, mut m: Milestone) {
+    let (to_lab, fee) = transfer_to_lab(env, &project.lab, m.amount);
 
     m.status = MilestoneStatus::Released;
+    m.lab_bps = BPS_DENOMINATOR as u32;
     project.milestones.set(index, m);
     save(env, &project);
     MilestoneReleased {
@@ -449,16 +527,7 @@ fn pay_lab(env: &Env, mut project: Project, index: u32, mut m: Milestone) {
 }
 
 fn refund(env: &Env, mut project: Project, index: u32, mut m: Milestone) -> Project {
-    token(env).transfer(&env.current_contract_address(), &project.investor, &m.amount);
-    // L'investisseur a pu revendre une partie de ses parts : on ne brûle que
-    // ce qu'il détient encore, pour ne jamais bloquer un remboursement.
-    let s = splitter(env);
-    let burnable = s
-        .shares_of(&project.license_id, &project.investor)
-        .min(m.amount);
-    if burnable > 0 {
-        s.burn_shares(&project.license_id, &project.investor, &burnable);
-    }
+    refund_investor(env, &project, m.amount);
 
     m.status = MilestoneStatus::Refunded;
     let amount = m.amount;

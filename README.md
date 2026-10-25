@@ -33,7 +33,10 @@ little of how their money is used.
    and receives revenue shares.
 3. **The lab proves a milestone.** If the investor does not dispute it within
    the challenge window, anyone can release the funds; a dispute goes to an
-   arbiter named upfront (optimistic validation).
+   arbiter named upfront (optimistic validation). Research can fail without
+   anyone being at fault, so the arbiter can also **split** a milestone: pay
+   the lab for the work done and refund the rest, with the investor's shares
+   reduced accordingly.
 4. **An industrial licensee pays royalties in EURC**, split in one transaction
    between the university, its inventors and the investors (pro rata).
 5. **The lab cashes out to its bank account** through a Stellar anchor
@@ -90,9 +93,9 @@ flowchart TB
 
 | Contract | ID |
 | --- | --- |
-| `ip_license_nft` | [`CC4INM4NVB5YUXINIFW2UEET2JSNWAKU5TO2KZQPJH32OP2QSJPVA2VV`](https://stellar.expert/explorer/testnet/contract/CC4INM4NVB5YUXINIFW2UEET2JSNWAKU5TO2KZQPJH32OP2QSJPVA2VV) |
-| `milestone_escrow` | [`CAR4YUSMUYOZYX55GETFAJWBOVRHAJFPAZU44FB5CAMRORH5CMPQI6KC`](https://stellar.expert/explorer/testnet/contract/CAR4YUSMUYOZYX55GETFAJWBOVRHAJFPAZU44FB5CAMRORH5CMPQI6KC) |
-| `royalty_splitter` | [`CBQ6QI4HZ46ZZEETZRY7247E4I7MITRUVWSIGPUKPQDK3YKAOOUA6POR`](https://stellar.expert/explorer/testnet/contract/CBQ6QI4HZ46ZZEETZRY7247E4I7MITRUVWSIGPUKPQDK3YKAOOUA6POR) |
+| `ip_license_nft` | [`CDONN5PWL4UWU4H5QUE7LBWC3MPIR3GSVGTQHLKB7LHF2OOWVJBKVK5P`](https://stellar.expert/explorer/testnet/contract/CDONN5PWL4UWU4H5QUE7LBWC3MPIR3GSVGTQHLKB7LHF2OOWVJBKVK5P) |
+| `milestone_escrow` | [`CBTTMKLJKBIMOJCLG3KBZFDKEH5OJMAGZR2NCHE2GF7NN5TPFJ5B4FIB`](https://stellar.expert/explorer/testnet/contract/CBTTMKLJKBIMOJCLG3KBZFDKEH5OJMAGZR2NCHE2GF7NN5TPFJ5B4FIB) |
+| `royalty_splitter` | [`CA27S6FTSNZVVRYGYPMLSKXXR5LDGSK44ENN6HAEIZDSU5UZRPWGIGEZ`](https://stellar.expert/explorer/testnet/contract/CA27S6FTSNZVVRYGYPMLSKXXR5LDGSK44ENN6HAEIZDSU5UZRPWGIGEZ) |
 | Circle EURC (SAC) | [`CCUUDM434BMZMYWYDITHFXHDMIVTGGD6T2I5UKNX5BSLXLW7HVR4MCGZ`](https://stellar.expert/explorer/testnet/contract/CCUUDM434BMZMYWYDITHFXHDMIVTGGD6T2I5UKNX5BSLXLW7HVR4MCGZ) |
 
 The front-end reads these IDs from `frontend/src/deployment.json`.
@@ -101,18 +104,20 @@ The front-end reads these IDs from `frontend/src/deployment.json`.
 
 | Step | Transaction |
 | --- | --- |
-| Licence IP-NFT minted | [`de29ddc0…`](https://stellar.expert/explorer/testnet/tx/de29ddc069cd9731c28eef69bdaf2723bbb87d3caea2cc57889dc2e547362d57) |
-| Royalty split locked | [`451218b7…`](https://stellar.expert/explorer/testnet/tx/451218b77879b6a22e587b32d139ea854936864b7071e39cff318bb9b8687da7) |
-| Funding round opened | [`db323b32…`](https://stellar.expert/explorer/testnet/tx/db323b32861903dec68766b7a78166bd60a77989e16584446502abcc321da59e) |
-| NDA signed on-chain | [`2ab29a25…`](https://stellar.expert/explorer/testnet/tx/2ab29a25bee986622b61c34da8c5e900d933729b743fcd838a2416e5107e6914) |
-| Escrow funded in Circle EURC | [`21b2ed85…`](https://stellar.expert/explorer/testnet/tx/21b2ed85389ce8b99ef6ea056006567dc584e266fe24aa2990533afe7eb12899) |
+| Licence IP-NFT minted | [`c4092a66…`](https://stellar.expert/explorer/testnet/tx/c4092a66992dcfd8ced93b8e8634ef6e7baff57b9d562724a218c458881e5ee3) |
+| Royalty split locked | [`7738f1d5…`](https://stellar.expert/explorer/testnet/tx/7738f1d505ae41de1156b667499aa5f16f16fa2f9e0126df9e25b9f40f1315aa) |
+| Funding round opened | [`d73b5043…`](https://stellar.expert/explorer/testnet/tx/d73b5043261bb9d5c8e6373be61e6ae347df213d1c60d76260253bf3da1b6bab) |
+| Escrow funded in Circle EURC | [`cd70b413…`](https://stellar.expert/explorer/testnet/tx/cd70b4135acfb565d30f2d9151626c5a060614ee1f2b4e04270fac27b74f4d2b) |
+| Milestone proof submitted | [`fcbb5c9d…`](https://stellar.expert/explorer/testnet/tx/fcbb5c9d29993ac26e51a2baf587a716790e19cb4945a6ea049b8c90eff4a8f8) |
+| Milestone disputed by the investor | [`b2ccf642…`](https://stellar.expert/explorer/testnet/tx/b2ccf642d1c45c0a5eaa8b69b2c2c0f155110cd04783d9cff34a4ad17f7315ef) |
+| Arbiter split: 60 % to the lab, 40 % refunded | [`cfa6207a…`](https://stellar.expert/explorer/testnet/tx/cfa6207a4721380507eedfdafb2f8bca1c79bd25c01b22b9ce966c20d1523a87) |
 
 ### The contracts
 
 | Contract | Main functions |
 | --- | --- |
 | `ip_license_nft` | `mint`, `get_license`, `list_licenses`, `transfer` (institutions only), `sign_nda`, `set_institution` |
-| `milestone_escrow` | `create_project`, `fund`, `submit_milestone`, `dispute`, `release` (after the challenge window), `resolve` (arbiter), `cancel` |
+| `milestone_escrow` | `create_project`, `fund`, `submit_milestone`, `dispute`, `release` (after the challenge window), `resolve` / `resolve_partial` (arbiter), `cancel` |
 | `royalty_splitter` | `configure`, `pay_royalty`, `claim`, `transfer_shares` (KYC only), `clawback`, `set_allowed` |
 
 Royalties use a per-share accumulator: paying out costs the same whatever the
@@ -144,7 +149,7 @@ No configuration is needed: the public contract IDs are committed.
 
 ```bash
 cd contracts
-cargo test           # 26 tests, including the full demo scenario
+cargo test           # 30 tests, including the full demo scenario
 ```
 
 ### Deploy your own instance (optional)
@@ -231,6 +236,9 @@ Everything after the `pre-hackathon` tag
 - **Bank cash-out**: anchor integration (SEP-1, SEP-10, SEP-24)
 - **Contract fix**: removed an instance TTL extension that cost about
   1,059 XLM of rent per licence on testnet
+- **Partial arbitration**: `resolve_partial` lets the arbiter split a disputed
+  milestone between the lab and the investor (4 new contract tests, slider in
+  the arbiter's panel)
 - **UX**: listing form usable without any crypto knowledge
 - **Collaboration**: team workflow ([CONTRIBUTING.md](CONTRIBUTING.md)), i18n
   and public deployment in progress

@@ -1,7 +1,7 @@
 import { Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import type { TFunction } from "i18next";
-import { escrow, nft, type License, type Project } from "../stellar/contracts";
+import { escrow, isSettled, nft, paidToLab, type License, type Project } from "../stellar/contracts";
 import { useAsync } from "../lib/useAsync";
 import { eurc } from "../lib/format";
 import { Badge, Button, Card, ErrorBox, Spinner } from "../components/ui";
@@ -25,15 +25,18 @@ export function fundingStatus(
 ): { label: string; tone: "neutral" | "teal" | "amber" | "navy" } {
   if (!project) return { label: t("funding.awaiting"), tone: "neutral" };
   if (!project.funded) return { label: t("funding.open"), tone: "amber" };
-  const released = project.milestones.filter((m) => m.status === "Released").length;
-  if (released === project.milestones.length) return { label: t("funding.full"), tone: "navy" };
-  return { label: t("funding.milestone", { current: released + 1, total: project.milestones.length }), tone: "teal" };
+  const settled = project.milestones.filter((m) => isSettled(m.status)).length;
+  if (settled === project.milestones.length) {
+    const allPaid = project.milestones.every((m) => m.status === "Released");
+    return { label: t(allPaid ? "funding.full" : "funding.done"), tone: "navy" };
+  }
+  return { label: t("funding.milestone", { current: settled + 1, total: project.milestones.length }), tone: "teal" };
 }
 
 function ListingCard({ license, project }: Listing) {
   const { t } = useTranslation();
   const total = project?.milestones.reduce((sum, m) => sum + m.amount, 0n) ?? 0n;
-  const released = project?.milestones.filter((m) => m.status === "Released").reduce((s, m) => s + m.amount, 0n) ?? 0n;
+  const released = project?.milestones.reduce((s, m) => s + paidToLab(m), 0n) ?? 0n;
   const status = fundingStatus(t, project);
   const pct = total ? Number((released * 100n) / total) : 0;
 
