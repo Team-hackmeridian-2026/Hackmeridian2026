@@ -6,6 +6,9 @@
     "toLight": "Switch to light theme",
     "toDark": "Switch to dark theme"
   },
+  "brand": {
+    "home": "BioLicensing, back to the marketplace"
+  },
   "nav": {
     "marketplace": "Marketplace",
     "newLicence": "List a patent",

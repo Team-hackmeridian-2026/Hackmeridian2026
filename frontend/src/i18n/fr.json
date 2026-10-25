@@ -6,6 +6,9 @@
     "toLight": "Passer au thème clair",
     "toDark": "Passer au thème sombre"
   },
+  "brand": {
+    "home": "BioLicensing, retour au marché"
+  },
   "nav": {
     "marketplace": "Marché",
     "newLicence": "Déposer un brevet",

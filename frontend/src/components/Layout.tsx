@@ -7,6 +7,7 @@ import { LANGUAGES } from "../i18n";
 import { useAsync } from "../lib/useAsync";
 import { formatNumber, shortAddress } from "../lib/format";
 import { Button } from "./ui";
+import { Logo } from "./Logo";
 import { useTheme } from "../lib/theme";
 
 const NAV = [
@@ -129,9 +130,8 @@ export function Layout() {
       <header className="sticky top-0 z-40 border-b border-white/10 bg-navy/95 text-paper backdrop-blur-md">
         <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-4 px-6 py-4">
           <div className="flex min-w-0 flex-wrap items-center gap-4 lg:gap-8">
-            <NavLink to="/" className="flex items-center gap-2 font-display text-xl font-bold">
-              <span className="inline-block size-3 rounded-full bg-teal" />
-              BioLicensing
+            <NavLink to="/" aria-label={t("brand.home")} className="shrink-0">
+              <Logo />
             </NavLink>
             <nav className="flex flex-wrap gap-1">
               {NAV.map((item) => (

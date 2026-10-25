@@ -6,6 +6,9 @@
     "toLight": "Mudar para o tema claro",
     "toDark": "Mudar para o tema escuro"
   },
+  "brand": {
+    "home": "BioLicensing, voltar ao mercado"
+  },
   "nav": {
     "marketplace": "Mercado",
     "newLicence": "Registar uma patente",
