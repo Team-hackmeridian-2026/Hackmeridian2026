@@ -21,6 +21,7 @@ import { useToasts } from "../components/toasts";
 import { useAsync } from "../lib/useAsync";
 import { formatNumber } from "../lib/format";
 import { Badge, Button, Card, ErrorBox, Notice, SectionTitle, Spinner, TxLink } from "../components/ui";
+import { useDocumentTitle } from "../lib/useDocumentTitle";
 
 const TERMINAL: AnchorStatus[] = ["completed", "refunded", "expired", "error", "no_market", "too_small", "too_large"];
 
@@ -63,6 +64,7 @@ function assetHint(t: TFunction, asset: AnchorAsset) {
 
 export function CashOut() {
   const { t } = useTranslation();
+  useDocumentTitle(t("nav.cashOut"));
   const { signer, connecting, connectWallet } = useWallet();
   const { push } = useToasts();
   const config = useAsync(anchorConfig, []);

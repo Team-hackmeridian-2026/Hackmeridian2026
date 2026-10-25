@@ -6,6 +6,7 @@ import { ErrorBox, Skeleton, buttonClass } from "../components/ui";
 import { HeroVisual } from "../components/HeroVisual";
 import { FundingProgress, fundingStatus } from "../components/Funding";
 import { Molecule } from "../components/Molecule";
+import { useDocumentTitle } from "../lib/useDocumentTitle";
 
 type Listing = { license: License; project?: Project };
 
@@ -122,6 +123,7 @@ const STEPS = [
 
 export function Marketplace() {
   const { t } = useTranslation();
+  useDocumentTitle(t("marketplace.heroTitle"), { brandFirst: true });
   const { data, error, loading, reload } = useAsync(loadListings, []);
 
   return (
