@@ -314,7 +314,7 @@
     "eyebrow": "Conformité",
     "title": "Administration de la plateforme",
     "intro": "Seules les institutions vérifiées peuvent déposer des brevets, et seuls les investisseurs ayant passé le KYC peuvent détenir des parts de revenus.",
-    "notAdmin": "Connectez le compte admin de la plateforme pour modifier ces registres. Tout le monde peut consulter un statut.",
+    "notAdmin": "Tout le monde peut consulter un statut ici. Modifier un registre demande le wallet admin de la plateforme.",
     "institutionsTitle": "Institutions vérifiées",
     "institutionsText": "Universités, labos et bureaux de transfert de technologie autorisés à créer des licences.",
     "institutionVerified": "Institution vérifiée",
@@ -322,7 +322,31 @@
     "kycTitle": "Liste blanche KYC",
     "kycText": "Investisseurs autorisés à détenir, acheter ou vendre des parts de revenus.",
     "investorVerified": "Investisseur vérifié",
-    "investorRevoked": "Investisseur révoqué"
+    "investorRevoked": "Investisseur révoqué",
+    "checker": {
+      "title": "Vérifier un compte",
+      "text": "Collez une adresse Stellar pour voir si elle est prête pour la démo : compte alimenté, trustline EURC, institution vérifiée, KYC.",
+      "refresh": "Actualiser",
+      "invalid": "Une adresse Stellar commence par G et compte 56 caractères.",
+      "unknown": "Inconnu",
+      "funded": "Compte alimenté (XLM)",
+      "friendbot": "L'alimenter avec Friendbot ↗",
+      "trustline": "Trustline EURC",
+      "trustlineHint": "Connectez ce compte et utilisez le bouton de trustline dans l'en-tête.",
+      "institutionHint": "Seul l'admin de la plateforme peut vérifier une institution.",
+      "kycHint": "Seul l'admin de la plateforme peut ajouter un investisseur à la liste KYC.",
+      "history": "Historique des transactions sur stellar.expert ↗",
+      "faucet": "Obtenir de l'EURC de test sur faucet.circle.com ↗",
+      "yes": "Oui",
+      "no": "Non"
+    },
+    "log": {
+      "title": "Activité de l'admin",
+      "text": "Chaque modification d'un registre est une transaction signée par le compte admin : son historique sur stellar.expert sert de journal d'audit.",
+      "adminAccount": "Compte admin ↗",
+      "nft": "Contrat IP-NFT ↗",
+      "splitter": "Contrat de répartition des redevances ↗"
+    }
   },
   "cashOut": {
     "status": {

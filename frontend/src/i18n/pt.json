@@ -314,7 +314,7 @@
     "eyebrow": "Conformidade",
     "title": "Administração da plataforma",
     "intro": "Só instituições verificadas podem registar patentes, e só investidores que passaram o KYC podem deter participações nas receitas.",
-    "notAdmin": "Ligue a conta de admin da plataforma para alterar estes registos. Qualquer pessoa pode consultar um estado.",
+    "notAdmin": "Qualquer pessoa pode consultar um estado aqui. Alterar um registo exige a carteira de administração da plataforma.",
     "institutionsTitle": "Instituições verificadas",
     "institutionsText": "Universidades, laboratórios e gabinetes de transferência de tecnologia autorizados a criar licenças.",
     "institutionVerified": "Instituição verificada",
@@ -322,7 +322,31 @@
     "kycTitle": "Lista de KYC autorizada",
     "kycText": "Investidores autorizados a deter, comprar ou vender participações nas receitas.",
     "investorVerified": "Investidor verificado",
-    "investorRevoked": "Investidor revogado"
+    "investorRevoked": "Investidor revogado",
+    "checker": {
+      "title": "Verificar uma conta",
+      "text": "Cole um endereço Stellar para ver se está pronto para a demo: conta com saldo, trustline EURC, instituição verificada, KYC.",
+      "refresh": "Atualizar",
+      "invalid": "Um endereço Stellar começa por G e tem 56 caracteres.",
+      "unknown": "Desconhecido",
+      "funded": "Conta com saldo (XLM)",
+      "friendbot": "Carregar com o Friendbot ↗",
+      "trustline": "Trustline EURC",
+      "trustlineHint": "Ligue esta conta e use o botão de trustline no cabeçalho.",
+      "institutionHint": "Só a administração da plataforma pode verificar uma instituição.",
+      "kycHint": "Só a administração da plataforma pode adicionar um investidor à lista KYC.",
+      "history": "Histórico de transações no stellar.expert ↗",
+      "faucet": "Obter EURC de teste em faucet.circle.com ↗",
+      "yes": "Sim",
+      "no": "Não"
+    },
+    "log": {
+      "title": "Atividade da administração",
+      "text": "Cada alteração a um registo é uma transação assinada pela conta de administração, por isso o seu histórico no stellar.expert serve de registo de auditoria.",
+      "adminAccount": "Conta de administração ↗",
+      "nft": "Contrato IP-NFT ↗",
+      "splitter": "Contrato de repartição de royalties ↗"
+    }
   },
   "cashOut": {
     "status": {

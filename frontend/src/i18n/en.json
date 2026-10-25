@@ -314,7 +314,7 @@
     "eyebrow": "Compliance",
     "title": "Platform administration",
     "intro": "Only verified institutions can list patents, and only investors who passed KYC can hold revenue shares.",
-    "notAdmin": "Connect the platform admin account to change these registries. Anyone can look up a status.",
+    "notAdmin": "Anyone can check a status here. Changing a registry needs the platform admin wallet.",
     "institutionsTitle": "Verified institutions",
     "institutionsText": "Universities, labs and tech transfer offices allowed to mint licences.",
     "institutionVerified": "Institution verified",
@@ -322,7 +322,31 @@
     "kycTitle": "KYC allowlist",
     "kycText": "Investors allowed to hold, buy or sell revenue shares.",
     "investorVerified": "Investor verified",
-    "investorRevoked": "Investor revoked"
+    "investorRevoked": "Investor revoked",
+    "checker": {
+      "title": "Check an account",
+      "text": "Paste any Stellar address to see if it is ready for the demo: funded, EURC trustline, verified institution, KYC.",
+      "refresh": "Refresh",
+      "invalid": "A Stellar address starts with G and has 56 characters.",
+      "unknown": "Unknown",
+      "funded": "Account funded (XLM)",
+      "friendbot": "Fund it with Friendbot ↗",
+      "trustline": "EURC trustline",
+      "trustlineHint": "Connect this account and use the trustline button in the header.",
+      "institutionHint": "Only the platform admin can verify an institution.",
+      "kycHint": "Only the platform admin can add an investor to the KYC list.",
+      "history": "Transaction history on stellar.expert ↗",
+      "faucet": "Get test EURC on faucet.circle.com ↗",
+      "yes": "Yes",
+      "no": "No"
+    },
+    "log": {
+      "title": "Admin activity",
+      "text": "Every registry change is a transaction signed by the admin account, so its history on stellar.expert is the audit log.",
+      "adminAccount": "Admin account ↗",
+      "nft": "IP-NFT contract ↗",
+      "splitter": "Royalty splitter contract ↗"
+    }
   },
   "cashOut": {
     "status": {
