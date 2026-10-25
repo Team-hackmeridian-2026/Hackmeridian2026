@@ -57,14 +57,20 @@ function initKit() {
 /** Catch the usual mistakes up front: extension off or locked, wrong network, other account active. */
 async function checkWallet(address: string): Promise<void> {
   let network: { networkPassphrase: string };
-  let active: string;
   try {
     network = await StellarWalletsKit.getNetwork();
+  } catch {
+    throw new WalletError("notConnected");
+  }
+  // Check the network before asking for the address: on a network where the site was never
+  // approved (Mainnet), Freighter answers that request with a connection popup.
+  if (network.networkPassphrase && network.networkPassphrase !== NETWORK_PASSPHRASE) throw new WalletError("network");
+  let active: string;
+  try {
     active = (await StellarWalletsKit.fetchAddress()).address;
   } catch {
     throw new WalletError("notConnected");
   }
-  if (network.networkPassphrase && network.networkPassphrase !== NETWORK_PASSPHRASE) throw new WalletError("network");
   if (active && active !== address) throw new WalletError("account", active);
 }
 
