@@ -444,7 +444,9 @@
       "notConnected": "Não foi possível contactar a tua carteira. Ativa e desbloqueia a extensão Freighter e volta a ligar-te no site.",
       "network": "A tua carteira está noutra rede. Muda o Freighter para Testnet e tenta de novo.",
       "account": "A conta ativa no Freighter ({{address}}) não é a que está ligada aqui. Muda de conta no Freighter, ou desliga e volta a ligar-te no site."
-    }
+    },
+    "expired": "A transação expirou antes de ser assinada (limite de 5 minutos). Tente novamente e confirme na carteira em menos de 5 minutos.",
+    "sendFailed": "A rede Stellar recusou a transação. Pode ter expirado: tente novamente e assine em menos de 5 minutos."
   },
   "header": {
     "testnet": "Testnet"
