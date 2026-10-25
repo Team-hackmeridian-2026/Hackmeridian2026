@@ -294,7 +294,16 @@
     "arbiterTitle": "Arbiter decision",
     "arbiterHelp": "Research can fail without anyone being at fault. Pay the lab for the work done and refund the rest.",
     "labShare": "Lab: {{lab}} % · Investor refund: {{refund}} %",
-    "split": "Apply this split"
+    "split": "Apply this split",
+    "terms": "Terms",
+    "dossier": "Scientific dossier",
+    "fundingTitle": "Funding and milestones",
+    "funding": "Funding",
+    "goToMilestones": "Go to the milestones",
+    "verifyHelp": "Choose a copy of the dossier: it is fingerprinted in your browser and never uploaded.",
+    "chooseFile": "Choose a file",
+    "milestoneN": "Milestone {{n}}",
+    "sections": "On this page"
   },
   "admin": {
     "address": "Stellar address",

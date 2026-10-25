@@ -46,15 +46,23 @@ export function Card({ children, className }: { children: ReactNode; className?:
   return <div className={cx("rounded-3xl border border-line bg-card p-6 shadow-card", className)}>{children}</div>;
 }
 
-export function Badge({ children, tone = "neutral" }: { children: ReactNode; tone?: "neutral" | "brand" | "amber" | "danger" | "navy" }) {
+export type BadgeTone = "neutral" | "brand" | "amber" | "danger" | "navy" | "success";
+
+export function Badge({ children, tone = "neutral", icon }: { children: ReactNode; tone?: BadgeTone; icon?: ReactNode }) {
   const styles = {
     neutral: "bg-subtle text-muted ring-1 ring-inset ring-line",
     brand: "bg-brand/15 text-brand-ink ring-1 ring-inset ring-brand/25",
     amber: "bg-amber/15 text-amber-dark ring-1 ring-inset ring-amber/30",
     danger: "bg-danger/10 text-danger ring-1 ring-inset ring-danger/25",
     navy: "bg-ink text-canvas",
+    success: "bg-success/10 text-success ring-1 ring-inset ring-success/25",
   }[tone];
-  return <span className={cx("inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold", styles)}>{children}</span>;
+  return (
+    <span className={cx("inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-xs font-semibold", styles)}>
+      {icon}
+      {children}
+    </span>
+  );
 }
 
 export function Field({ label, hint, children }: { label: string; hint?: ReactNode; children: ReactNode }) {
@@ -98,15 +106,16 @@ export function TxLink({ hash }: { hash: string }) {
   );
 }
 
+/** Page header from the Figma: small eyebrow, very large title, intro below. */
 export function SectionTitle({ eyebrow, title, children }: { eyebrow?: string; title: string; children?: ReactNode }) {
   return (
-    <div className="flex flex-wrap items-end justify-between gap-4">
+    <header className="flex flex-col gap-4">
       <div>
-        {eyebrow && <p className="text-sm font-semibold text-brand-ink">{eyebrow}</p>}
-        <h2 className="mt-1 font-display text-3xl font-extrabold tracking-tight sm:text-4xl">{title}</h2>
+        {eyebrow && <p className="text-sm font-semibold text-muted">{eyebrow}</p>}
+        <h1 className="mt-2 font-display text-5xl leading-[0.95] font-extrabold tracking-[-0.04em] text-balance sm:text-6xl">{title}</h1>
       </div>
-      {children}
-    </div>
+      {children && <div className="max-w-2xl text-lg leading-relaxed text-muted">{children}</div>}
+    </header>
   );
 }
 
@@ -139,20 +148,56 @@ export function ErrorBox({ message, onRetry }: { message: string; onRetry?: () =
   );
 }
 
-/** Neutral information or a prerequisite ("connect your wallet…"): not an error. */
-export function Notice({ children, action }: { children: ReactNode; action?: ReactNode }) {
+/**
+ * Neutral information or a prerequisite ("connect your wallet…"): not an error.
+ * `warning` is the amber variant used when an action is blocked.
+ */
+export function Notice({ children, action, tone = "info" }: { children: ReactNode; action?: ReactNode; tone?: "info" | "warning" }) {
+  const warning = tone === "warning";
   return (
-    <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-line bg-card px-4 py-3 text-sm text-ink shadow-card">
-      <div className="flex items-start gap-2">
-        <svg viewBox="0 0 24 24" className="mt-0.5 size-4 shrink-0 text-brand-ink" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden>
-          <circle cx="12" cy="12" r="9" />
-          <path d="M12 11v5M12 8h.01" />
-        </svg>
+    <div
+      className={cx(
+        "flex flex-wrap items-center justify-between gap-3 rounded-2xl border px-4 py-3 text-sm",
+        warning ? "border-amber/50 bg-amber/10 text-ink" : "border-line bg-subtle text-ink",
+      )}
+    >
+      <div className="flex items-start gap-2.5">
+        {warning ? (
+          <svg viewBox="0 0 24 24" className="mt-0.5 size-4 shrink-0 text-amber-dark" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+            <path d="M12 4 2.5 20h19z M12 10v4.5M12 17.5h.01" />
+          </svg>
+        ) : (
+          <svg viewBox="0 0 24 24" className="mt-0.5 size-4 shrink-0 text-muted" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden>
+            <circle cx="12" cy="12" r="9" />
+            <path d="M12 7.5V12l3 2" />
+          </svg>
+        )}
         <div>{children}</div>
       </div>
       {action}
     </div>
   );
+}
+
+/** Small status glyphs shared by milestone pills, timelines and checklists. */
+export function StatusIcon({ kind, className = "size-3.5" }: { kind: "pending" | "running" | "done" | "error" | "clock" | "refund" | "split"; className?: string }) {
+  const common = { viewBox: "0 0 24 24", className, fill: "none", stroke: "currentColor", strokeWidth: 2.2, strokeLinecap: "round" as const, strokeLinejoin: "round" as const, "aria-hidden": true };
+  switch (kind) {
+    case "running":
+      return <svg {...common} className={cx(className, "animate-spin")}><path d="M12 3a9 9 0 1 0 9 9" /></svg>;
+    case "done":
+      return <svg {...common}><circle cx="12" cy="12" r="9" /><path d="m8 12.5 2.8 2.8L16 10" /></svg>;
+    case "error":
+      return <svg {...common}><circle cx="12" cy="12" r="9" /><path d="M12 7.5v5M12 16h.01" /></svg>;
+    case "clock":
+      return <svg {...common}><circle cx="12" cy="12" r="9" /><path d="M12 7.5V12l3 2" /></svg>;
+    case "refund":
+      return <svg {...common}><path d="M9 14 4 9l5-5" /><path d="M4 9h10a6 6 0 0 1 0 12h-3" /></svg>;
+    case "split":
+      return <svg {...common}><circle cx="12" cy="12" r="9" /><path d="M12 3v18" /></svg>;
+    default:
+      return <svg {...common}><circle cx="12" cy="12" r="9" strokeDasharray="3.2 3.2" /></svg>;
+  }
 }
 
 /** Placeholder block shown while data loads. */

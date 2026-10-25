@@ -294,7 +294,16 @@
     "arbiterTitle": "Decisão do árbitro",
     "arbiterHelp": "A investigação pode falhar sem culpa de ninguém. Pague ao laboratório o trabalho realizado e reembolse o resto.",
     "labShare": "Laboratório: {{lab}} % · Reembolso ao investidor: {{refund}} %",
-    "split": "Aplicar esta divisão"
+    "split": "Aplicar esta divisão",
+    "terms": "Condições",
+    "dossier": "Dossiê científico",
+    "fundingTitle": "Financiamento e marcos",
+    "funding": "Financiamento",
+    "goToMilestones": "Ver os marcos",
+    "verifyHelp": "Escolha uma cópia do dossiê: a impressão digital é calculada no seu navegador e nada é enviado.",
+    "chooseFile": "Escolher um ficheiro",
+    "milestoneN": "Marco {{n}}",
+    "sections": "Nesta página"
   },
   "admin": {
     "address": "Endereço Stellar",
