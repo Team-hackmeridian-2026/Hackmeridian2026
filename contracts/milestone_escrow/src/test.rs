@@ -8,6 +8,10 @@ use soroban_sdk::{
 };
 
 const WINDOW: u64 = 60;
+/// Research period of the test projects: one year after creation (ledger time 0).
+const DEADLINE: u64 = 365 * 24 * 60 * 60;
+/// Same as ARBITER_PERIOD in the contract.
+const ARBITER_PERIOD: u64 = 30 * 24 * 60 * 60;
 
 struct Setup<'a> {
     env: Env,
@@ -123,6 +127,7 @@ fn create(s: &Setup) -> u64 {
         &s.arbiter,
         &vec![&s.env, 10_000i128, 10_000, 10_000],
         &WINDOW,
+        &DEADLINE,
     )
 }
 
@@ -332,6 +337,74 @@ fn cannot_release_twice() {
 }
 
 #[test]
+fn no_submission_after_the_deadline() {
+    let s = setup(0);
+    let pid = create(&s);
+    s.escrow.fund(&pid);
+    advance(&s, DEADLINE);
+    assert_eq!(
+        s.escrow.try_submit_milestone(&pid, &0, &proof(&s, 1)),
+        Err(Ok(Error::DeadlinePassed.into()))
+    );
+}
+
+#[test]
+fn investor_reclaims_unsubmitted_milestones_after_the_deadline() {
+    let s = setup(0);
+    let pid = create(&s);
+    s.escrow.fund(&pid);
+    s.escrow.submit_milestone(&pid, &0, &proof(&s, 1));
+    advance(&s, WINDOW);
+    s.escrow.release(&pid, &0);
+    s.escrow.submit_milestone(&pid, &1, &proof(&s, 2));
+
+    // Before the deadline there is nothing to reclaim.
+    assert_eq!(s.escrow.try_reclaim(&pid), Err(Ok(Error::NothingToReclaim.into())));
+
+    advance(&s, DEADLINE);
+    s.escrow.reclaim(&pid);
+    // Anyone can trigger it: the money can only go back to the investor.
+    assert!(s.env.auths().is_empty());
+    assert_eq!(status(&s, pid, 0), MilestoneStatus::Released);
+    // A milestone submitted before the deadline can still be released.
+    assert_eq!(status(&s, pid, 1), MilestoneStatus::Submitted);
+    assert_eq!(status(&s, pid, 2), MilestoneStatus::Refunded);
+    assert_eq!(s.token.balance(&s.investor), 1_000_000 - 20_000);
+    assert_eq!(s.splitter.shares_of(&s.license_id, &s.investor), 20_000);
+
+    s.escrow.release(&pid, &1);
+    assert_eq!(s.token.balance(&s.lab), 20_000);
+    assert_eq!(s.token.balance(&s.escrow.address), 0);
+    assert_eq!(s.escrow.try_reclaim(&pid), Err(Ok(Error::NothingToReclaim.into())));
+}
+
+#[test]
+fn investor_reclaims_a_dispute_the_arbiter_never_settles() {
+    let s = setup(0);
+    let pid = disputed(&s);
+
+    advance(&s, WINDOW + ARBITER_PERIOD - 1);
+    assert_eq!(s.escrow.try_reclaim(&pid), Err(Ok(Error::NothingToReclaim.into())));
+
+    advance(&s, 1);
+    s.escrow.reclaim(&pid);
+    assert_eq!(status(&s, pid, 0), MilestoneStatus::Refunded);
+    // The next milestone is unblocked and the lab can carry on before the deadline.
+    s.escrow.submit_milestone(&pid, &1, &proof(&s, 3));
+    assert_eq!(status(&s, pid, 1), MilestoneStatus::Submitted);
+}
+
+#[test]
+fn arbiter_can_still_settle_until_someone_reclaims() {
+    let s = setup(0);
+    let pid = disputed(&s);
+    advance(&s, WINDOW + ARBITER_PERIOD);
+    s.escrow.resolve_partial(&pid, &0, &6_000);
+    assert_eq!(status(&s, pid, 0), MilestoneStatus::Split);
+    assert_eq!(s.escrow.try_reclaim(&pid), Err(Ok(Error::NothingToReclaim.into())));
+}
+
+#[test]
 fn cancel_refunds_pending_milestones() {
     let s = setup(0);
     let pid = create(&s);
@@ -373,20 +446,41 @@ fn project_requires_configured_split_and_valid_amounts() {
             &s.investor,
             &s.arbiter,
             &vec![&s.env, 0i128],
-            &WINDOW
+            &WINDOW,
+            &DEADLINE
         ),
         Err(Ok(Error::InvalidMilestones.into()))
     );
-    assert_eq!(
+}
+
+#[test]
+fn arbiter_window_and_deadline_are_checked_at_creation() {
+    let s = setup(0);
+    let try_create = |arbiter: &Address, window: u64, deadline: u64| {
         s.escrow.try_create_project(
             &s.license_id,
             &s.investor,
-            &s.investor,
+            arbiter,
             &vec![&s.env, 10i128],
-            &WINDOW
-        ),
-        Err(Ok(Error::InvalidMilestones.into()))
+            &window,
+            &deadline,
+        )
+    };
+    let parties = Err(Ok(Error::InvalidParties.into()));
+    assert_eq!(try_create(&s.investor, WINDOW, DEADLINE), parties);
+    assert_eq!(try_create(&s.lab, WINDOW, DEADLINE), parties);
+
+    let window = Err(Ok(Error::InvalidWindow.into()));
+    assert_eq!(try_create(&s.arbiter, 0, DEADLINE), window);
+    assert_eq!(try_create(&s.arbiter, WINDOW - 1, DEADLINE), window);
+    assert_eq!(try_create(&s.arbiter, 31 * 24 * 60 * 60, DEADLINE), window);
+
+    advance(&s, 1_000);
+    assert_eq!(
+        try_create(&s.arbiter, WINDOW, 1_000),
+        Err(Ok(Error::InvalidDeadline.into()))
     );
+    assert!(try_create(&s.arbiter, WINDOW, 1_001).is_ok());
 }
 
 #[test]
@@ -400,6 +494,7 @@ fn unverified_investor_cannot_fund() {
         &s.arbiter,
         &vec![&s.env, 30_000i128],
         &WINDOW,
+        &DEADLINE,
     );
     assert!(s.escrow.try_fund(&pid).is_err());
     assert_eq!(s.token.balance(&stranger), 30_000);

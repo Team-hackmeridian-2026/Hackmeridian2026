@@ -4,6 +4,10 @@
 //! (empreinte d'un rapport) de chaque jalon ; sans contestation pendant la
 //! fenêtre `challenge_period`, n'importe qui peut déclencher la libération.
 //! En cas de contestation, l'arbitre désigné à la création tranche.
+//!
+//! Les fonds ne restent jamais bloqués : après l'échéance du projet, les
+//! jalons non soumis sont remboursables, et un litige que l'arbitre n'a pas
+//! tranché dans `ARBITER_PERIOD` l'est aussi (`reclaim`).
 #![no_std]
 
 use soroban_sdk::{
@@ -16,6 +20,12 @@ const TTL_THRESHOLD: u32 = 7 * DAY_IN_LEDGERS;
 const TTL_EXTEND_TO: u32 = 30 * DAY_IN_LEDGERS;
 const BPS_DENOMINATOR: i128 = 10_000;
 const MAX_MILESTONES: u32 = 10;
+/// Fenêtre de contestation minimale : une minute, la durée utilisée en démo.
+const MIN_CHALLENGE_PERIOD: u64 = 60;
+/// Fenêtre maximale, pour qu'un jalon soumis ne puisse pas rester bloqué des années.
+const MAX_CHALLENGE_PERIOD: u64 = 30 * 24 * 60 * 60;
+/// Délai laissé à l'arbitre, après la fin de la fenêtre, pour trancher un litige.
+const ARBITER_PERIOD: u64 = 30 * 24 * 60 * 60;
 
 #[contractclient(name = "LicenseNftClient")]
 pub trait LicenseNftInterface {
@@ -63,6 +73,9 @@ pub struct Project {
     pub investor: Address,
     pub arbiter: Address,
     pub challenge_period: u64,
+    /// Après cette date (horodatage du ledger), plus aucun jalon ne peut être
+    /// soumis et les jalons en attente sont remboursables à l'investisseur.
+    pub deadline: u64,
     pub funded: bool,
     pub milestones: Vec<Milestone>,
 }
@@ -96,6 +109,14 @@ pub enum Error {
     ChallengeWindowOpen = 10,
     InvalidConfig = 11,
     InvalidShare = 12,
+    /// L'arbitre ne peut être ni l'investisseur ni le labo.
+    InvalidParties = 13,
+    /// Fenêtre de contestation hors de [MIN_CHALLENGE_PERIOD, MAX_CHALLENGE_PERIOD].
+    InvalidWindow = 14,
+    /// Échéance déjà passée à la création du projet.
+    InvalidDeadline = 15,
+    DeadlinePassed = 16,
+    NothingToReclaim = 17,
 }
 
 #[contractevent]
@@ -201,6 +222,7 @@ impl MilestoneEscrow {
         arbiter: Address,
         amounts: Vec<i128>,
         challenge_period: u64,
+        deadline: u64,
     ) -> u64 {
         let nft: Address = env.storage().instance().get(&DataKey::LicenseNft).unwrap();
         let lab = LicenseNftClient::new(&env, &nft).owner_of(&license_id);
@@ -209,8 +231,18 @@ impl MilestoneEscrow {
         if !splitter(&env).is_configured(&license_id) {
             panic_with_error!(&env, Error::SplitNotConfigured);
         }
-        if amounts.is_empty() || amounts.len() > MAX_MILESTONES || arbiter == investor {
+        if amounts.is_empty() || amounts.len() > MAX_MILESTONES {
             panic_with_error!(&env, Error::InvalidMilestones);
+        }
+        // L'arbitre tranche entre le labo et l'investisseur : il ne peut être aucun des deux.
+        if arbiter == investor || arbiter == lab {
+            panic_with_error!(&env, Error::InvalidParties);
+        }
+        if !(MIN_CHALLENGE_PERIOD..=MAX_CHALLENGE_PERIOD).contains(&challenge_period) {
+            panic_with_error!(&env, Error::InvalidWindow);
+        }
+        if deadline <= env.ledger().timestamp() {
+            panic_with_error!(&env, Error::InvalidDeadline);
         }
         let mut milestones = Vec::new(&env);
         let mut total: i128 = 0;
@@ -242,6 +274,7 @@ impl MilestoneEscrow {
                 investor,
                 arbiter,
                 challenge_period,
+                deadline,
                 funded: false,
                 milestones,
             },
@@ -292,6 +325,9 @@ impl MilestoneEscrow {
         project.lab.require_auth();
         if !project.funded {
             panic_with_error!(&env, Error::NotFunded);
+        }
+        if env.ledger().timestamp() >= project.deadline {
+            panic_with_error!(&env, Error::DeadlinePassed);
         }
         let mut m = milestone(&env, &project, index);
         if m.status != MilestoneStatus::Pending {
@@ -392,6 +428,36 @@ impl MilestoneEscrow {
             if m.status == MilestoneStatus::Pending {
                 project = refund(&env, project, i, m);
             }
+        }
+    }
+
+    /// Rembourse l'investisseur quand la recherche s'arrête : jalons non soumis
+    /// à l'échéance, et litiges que l'arbitre n'a pas tranchés dans
+    /// `ARBITER_PERIOD` après la fin de la fenêtre. Comme `release`, n'importe
+    /// qui peut le déclencher : les fonds ne peuvent aller qu'à l'investisseur.
+    pub fn reclaim(env: Env, project_id: u64) {
+        let mut project = load(&env, project_id);
+        if !project.funded {
+            panic_with_error!(&env, Error::NotFunded);
+        }
+        let now = env.ledger().timestamp();
+        let mut reclaimed = false;
+        for i in 0..project.milestones.len() {
+            let m = project.milestones.get_unchecked(i);
+            let stalled = match m.status {
+                MilestoneStatus::Pending => now >= project.deadline,
+                MilestoneStatus::Disputed => {
+                    now >= m.submitted_at + project.challenge_period + ARBITER_PERIOD
+                }
+                _ => false,
+            };
+            if stalled {
+                project = refund(&env, project, i, m);
+                reclaimed = true;
+            }
+        }
+        if !reclaimed {
+            panic_with_error!(&env, Error::NothingToReclaim);
         }
     }
 

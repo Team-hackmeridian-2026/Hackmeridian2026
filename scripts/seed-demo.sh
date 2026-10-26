@@ -12,6 +12,8 @@ shopt -s inherit_errexit
 
 NETWORK="${NETWORK:-testnet}"
 WINDOW=60
+# Échéance des projets de démo : un an (voir milestone_escrow::reclaim).
+DEADLINE=$(( $(date +%s) + 365 * 24 * 3600 ))
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 # shellcheck disable=SC1090
 source "$ROOT/deployments/$NETWORK.env"
@@ -58,7 +60,7 @@ create() {
   invoke "$SPLITTER_ID" bl-lab configure --license_id "$license" --config \
     "{\"fixed\":[{\"addr\":\"$LAB\",\"bps\":4000},{\"addr\":\"$INVENTOR\",\"bps\":3000}],\"investors_bps\":3000}" >/dev/null
   project="$(invoke "$ESCROW_ID" bl-lab create_project --license_id "$license" --investor "$FUND" \
-    --arbiter "$ARBITER" --amounts "$amounts" --challenge_period "$WINDOW")"
+    --arbiter "$ARBITER" --amounts "$amounts" --challenge_period "$WINDOW" --deadline "$DEADLINE")"
   echo "  + #$license $title" >&2
   echo "$project:$license"
 }

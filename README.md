@@ -128,7 +128,7 @@ The front-end reads these IDs from `frontend/src/deployment.json`.
 | Contract | Main functions |
 | --- | --- |
 | `ip_license_nft` | `mint`, `get_license`, `list_licenses`, `transfer` (institutions only), `sign_nda`, `set_institution` |
-| `milestone_escrow` | `create_project`, `fund`, `submit_milestone`, `dispute`, `release` (after the challenge window), `resolve` / `resolve_partial` (arbiter), `cancel` |
+| `milestone_escrow` | `create_project`, `fund`, `submit_milestone`, `dispute`, `release` (after the challenge window), `resolve` / `resolve_partial` (arbiter), `cancel`, `reclaim` (after the round's deadline, or when the arbiter has not settled a dispute within 30 days) |
 | `royalty_splitter` | `configure`, `pay_royalty`, `claim`, `transfer_shares` (KYC only), `clawback`, `set_allowed` |
 
 Royalties use a per-share accumulator: paying out costs the same whatever the
