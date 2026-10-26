@@ -446,5 +446,13 @@
     },
     "expired": "La transaction a expiré avant d'être signée (limite de 5 minutes). Recommencez et confirmez dans votre wallet en moins de 5 minutes.",
     "sendFailed": "Le réseau Stellar a refusé la transaction. Elle a peut-être expiré : recommencez et signez en moins de 5 minutes."
+  },
+  "errorPage": {
+    "notFoundTitle": "Page introuvable",
+    "notFoundText": "Rien n'existe à cette adresse. Vérifiez le lien ou revenez aux licences.",
+    "title": "Une erreur est survenue",
+    "text": "Cette page a rencontré une erreur inattendue. Rechargez-la ou revenez aux licences.",
+    "reload": "Recharger",
+    "back": "Retour aux licences"
   }
 }

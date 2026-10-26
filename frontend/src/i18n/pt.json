@@ -446,5 +446,13 @@
     },
     "expired": "A transação expirou antes de ser assinada (limite de 5 minutos). Tente novamente e confirme na carteira em menos de 5 minutos.",
     "sendFailed": "A rede Stellar recusou a transação. Pode ter expirado: tente novamente e assine em menos de 5 minutos."
+  },
+  "errorPage": {
+    "notFoundTitle": "Página não encontrada",
+    "notFoundText": "Não existe nada neste endereço. Verifique o link ou volte às licenças.",
+    "title": "Algo correu mal",
+    "text": "Esta página encontrou um erro inesperado. Recarregue-a ou volte às licenças.",
+    "reload": "Recarregar",
+    "back": "Voltar às licenças"
   }
 }

@@ -10,6 +10,7 @@ import { NewLicence } from "./pages/NewLicence";
 import { LicenceDetail } from "./pages/LicenceDetail";
 import { Admin } from "./pages/Admin";
 import { CashOut } from "./pages/CashOut";
+import { NotFound, RouteError } from "./components/RouteError";
 import "./i18n";
 import "./index.css";
 
@@ -19,12 +20,22 @@ import "./index.css";
 const router = createBrowserRouter([
   {
     element: <Layout />,
+    // Only if the layout itself fails: the error page then shows without the header.
+    errorElement: <RouteError />,
     children: [
-      { path: "/", element: <Marketplace /> },
-      { path: "/new", element: <NewLicence /> },
-      { path: "/licence/:id", element: <LicenceDetail /> },
-      { path: "/admin", element: <Admin /> },
-      { path: "/cash-out", element: <CashOut /> },
+      {
+        // A screen that throws is replaced by the error page inside the layout,
+        // so the header and the navigation stay usable.
+        errorElement: <RouteError />,
+        children: [
+          { path: "/", element: <Marketplace /> },
+          { path: "/new", element: <NewLicence /> },
+          { path: "/licence/:id", element: <LicenceDetail /> },
+          { path: "/admin", element: <Admin /> },
+          { path: "/cash-out", element: <CashOut /> },
+          { path: "*", element: <NotFound /> },
+        ],
+      },
     ],
   },
 ]);
