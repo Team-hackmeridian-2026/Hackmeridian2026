@@ -127,6 +127,8 @@
     },
     "count_one": "{{count}} licença publicada",
     "count_other": "{{count}} licenças publicadas",
+    "shown": "{{shown}} de {{total}} apresentadas",
+    "showMore": "Mostrar mais licenças",
     "table": {
       "licence": "Licença",
       "field": "Área",

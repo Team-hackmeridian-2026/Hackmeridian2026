@@ -127,6 +127,8 @@
     },
     "count_one": "{{count}} licence listed",
     "count_other": "{{count}} licences listed",
+    "shown": "{{shown}} of {{total}} shown",
+    "showMore": "Show more licences",
     "table": {
       "licence": "Licence",
       "field": "Field",

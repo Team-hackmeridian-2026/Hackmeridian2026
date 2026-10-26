@@ -127,6 +127,8 @@
     },
     "count_one": "{{count}} licence publiée",
     "count_other": "{{count}} licences publiées",
+    "shown": "{{shown}} sur {{total}} affichées",
+    "showMore": "Afficher plus de licences",
     "table": {
       "licence": "Licence",
       "field": "Domaine",
