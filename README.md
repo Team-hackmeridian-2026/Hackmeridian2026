@@ -211,9 +211,11 @@ arbiter as a second Freighter account if you want to try a dispute.
 
 #### Happy path (about 5 minutes), connected as your juror account
 
-1. **List a patent**. In the funding section, set the **investor** to your own
-   juror address and the **arbiter** to the jury arbiter address; choose the
-   1-minute challenge window and two milestones of 1 EURC.
+1. **List a patent**. Fill in a title, field and territory, pick an inventor
+   (the demo inventor is fine) and add any file as the dossier. In the funding
+   section, set the **investor** to your own juror address and the **arbiter**
+   to the jury arbiter address; choose the 1-minute challenge window and two
+   milestones of 1 EURC.
 2. On the licence page, **Fund**: 2 EURC are locked in escrow and shares are
    minted to you.
 3. **Submit proof** of milestone 1, wait one minute, then **Release the funds**
