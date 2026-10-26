@@ -1,0 +1,25 @@
+# BioLicensing
+
+> University patent licences on Stellar: funded in Circle EURC, released by milestones, with royalties shared automatically between the university, its inventors and its investors. Built for HackMeridian 2026 (Genesis track, Stellar Composed theme). Live demo on Stellar testnet, test assets only.
+
+A verified university lists a patent as a licence IP-NFT (terms + SHA-256 fingerprint of the private scientific dossier). An investor locks EURC in a milestone escrow and receives revenue shares. The lab proves each milestone; without a dispute within the challenge window anyone can release the funds, otherwise an arbiter approves, refunds or splits the milestone. Licensees pay royalties in EURC, split in one transaction. The lab cashes out to a bank account through a Stellar anchor (SEP-10 + SEP-24).
+
+## Links
+- [Live demo](https://biolicensing.vercel.app/): marketplace of licences, browsable without a wallet
+- [Source code and README](https://github.com/Team-hackmeridian-2026/Hackmeridian2026): architecture, contract IDs, on-chain evidence, jury test accounts, roadmap
+- [List a patent](https://biolicensing.vercel.app/new): the listing form used by university labs
+- [Bank cash-out](https://biolicensing.vercel.app/cash-out): SEP-1, SEP-10 and SEP-24 withdrawal through an anchor
+- [Admin](https://biolicensing.vercel.app/admin): verified institutions, KYC allowlist, read-only account checker
+
+## Stellar building blocks
+- Soroban contracts in Rust: ip_license_nft, milestone_escrow, royalty_splitter (30 unit tests)
+- Circle EURC on testnet through its Stellar Asset Contract
+- Stellar Wallets Kit (Freighter, xBull, Lobstr…)
+- SEP-1, SEP-10, SEP-24 anchor integration
+- Soroban RPC and Horizon
+
+## Deployed contracts (Stellar testnet)
+- [ip_license_nft](https://stellar.expert/explorer/testnet/contract/CDONN5PWL4UWU4H5QUE7LBWC3MPIR3GSVGTQHLKB7LHF2OOWVJBKVK5P): CDONN5PWL4UWU4H5QUE7LBWC3MPIR3GSVGTQHLKB7LHF2OOWVJBKVK5P
+- [milestone_escrow](https://stellar.expert/explorer/testnet/contract/CBTTMKLJKBIMOJCLG3KBZFDKEH5OJMAGZR2NCHE2GF7NN5TPFJ5B4FIB): CBTTMKLJKBIMOJCLG3KBZFDKEH5OJMAGZR2NCHE2GF7NN5TPFJ5B4FIB
+- [royalty_splitter](https://stellar.expert/explorer/testnet/contract/CA27S6FTSNZVVRYGYPMLSKXXR5LDGSK44ENN6HAEIZDSU5UZRPWGIGEZ): CA27S6FTSNZVVRYGYPMLSKXXR5LDGSK44ENN6HAEIZDSU5UZRPWGIGEZ
+- [Circle EURC (SAC)](https://stellar.expert/explorer/testnet/contract/CCUUDM434BMZMYWYDITHFXHDMIVTGGD6T2I5UKNX5BSLXLW7HVR4MCGZ): CCUUDM434BMZMYWYDITHFXHDMIVTGGD6T2I5UKNX5BSLXLW7HVR4MCGZ
