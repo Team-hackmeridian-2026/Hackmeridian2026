@@ -289,7 +289,13 @@
     "owner": "Owner (university)",
     "inventors": "Inventors",
     "listedOn": "Listed on",
-    "noRound": "No funding round yet.",
+    "noRound": "No funding round yet: the university has not finished setting up this licence.",
+    "splitPending": "The royalty split is not set yet.",
+    "setup": {
+      "title": "Finish setting up this licence",
+      "text": "The licence is on Stellar, but the listing stopped before every step was confirmed. Confirm the remaining steps to open it to funding.",
+      "sameArbiter": "The arbiter must be someone other than the investor."
+    },
     "splitResult": "{{lab}} % paid to the lab, {{refund}} % refunded to the investor",
     "arbiterTitle": "Arbiter decision",
     "arbiterHelp": "Research can fail without anyone being at fault. Pay the lab for the work done and refund the rest.",

@@ -289,7 +289,13 @@
     "owner": "Proprietária (universidade)",
     "inventors": "Inventores",
     "listedOn": "Registada em",
-    "noRound": "Ainda sem ronda de financiamento.",
+    "noRound": "Ainda sem ronda de financiamento: a universidade não concluiu a configuração desta licença.",
+    "splitPending": "A repartição dos royalties ainda não está definida.",
+    "setup": {
+      "title": "Concluir a configuração desta licença",
+      "text": "A licença já está na Stellar, mas a publicação parou antes de todos os passos serem confirmados. Confirme os passos em falta para a abrir ao financiamento.",
+      "sameArbiter": "O árbitro tem de ser uma pessoa diferente do investidor."
+    },
     "splitResult": "{{lab}} % pagos ao laboratório, {{refund}} % reembolsados ao investidor",
     "arbiterTitle": "Decisão do árbitro",
     "arbiterHelp": "A investigação pode falhar sem culpa de ninguém. Pague ao laboratório o trabalho realizado e reembolse o resto.",
