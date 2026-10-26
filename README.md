@@ -11,7 +11,7 @@ Theme: **Stellar Composed**
 | | |
 | --- | --- |
 | Live demo | [https://biolicensing.vercel.app](https://biolicensing.vercel.app) |
-| Demo video | _[link]_ |
+| Demo video | [https://www.youtube.com/watch?v=0PhDHTKIf8w](https://www.youtube.com/watch?v=0PhDHTKIf8w) |
 | Network | Stellar **testnet** (all amounts are test assets) |
 
 ![BioLicensing home page: hero with the binary DNA helix](docs/screenshots/home.png)
