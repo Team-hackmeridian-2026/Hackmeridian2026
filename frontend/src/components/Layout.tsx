@@ -229,7 +229,7 @@ export function Layout() {
     ));
 
   return (
-    <div className="flex min-h-screen flex-col">
+    <div className="flex min-h-screen flex-col overflow-x-clip">
       <header ref={headerRef} className="sticky top-0 z-40 border-b border-line bg-canvas/85 backdrop-blur-md">
         <div className="mx-auto max-w-6xl px-4 sm:px-6">
           <div className="flex items-center justify-between gap-4 py-3 min-[1280px]:grid min-[1280px]:grid-cols-[auto_1fr_auto] min-[1280px]:py-3.5">
