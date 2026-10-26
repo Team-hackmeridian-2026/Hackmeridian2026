@@ -533,8 +533,9 @@ sequenceDiagram
   time, so a release clicked right at the deadline can fail with "challenge
   window still open".
 - A licence whose listing stopped after the first transaction shows in the
-  marketplace with "No funding round yet" and an error in its royalties panel,
-  with no way for its owner to finish the setup.
+  marketplace with "No funding round yet", and its licence page crashes (the
+  royalties panel reads a split that does not exist), with no way for its
+  owner to finish the setup.
 
 ---
 
