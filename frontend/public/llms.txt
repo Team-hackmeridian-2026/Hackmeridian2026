@@ -12,7 +12,7 @@ A verified university lists a patent as a licence IP-NFT (terms + SHA-256 finger
 - [Admin](https://biolicensing.vercel.app/admin): verified institutions, KYC allowlist, read-only account checker
 
 ## Stellar building blocks
-- Soroban contracts in Rust: ip_license_nft, milestone_escrow, royalty_splitter (30 unit tests)
+- Soroban contracts in Rust: ip_license_nft, milestone_escrow, royalty_splitter, with unit tests for the full demo scenario, edge cases and who must sign
 - Circle EURC on testnet through its Stellar Asset Contract
 - Stellar Wallets Kit (Freighter, xBull, Lobstr…)
 - SEP-1, SEP-10, SEP-24 anchor integration
