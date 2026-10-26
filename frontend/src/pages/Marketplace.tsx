@@ -132,10 +132,6 @@ export function Marketplace() {
       {/* Hero */}
       <section className="relative isolate grid items-center gap-10 lg:grid-cols-[1.1fr_1fr] lg:gap-6">
         <div className="flex flex-col gap-7 py-6 sm:py-10">
-          <p className="flex items-center gap-2.5 text-sm text-muted">
-            <span aria-hidden className="size-2 shrink-0 rounded-full bg-amber ring-4 ring-amber/20" />
-            {t("marketplace.heroNote")}
-          </p>
           <BurstHeading
             as="h1"
             className="max-w-[12ch] font-display text-5xl leading-[0.95] font-extrabold tracking-[-0.04em] text-balance sm:text-6xl lg:text-[5.4rem]"

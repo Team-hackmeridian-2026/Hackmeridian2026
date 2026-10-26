@@ -89,7 +89,6 @@
     "title": "Licences sur le testnet Stellar",
     "empty": "Aucune licence pour l'instant",
     "emptyCta": "Déposer le premier brevet",
-    "heroNote": "Démo en direct sur le testnet Stellar : les montants sont en EURC de test, aucun argent réel ne circule.",
     "explore": "Explorer les licences",
     "builtFor": "Conçu pour",
     "audiences": {
@@ -447,8 +446,5 @@
     },
     "expired": "La transaction a expiré avant d'être signée (limite de 5 minutes). Recommencez et confirmez dans votre wallet en moins de 5 minutes.",
     "sendFailed": "Le réseau Stellar a refusé la transaction. Elle a peut-être expiré : recommencez et signez en moins de 5 minutes."
-  },
-  "header": {
-    "testnet": "Testnet"
   }
 }
