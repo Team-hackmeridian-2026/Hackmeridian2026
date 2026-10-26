@@ -1,0 +1,57 @@
+name: CI
+
+# Runs on every pull request and on main, so a broken contract test, type error
+# or missing translation is caught before review instead of after the merge.
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  contracts:
+    name: Contracts
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: contracts
+    steps:
+      - uses: actions/checkout@v7
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: wasm32v1-none
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: contracts
+      - name: Unit tests
+        run: cargo test --locked
+      - name: Install the Stellar CLI
+        uses: stellar/stellar-cli@v28.0.0
+      - name: Build the Wasm contracts
+        # soroban-sdk 28 only builds contracts through `stellar contract build`.
+        run: stellar contract build
+
+  frontend:
+    name: Front-end
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: frontend
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+      - run: npm ci
+      - name: Type check and build
+        run: npm run build
+      - name: Translations (EN / FR / PT)
+        run: npm run test:i18n
