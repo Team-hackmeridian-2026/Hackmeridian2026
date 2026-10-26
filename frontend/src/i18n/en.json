@@ -89,7 +89,6 @@
     "title": "Licences on Stellar testnet",
     "empty": "No licence listed yet",
     "emptyCta": "List the first patent",
-    "heroNote": "Live demo on Stellar testnet: amounts are test EURC, no real money moves.",
     "explore": "Explore licences",
     "builtFor": "Built for",
     "audiences": {
@@ -447,8 +446,5 @@
     },
     "expired": "The transaction expired before it was signed (5-minute limit). Try again and confirm in your wallet within 5 minutes.",
     "sendFailed": "The Stellar network refused the transaction. It may have expired: try again and sign within 5 minutes."
-  },
-  "header": {
-    "testnet": "Testnet"
   }
 }

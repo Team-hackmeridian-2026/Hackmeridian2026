@@ -165,17 +165,6 @@ const linkClass = (stacked: boolean) => ({ isActive }: { isActive: boolean }) =>
     isActive ? "bg-card text-ink shadow-pill ring-1 ring-inset ring-line" : "text-muted hover:text-ink"
   }`;
 
-/** Reminds every visitor that nothing here moves real money. */
-function TestnetBadge() {
-  const { t } = useTranslation();
-  return (
-    <span className="inline-flex shrink-0 items-center gap-1.5 rounded-full border border-dashed border-amber/80 bg-amber/10 px-2.5 py-0.5 text-xs font-semibold whitespace-nowrap text-amber-dark">
-      <span aria-hidden className="size-1.5 rounded-full bg-amber" />
-      {t("header.testnet")}
-    </span>
-  );
-}
-
 export function Layout() {
   const { t } = useTranslation();
   const { signer, connecting, connectWallet } = useWallet();
@@ -238,9 +227,6 @@ export function Layout() {
                 {/* Below 360px only the mark fits next to the wallet button and the menu. */}
                 <Logo wordmarkClassName="max-[359px]:hidden" />
               </NavLink>
-              <span className="hidden sm:inline-flex">
-                <TestnetBadge />
-              </span>
             </div>
             {desktop && (
               <nav aria-label={t("nav.main")} className="flex gap-1 justify-self-center rounded-full bg-subtle p-1">
@@ -283,7 +269,6 @@ export function Layout() {
               <div className="flex items-center gap-2">
                 <LanguageSwitcher />
                 <ThemeToggle />
-                <TestnetBadge />
               </div>
               {signer && <WalletArea balance={balance.data} />}
             </div>

@@ -89,7 +89,6 @@
     "title": "Licenças na testnet Stellar",
     "empty": "Ainda não há licenças",
     "emptyCta": "Registar a primeira patente",
-    "heroNote": "Demonstração ao vivo na testnet Stellar: os montantes são EURC de teste, não circula dinheiro real.",
     "explore": "Explorar licenças",
     "builtFor": "Feito para",
     "audiences": {
@@ -447,8 +446,5 @@
     },
     "expired": "A transação expirou antes de ser assinada (limite de 5 minutos). Tente novamente e confirme na carteira em menos de 5 minutos.",
     "sendFailed": "A rede Stellar recusou a transação. Pode ter expirado: tente novamente e assine em menos de 5 minutos."
-  },
-  "header": {
-    "testnet": "Testnet"
   }
 }
