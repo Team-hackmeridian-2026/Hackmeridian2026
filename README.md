@@ -209,6 +209,26 @@ One-time setup, by a repository admin:
 
 These are testnet keys only. Never put mainnet keys in this secret.
 
+#### Switching to new demo accounts
+
+The contracts' admin is the account that deployed them. If the `bl-*` keys are
+lost, deploy the new contracts with a new set of accounts:
+
+1. On your machine, `EURC_MODE=circle ./scripts/setup-accounts.sh` creates the
+   `bl-*` identities, funds them with XLM and adds the EURC trustlines.
+2. Import the four jury accounts, whose testnet keys are in the table above:
+   `stellar keys add bl-jury-1 --secret-key` (then `bl-jury-2`, `bl-jury-3`
+   and `bl-jury-arbiter`) and paste the key when prompted.
+3. Get test EURC on [faucet.circle.com](https://faucet.circle.com) for
+   `bl-fund` (about 8) and `bl-pharma` (about 3, plus 5 per juror whose
+   balance is empty).
+4. Store the keys with the command above, then run the workflow with
+   **new_accounts** ticked: the new addresses replace the old ones in
+   `frontend/src/deployment.json`.
+
+The previous contracts stay on testnet with their old admin; the app stops
+showing their licences.
+
 ### Environment variables
 
 | Variable | Where | Default | Meaning |
