@@ -143,7 +143,7 @@ fn status(s: &Setup, pid: u64, index: u32) -> MilestoneStatus {
     s.escrow.get_project(&pid).milestones.get_unchecked(index).status
 }
 
-/// Le scénario exact de la démo.
+/// The exact demo scenario.
 #[test]
 fn demo_scenario_end_to_end() {
     let s = setup(0);
@@ -174,7 +174,7 @@ fn demo_scenario_end_to_end() {
 
 #[test]
 fn fee_goes_to_treasury_on_release() {
-    let s = setup(250); // 2,5 %
+    let s = setup(250); // 2.5 %
     let pid = create(&s);
     s.escrow.fund(&pid);
     s.escrow.submit_milestone(&pid, &0, &proof(&s, 1));
@@ -234,23 +234,23 @@ fn arbiter_splits_a_milestone_after_a_good_faith_failure() {
     let s = setup(0);
     let pid = disputed(&s);
 
-    s.escrow.resolve_partial(&pid, &0, &6_000); // 60 % au labo
+    s.escrow.resolve_partial(&pid, &0, &6_000); // 60 % to the lab
     let m = s.escrow.get_project(&pid).milestones.get_unchecked(0);
     assert_eq!(m.status, MilestoneStatus::Split);
     assert_eq!(m.lab_bps, 6_000);
     assert_eq!(s.token.balance(&s.lab), 6_000);
     assert_eq!(s.token.balance(&s.investor), 1_000_000 - 30_000 + 4_000);
     assert_eq!(s.token.balance(&s.escrow.address), 20_000);
-    // Les parts suivent l'argent réellement engagé.
+    // Shares follow the money actually committed.
     assert_eq!(s.splitter.shares_of(&s.license_id, &s.investor), 26_000);
 
-    // Un jalon partagé est réglé : le suivant peut être soumis.
+    // A split milestone is settled: the next one can be submitted.
     s.escrow.submit_milestone(&pid, &1, &proof(&s, 3));
 }
 
 #[test]
 fn split_fee_only_applies_to_the_lab_share() {
-    let s = setup(250); // 2,5 %
+    let s = setup(250); // 2.5 %
     let pid = disputed(&s);
     s.escrow.resolve_partial(&pid, &0, &5_000);
     assert_eq!(s.token.balance(&s.treasury), 125);
@@ -304,7 +304,7 @@ fn dispute_then_arbiter_refunds_and_burns_shares() {
     assert_eq!(s.token.balance(&s.investor), 1_000_000 - 20_000);
     assert_eq!(s.splitter.shares_of(&s.license_id, &s.investor), 20_000);
 
-    // Le jalon suivant peut être soumis après un remboursement.
+    // The next milestone can be submitted after a refund.
     s.escrow.submit_milestone(&pid, &1, &proof(&s, 3));
 }
 

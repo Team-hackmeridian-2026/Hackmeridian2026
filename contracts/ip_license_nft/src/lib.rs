@@ -1,8 +1,8 @@
-//! IP-NFT de licence.
+//! Licence IP-NFT.
 //!
-//! Chaque jeton représente un contrat de licence sur un brevet : l'université
-//! (ou le labo) en reste titulaire, le jeton porte les termes de la licence et
-//! l'empreinte SHA-256 du dossier scientifique stocké hors chaîne.
+//! Each token represents a licence agreement on a patent: the university
+//! (or the lab) remains its owner, and the token carries the licence terms and
+//! the SHA-256 fingerprint of the scientific dossier stored off-chain.
 #![no_std]
 
 use soroban_sdk::{
@@ -100,7 +100,7 @@ impl IpLicenseNft {
         env.storage().instance().get(&DataKey::Admin).unwrap()
     }
 
-    /// Déclare une adresse comme institution vérifiée (université, labo, TTO).
+    /// Marks an address as a verified institution (university, lab, TTO).
     pub fn set_institution(env: Env, institution: Address, verified: bool) {
         Self::admin(env.clone()).require_auth();
         let key = DataKey::Institution(institution);
@@ -150,9 +150,9 @@ impl IpLicenseNft {
         let key = DataKey::License(id);
         env.storage().persistent().set(&key, &license);
         bump(&env, &key);
-        // Pas d'extend_ttl sur l'instance ici : elle prolonge aussi le code du
-        // contrat et coûtait ~1 000 XLM de loyer par appel sur le testnet.
-        // L'instance se prolonge à part avec `stellar contract extend`.
+        // No extend_ttl on the instance here: it also extends the contract code
+        // and cost ~1,000 XLM of rent per call on testnet.
+        // The instance is extended separately with `stellar contract extend`.
         env.storage().instance().set(&DataKey::NextId, &(id + 1));
 
         LicenseMinted {
@@ -181,7 +181,7 @@ impl IpLicenseNft {
         next - 1
     }
 
-    /// Licences `start..start+limit` (les identifiants commencent à 1).
+    /// Licences `start..start+limit` (IDs start at 1).
     pub fn list_licenses(env: Env, start: u64, limit: u32) -> Vec<License> {
         let next: u64 = env.storage().instance().get(&DataKey::NextId).unwrap();
         let start = start.max(1);
@@ -195,7 +195,7 @@ impl IpLicenseNft {
         out
     }
 
-    /// La licence ne peut être cédée qu'à une autre institution vérifiée.
+    /// The licence can only be transferred to another verified institution.
     pub fn transfer(env: Env, id: u64, from: Address, to: Address) {
         from.require_auth();
         let mut license = Self::get_license(env.clone(), id);
@@ -212,8 +212,8 @@ impl IpLicenseNft {
         LicenseTransferred { id, from, to }.publish(&env);
     }
 
-    /// Trace on-chain l'acceptation de l'accord de confidentialité avant
-    /// l'accès à la data room chiffrée.
+    /// Records on-chain that the viewer accepted the non-disclosure agreement
+    /// before accessing the encrypted data room.
     pub fn sign_nda(env: Env, id: u64, viewer: Address) {
         viewer.require_auth();
         Self::get_license(env.clone(), id);

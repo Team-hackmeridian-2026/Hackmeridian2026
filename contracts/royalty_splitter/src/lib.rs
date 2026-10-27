@@ -1,15 +1,14 @@
-//! Parts d'investissement et répartition des redevances.
+//! Investment shares and royalty split.
 //!
-//! Pour chaque licence :
-//! - des bénéficiaires fixes (université, inventeurs) reçoivent un pourcentage
-//!   de chaque redevance ;
-//! - la part « investisseurs » est répartie au prorata des parts détenues,
-//!   via un accumulateur par part (coût constant quel que soit le nombre de
-//!   détenteurs). Chacun retire ses gains quand il veut (`claim`).
+//! For each licence:
+//! - fixed beneficiaries (university, inventors) receive a percentage of every
+//!   royalty;
+//! - the investors' part is shared pro rata to the shares held, through a
+//!   per-share accumulator (constant cost whatever the number of holders).
+//!   Everyone withdraws their earnings when they want (`claim`).
 //!
-//! Les parts ne peuvent être détenues que par des adresses en liste blanche
-//! (KYC) et l'admin peut les récupérer (clawback), sur le modèle des actifs
-//! régulés de Stellar.
+//! Shares can only be held by allowlisted (KYC) addresses, and the admin can
+//! claw them back, on the model of Stellar's regulated assets.
 #![no_std]
 
 use soroban_sdk::{
@@ -39,8 +38,8 @@ pub struct Beneficiary {
 #[contracttype]
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub struct SplitConfig {
-    /// Université en premier : elle reçoit les arrondis et la part
-    /// investisseurs tant qu'aucune part n'a été émise.
+    /// University first: it receives the rounding remainders, and the
+    /// investors' part as long as no share has been minted.
     pub fixed: Vec<Beneficiary>,
     pub investors_bps: u32,
 }
@@ -170,13 +169,13 @@ impl RoyaltySplitter {
         env.storage().instance().get(&DataKey::Token).unwrap()
     }
 
-    /// L'émetteur de parts autorisé : le contrat d'escrow.
+    /// The authorised share minter: the escrow contract.
     pub fn set_minter(env: Env, minter: Address) {
         Self::admin(env.clone()).require_auth();
         env.storage().instance().set(&DataKey::Minter, &minter);
     }
 
-    /// Liste blanche KYC.
+    /// KYC allowlist.
     pub fn set_allowed(env: Env, who: Address, allowed: bool) {
         Self::admin(env.clone()).require_auth();
         let key = DataKey::Allowed(who);
@@ -195,9 +194,9 @@ impl RoyaltySplitter {
             .unwrap_or(false)
     }
 
-    // ---------- Configuration d'une licence ----------
+    // ---------- Licence configuration ----------
 
-    /// Fixée une seule fois par le titulaire de la licence.
+    /// Set once, by the licence owner.
     pub fn configure(env: Env, license_id: u64, config: SplitConfig) {
         let nft: Address = env.storage().instance().get(&DataKey::LicenseNft).unwrap();
         let owner = LicenseNftClient::new(&env, &nft).owner_of(&license_id);
@@ -236,7 +235,7 @@ impl RoyaltySplitter {
         config(&env, license_id)
     }
 
-    // ---------- Parts ----------
+    // ---------- Shares ----------
 
     pub fn mint_shares(env: Env, license_id: u64, to: Address, amount: i128) {
         minter(&env).require_auth();
@@ -258,13 +257,13 @@ impl RoyaltySplitter {
         .publish(&env);
     }
 
-    /// Appelé par l'escrow quand une tranche est remboursée à l'investisseur.
+    /// Called by the escrow when a milestone is refunded to the investor.
     pub fn burn_shares(env: Env, license_id: u64, from: Address, amount: i128) {
         minter(&env).require_auth();
         burn(&env, license_id, &from, amount);
     }
 
-    /// Clawback réglementaire (décision de justice, erreur).
+    /// Regulatory clawback (court order, error).
     pub fn clawback(env: Env, license_id: u64, from: Address, amount: i128) {
         Self::admin(env.clone()).require_auth();
         burn(&env, license_id, &from, amount);
@@ -308,7 +307,7 @@ impl RoyaltySplitter {
         total_shares(&env, license_id)
     }
 
-    // ---------- Redevances ----------
+    // ---------- Royalties ----------
 
     pub fn pay_royalty(env: Env, license_id: u64, payer: Address, amount: i128) {
         payer.require_auth();
@@ -348,7 +347,7 @@ impl RoyaltySplitter {
         }
         distributed += investors_part;
 
-        // Arrondis au premier bénéficiaire fixe.
+        // Rounding remainders go to the first fixed beneficiary.
         add_claimable(&env, license_id, &first, net - distributed);
 
         let key = DataKey::TotalRoyalties(license_id);
@@ -401,7 +400,7 @@ impl RoyaltySplitter {
     }
 }
 
-// ---------- Fonctions internes ----------
+// ---------- Internal functions ----------
 
 fn bump(env: &Env, key: &DataKey) {
     env.storage()
@@ -472,7 +471,7 @@ fn debt(env: &Env, license_id: u64, who: &Address) -> i128 {
         .unwrap_or(0)
 }
 
-/// Gains accumulés par les parts de `who` et pas encore réglés.
+/// Earnings accrued by `who`'s shares and not yet settled.
 fn pending(env: &Env, license_id: u64, who: &Address) -> i128 {
     let shares = RoyaltySplitter::shares_of(env.clone(), license_id, who.clone());
     shares * acc(env, license_id) / ACC_SCALE - debt(env, license_id, who)
@@ -490,7 +489,7 @@ fn reset_debt(env: &Env, license_id: u64, who: &Address) {
     }
 }
 
-/// Convertit les gains en attente en montant retirable.
+/// Turns pending earnings into a withdrawable amount.
 fn settle(env: &Env, license_id: u64, who: &Address) {
     let p = pending(env, license_id, who);
     if p > 0 {

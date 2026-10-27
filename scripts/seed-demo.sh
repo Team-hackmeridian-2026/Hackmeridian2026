@@ -1,26 +1,26 @@
 #!/usr/bin/env bash
-# Remplit le testnet avec des licences de démo dans différents états, pour que
-# la marketplace ne soit jamais vide (site public, vidéo, essais du jury).
-# Prérequis : scripts/setup-accounts.sh puis scripts/deploy.sh, et des EURC sur
-# le fonds (~8) et l'industriel (~3).
+# Fills testnet with demo licences in different states, so that the marketplace
+# is never empty (public site, video, jury trials).
+# Requires: scripts/setup-accounts.sh then scripts/deploy.sh, and EURC on the
+# fund (~8) and the licensee (~3).
 #
-# Relançable : un brevet dont le titre existe déjà est ignoré. Les fenêtres de
-# contestation durent 1 minute ; le script attend deux fois, ~3 minutes au total.
+# Rerunnable: a patent whose title already exists is skipped. Challenge windows
+# last 1 minute; the script waits twice, ~3 minutes in total.
 set -euo pipefail
-# Une erreur dans $( … ) doit aussi arrêter le script.
+# An error inside $( … ) must stop the script too.
 shopt -s inherit_errexit
 
 NETWORK="${NETWORK:-testnet}"
 WINDOW=60
-# Échéance des projets de démo : un an (voir milestone_escrow::reclaim).
+# Deadline of the demo projects: one year (see milestone_escrow::reclaim).
 DEADLINE=$(( $(date +%s) + 365 * 24 * 3600 ))
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 # shellcheck disable=SC1090
 source "$ROOT/deployments/$NETWORK.env"
 
-EURC=10000000 # 1 EURC en unités on-chain (7 décimales)
+EURC=10000000 # 1 EURC in on-chain units (7 decimals)
 
-# Le RPC testnet renvoie parfois des timeouts : on réessaie jusqu'à 3 fois.
+# The testnet RPC sometimes times out: retry up to 3 times.
 invoke() {
   local id="$1" source="$2" n out; shift 2
   for n in 1 2 3; do
@@ -28,10 +28,10 @@ invoke() {
       printf '%s' "$out" | tail -1 | tr -d '"'
       return 0
     fi
-    echo "  (tentative $n échouée, nouvel essai)" >&2
+    echo "  (attempt $n failed, retrying)" >&2
     sleep 5
   done
-  echo "  échec : $*" >&2
+  echo "  failed: $*" >&2
   return 1
 }
 
@@ -44,12 +44,12 @@ hash_of() { printf '%s' "$1" | sha256sum | cut -d' ' -f1; }
 EXISTING="$(read_only "$NFT_ID" list_licenses --start 1 --limit 50 \
   | python3 -c 'import sys, json; print("\n".join(l["title"] for l in json.load(sys.stdin)))')"
 
-# Crée licence + répartition + tour de financement ; affiche l'id du projet,
-# ou rien si le brevet existe déjà.
+# Creates licence + split + funding round; prints the project ID,
+# or nothing if the patent already exists.
 create() {
   local title="$1" field="$2" exclusive="$3" amounts="$4"
   if grep -qxF "$title" <<<"$EXISTING"; then
-    echo "  = $title (déjà présent)" >&2
+    echo "  = $title (already there)" >&2
     return 0
   fi
   local terms license project
@@ -69,20 +69,20 @@ fund()    { invoke "$ESCROW_ID" bl-fund fund --project_id "$1" >/dev/null; }
 submit()  { invoke "$ESCROW_ID" bl-lab submit_milestone --project_id "$1" --index "$2" --proof_hash "$(hash_of "report $1-$2")" >/dev/null; }
 release() { invoke "$ESCROW_ID" bl-admin release --project_id "$1" --index "$2" >/dev/null; }
 royalty() { invoke "$SPLITTER_ID" bl-pharma pay_royalty --license_id "$1" --payer "$PHARMA" --amount "$2" >/dev/null; }
-wait_window() { echo "==> Fenêtre de contestation ($((WINDOW + 5)) s)"; sleep $((WINDOW + 5)); }
+wait_window() { echo "==> Challenge window ($((WINDOW + 5)) s)"; sleep $((WINDOW + 5)); }
 
 echo "==> Licences"
 ANTIBODY="$(create "Anti-inflammatory antibody for rheumatoid arthritis" Biotech true "[\"$EURC\",\"$EURC\"]")"
 GLUCOSE="$(create "Implantable glucose sensor with 2-year lifetime" Medtech true "[\"$((EURC * 3 / 2))\",\"$((EURC * 3 / 2))\"]")"
 BATTERY="$(create "Solid-state electrolyte for safer EV batteries" Energy false "[\"$EURC\",\"$EURC\",\"$EURC\"]")"
 AI="$(create "AI early detection of lung nodules in CT scans" "Artificial intelligence" true "[\"$((EURC * 2))\",\"$((EURC * 2))\"]")"
-: "${AI}" # ouvert au financement : aucun investisseur pour l'instant
+: "${AI}" # open for funding: no investor yet
 
-echo "==> Financement et premiers jalons"
+echo "==> Funding and first milestones"
 if [ -n "$ANTIBODY" ]; then
   p="${ANTIBODY%%:*}"
   fund "$p"; submit "$p" 0
-  # Échec scientifique de bonne foi : l'arbitre partage la tranche 60/40.
+  # Good-faith scientific failure: the arbiter splits the milestone 60/40.
   invoke "$ESCROW_ID" bl-fund dispute --project_id "$p" --index 0 --reason_hash "$(hash_of "dispute $p")" >/dev/null
   invoke "$ESCROW_ID" bl-arbiter resolve_partial --project_id "$p" --index 0 --lab_bps 6000 >/dev/null
   submit "$p" 1
@@ -93,7 +93,7 @@ done
 
 if [ -n "$ANTIBODY$GLUCOSE$BATTERY" ]; then
   wait_window
-  echo "==> Libérations"
+  echo "==> Releases"
   if [ -n "$ANTIBODY" ]; then release "${ANTIBODY%%:*}" 1; fi
   for v in "$GLUCOSE" "$BATTERY"; do
     if [ -n "$v" ]; then release "${v%%:*}" 0; submit "${v%%:*}" 1; fi
@@ -105,14 +105,14 @@ if [ -n "$GLUCOSE" ]; then
   release "${GLUCOSE%%:*}" 1
 fi
 
-echo "==> Redevances et NDA"
+echo "==> Royalties and NDA"
 if [ -n "$ANTIBODY" ]; then
   royalty "${ANTIBODY#*:}" $((EURC * 2))
   invoke "$NFT_ID" bl-fund sign_nda --id "${ANTIBODY#*:}" --viewer "$FUND" >/dev/null
 fi
 if [ -n "$GLUCOSE" ]; then royalty "${GLUCOSE#*:}" "$EURC"; fi
 
-echo "==> Terminé"
+echo "==> Done"
 read_only "$NFT_ID" list_licenses --start 1 --limit 50 \
   | python3 -c 'import sys, json
 for l in json.load(sys.stdin):

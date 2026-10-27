@@ -35,7 +35,7 @@ findings and the questions we should answer before the next iteration.
 | **Off-chain** | A single-page React 19 + Vite 8 + Tailwind 4 app (~4,500 lines of TS/TSX), no backend, no database |
 | **External services** | Soroban RPC and Horizon (testnet), Circle EURC through its Stellar Asset Contract, Stellar Wallets Kit, SDF test anchor (SEP-1/10/24) |
 | **Hosting** | Vercel, production deployed from `main`, a preview per pull request |
-| **Languages** | UI in English, French and Portuguese; contract comments and scripts in French |
+| **Languages** | UI in English, French and Portuguese; code, comments, scripts and docs in English |
 | **Maturity** | Demo-ready on testnet. Not audited, not upgradable, single admin key |
 
 What works well, in one sentence each:
@@ -279,7 +279,7 @@ frontend/
   src/components/*.tsx         1,650  UI kit, toasts, 3D/SVG visuals, layout
   src/i18n/{en,fr,pt}.json   450 each  translations, parity-tested by tests/i18n.test.mjs
 scripts/                              testnet accounts, deploy, seed, jury accounts (bash + stellar CLI)
-docs/PLAN.md                          original development plan (French)
+docs/PLAN.md                          original development plan
 ```
 
 ### 3.2 Contracts
@@ -425,10 +425,7 @@ Debts worth paying down:
    catch drift at build time.
 2. The `normalizeProject` workaround for unit enums shows the runtime spec
    decoder's quirks leaking into app code.
-3. Mixed languages: contract comments, error docs and scripts are in French,
-   UI and README in English. Pick one for code comments before outside
-   contributors arrive.
-4. `pages/LicenceDetail.tsx` (592 lines) and `pages/NewLicence.tsx` (473
+3. `pages/LicenceDetail.tsx` (592 lines) and `pages/NewLicence.tsx` (473
    lines) mix data loading, validation and rendering; extracting hooks would
    make them testable.
 

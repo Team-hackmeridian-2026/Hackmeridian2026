@@ -1,12 +1,12 @@
 #!/usr/bin/env bash
-# Crée et approvisionne les comptes de démo sur le testnet, puis prépare l'EURC.
+# Creates and funds the demo accounts on testnet, then sets up EURC.
 #
-#   EURC_MODE=mock   (défaut) EURC de test émis par notre compte bl-issuer :
-#                    quantité illimitée, idéal pour la démo.
-#   EURC_MODE=circle EURC officiel de Circle sur testnet. Les comptes doivent
-#                    ensuite être approvisionnés via https://faucet.circle.com
+#   EURC_MODE=mock   (default) test EURC issued by our bl-issuer account:
+#                    unlimited supply, ideal for the demo.
+#   EURC_MODE=circle Circle's official EURC on testnet. The accounts must then
+#                    be funded through https://faucet.circle.com
 #
-# Les clés sont stockées par le CLI `stellar` (hors du dépôt).
+# Keys are stored by the `stellar` CLI (outside the repository).
 set -euo pipefail
 
 NETWORK="${NETWORK:-testnet}"
@@ -20,7 +20,7 @@ HOLDERS=(admin lab inventor fund pharma)
 
 addr() { stellar keys address "bl-$1"; }
 
-echo "==> Comptes ($NETWORK)"
+echo "==> Accounts ($NETWORK)"
 for role in "${ROLES[@]}"; do
   if stellar keys address "bl-$role" >/dev/null 2>&1; then
     stellar keys fund "bl-$role" --network "$NETWORK" >/dev/null 2>&1 || true
@@ -45,15 +45,15 @@ for role in "${HOLDERS[@]}"; do
 done
 
 if [ "$EURC_MODE" = "mock" ]; then
-  echo "==> Émission d'EURC de test"
-  # Montants en stroops (7 décimales) : 1 000 000 EURC au fonds, 100 000 à l'industriel.
+  echo "==> Issuing test EURC"
+  # Amounts in stroops (7 decimals): 1,000,000 EURC to the fund, 100,000 to the licensee.
   stellar tx new payment --source-account bl-issuer --network "$NETWORK" --quiet \
     --destination "$(addr fund)" --asset "$ASSET" --amount 10000000000000 >/dev/null
   stellar tx new payment --source-account bl-issuer --network "$NETWORK" --quiet \
     --destination "$(addr pharma)" --asset "$ASSET" --amount 1000000000000 >/dev/null
 fi
 
-echo "==> Contrat SAC de l'EURC"
+echo "==> EURC SAC contract"
 EURC_CONTRACT="$(stellar contract asset deploy --asset "$ASSET" \
   --source-account bl-admin --network "$NETWORK" 2>/dev/null \
   || stellar contract id asset --asset "$ASSET" --network "$NETWORK")"
@@ -72,4 +72,4 @@ FUND=$(addr fund)
 PHARMA=$(addr pharma)
 ARBITER=$(addr arbiter)
 EOF
-echo "==> Écrit dans ${OUT#"$ROOT"/}"
+echo "==> Written to ${OUT#"$ROOT"/}"

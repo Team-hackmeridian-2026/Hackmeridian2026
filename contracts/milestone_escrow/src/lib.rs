@@ -1,13 +1,13 @@
-//! Escrow EURC à jalons avec validation optimiste.
+//! EURC milestone escrow with optimistic validation.
 //!
-//! L'investisseur dépose la totalité des fonds ; le labo soumet la preuve
-//! (empreinte d'un rapport) de chaque jalon ; sans contestation pendant la
-//! fenêtre `challenge_period`, n'importe qui peut déclencher la libération.
-//! En cas de contestation, l'arbitre désigné à la création tranche.
+//! The investor deposits the full amount; the lab submits the proof (the
+//! fingerprint of a report) of each milestone; if nobody disputes it within the
+//! `challenge_period` window, anyone can trigger the release.
+//! A dispute is settled by the arbiter named when the project is created.
 //!
-//! Les fonds ne restent jamais bloqués : après l'échéance du projet, les
-//! jalons non soumis sont remboursables, et un litige que l'arbitre n'a pas
-//! tranché dans `ARBITER_PERIOD` l'est aussi (`reclaim`).
+//! Funds never stay locked: after the project deadline, unsubmitted milestones
+//! can be refunded, and so can a dispute the arbiter has not settled within
+//! `ARBITER_PERIOD` (`reclaim`).
 #![no_std]
 
 use soroban_sdk::{
@@ -20,11 +20,11 @@ const TTL_THRESHOLD: u32 = 7 * DAY_IN_LEDGERS;
 const TTL_EXTEND_TO: u32 = 30 * DAY_IN_LEDGERS;
 const BPS_DENOMINATOR: i128 = 10_000;
 const MAX_MILESTONES: u32 = 10;
-/// Fenêtre de contestation minimale : une minute, la durée utilisée en démo.
+/// Shortest challenge window: one minute, the duration used in the demo.
 const MIN_CHALLENGE_PERIOD: u64 = 60;
-/// Fenêtre maximale, pour qu'un jalon soumis ne puisse pas rester bloqué des années.
+/// Longest window, so that a submitted milestone cannot stay locked for years.
 const MAX_CHALLENGE_PERIOD: u64 = 30 * 24 * 60 * 60;
-/// Délai laissé à l'arbitre, après la fin de la fenêtre, pour trancher un litige.
+/// Time the arbiter has, after the window closes, to settle a dispute.
 const ARBITER_PERIOD: u64 = 30 * 24 * 60 * 60;
 
 #[contractclient(name = "LicenseNftClient")]
@@ -48,7 +48,7 @@ pub enum MilestoneStatus {
     Disputed,
     Released,
     Refunded,
-    /// L'arbitre a partagé la tranche : une part au labo, le reste remboursé.
+    /// The arbiter split the milestone: a share to the lab, the rest refunded.
     Split,
 }
 
@@ -60,7 +60,7 @@ pub struct Milestone {
     pub proof_hash: Option<BytesN<32>>,
     pub submitted_at: u64,
     pub dispute_reason: Option<BytesN<32>>,
-    /// Part de la tranche versée au labo, en points de base (10 000 = tout).
+    /// Share of the milestone paid to the lab, in basis points (10,000 = all).
     pub lab_bps: u32,
 }
 
@@ -73,8 +73,8 @@ pub struct Project {
     pub investor: Address,
     pub arbiter: Address,
     pub challenge_period: u64,
-    /// Après cette date (horodatage du ledger), plus aucun jalon ne peut être
-    /// soumis et les jalons en attente sont remboursables à l'investisseur.
+    /// After this date (ledger timestamp), no milestone can be submitted any
+    /// more and pending milestones can be refunded to the investor.
     pub deadline: u64,
     pub funded: bool,
     pub milestones: Vec<Milestone>,
@@ -109,11 +109,11 @@ pub enum Error {
     ChallengeWindowOpen = 10,
     InvalidConfig = 11,
     InvalidShare = 12,
-    /// L'arbitre ne peut être ni l'investisseur ni le labo.
+    /// The arbiter can be neither the investor nor the lab.
     InvalidParties = 13,
-    /// Fenêtre de contestation hors de [MIN_CHALLENGE_PERIOD, MAX_CHALLENGE_PERIOD].
+    /// Challenge window outside [MIN_CHALLENGE_PERIOD, MAX_CHALLENGE_PERIOD].
     InvalidWindow = 14,
-    /// Échéance déjà passée à la création du projet.
+    /// Deadline already passed when the project is created.
     InvalidDeadline = 15,
     DeadlinePassed = 16,
     NothingToReclaim = 17,
@@ -214,7 +214,7 @@ impl MilestoneEscrow {
         s.set(&DataKey::NextId, &1u64);
     }
 
-    /// Créé par le titulaire de la licence (le labo / l'université).
+    /// Created by the licence owner (the lab / the university).
     pub fn create_project(
         env: Env,
         license_id: u64,
@@ -234,7 +234,7 @@ impl MilestoneEscrow {
         if amounts.is_empty() || amounts.len() > MAX_MILESTONES {
             panic_with_error!(&env, Error::InvalidMilestones);
         }
-        // L'arbitre tranche entre le labo et l'investisseur : il ne peut être aucun des deux.
+        // The arbiter settles between the lab and the investor, so it can be neither.
         if arbiter == investor || arbiter == lab {
             panic_with_error!(&env, Error::InvalidParties);
         }
@@ -262,7 +262,7 @@ impl MilestoneEscrow {
         }
 
         let id: u64 = env.storage().instance().get(&DataKey::NextId).unwrap();
-        // Instance prolongée à part (voir ip_license_nft::mint).
+        // The instance is extended separately (see ip_license_nft::mint).
         env.storage().instance().set(&DataKey::NextId, &(id + 1));
 
         save(
@@ -299,7 +299,7 @@ impl MilestoneEscrow {
         id
     }
 
-    /// Dépose la totalité des fonds et émet les parts correspondantes.
+    /// Deposits the full amount and mints the matching shares.
     pub fn fund(env: Env, project_id: u64) {
         let mut project = load(&env, project_id);
         project.investor.require_auth();
@@ -376,7 +376,7 @@ impl MilestoneEscrow {
         .publish(&env);
     }
 
-    /// Sans contestation à la fin de la fenêtre : n'importe qui peut libérer.
+    /// Undisputed when the window closes: anyone can release.
     pub fn release(env: Env, project_id: u64, index: u32) {
         let project = load(&env, project_id);
         let m = milestone(&env, &project, index);
@@ -393,9 +393,9 @@ impl MilestoneEscrow {
         Self::resolve_partial(env, project_id, index, if approve { BPS_DENOMINATOR as u32 } else { 0 });
     }
 
-    /// La recherche peut échouer sans faute : l'arbitre attribue `lab_bps` de
-    /// la tranche au labo (travail réalisé) et rembourse le reste à
-    /// l'investisseur, dont les parts sont réduites d'autant.
+    /// Research can fail without anyone being at fault: the arbiter gives
+    /// `lab_bps` of the milestone to the lab (work done) and refunds the rest to
+    /// the investor, whose shares shrink accordingly.
     pub fn resolve_partial(env: Env, project_id: u64, index: u32, lab_bps: u32) {
         let project = load(&env, project_id);
         project.arbiter.require_auth();
@@ -415,7 +415,7 @@ impl MilestoneEscrow {
         }
     }
 
-    /// Annulation d'un commun accord : les jalons non soumis sont remboursés.
+    /// Cancellation by mutual agreement: unsubmitted milestones are refunded.
     pub fn cancel(env: Env, project_id: u64) {
         let mut project = load(&env, project_id);
         project.lab.require_auth();
@@ -431,10 +431,10 @@ impl MilestoneEscrow {
         }
     }
 
-    /// Rembourse l'investisseur quand la recherche s'arrête : jalons non soumis
-    /// à l'échéance, et litiges que l'arbitre n'a pas tranchés dans
-    /// `ARBITER_PERIOD` après la fin de la fenêtre. Comme `release`, n'importe
-    /// qui peut le déclencher : les fonds ne peuvent aller qu'à l'investisseur.
+    /// Refunds the investor when research stops: milestones not submitted by
+    /// the deadline, and disputes the arbiter has not settled within
+    /// `ARBITER_PERIOD` after the window closes. Like `release`, anyone can
+    /// trigger it: the funds can only go to the investor.
     pub fn reclaim(env: Env, project_id: u64) {
         let mut project = load(&env, project_id);
         if !project.funded {
@@ -478,7 +478,7 @@ impl MilestoneEscrow {
     }
 }
 
-// ---------- Fonctions internes ----------
+// ---------- Internal functions ----------
 
 fn bump(env: &Env, key: &DataKey) {
     env.storage()
@@ -527,7 +527,7 @@ fn is_settled(status: MilestoneStatus) -> bool {
     )
 }
 
-/// Verse `gross` au labo, commission de la plateforme déduite. Renvoie (net, commission).
+/// Pays `gross` to the lab minus the platform fee. Returns (net, fee).
 fn transfer_to_lab(env: &Env, lab: &Address, gross: i128) -> (i128, i128) {
     let fee_bps: u32 = env.storage().instance().get(&DataKey::FeeBps).unwrap();
     let fee = gross * fee_bps as i128 / BPS_DENOMINATOR;
@@ -541,11 +541,11 @@ fn transfer_to_lab(env: &Env, lab: &Address, gross: i128) -> (i128, i128) {
     (gross - fee, fee)
 }
 
-/// Rembourse `amount` à l'investisseur et brûle les parts correspondantes.
+/// Refunds `amount` to the investor and burns the matching shares.
 fn refund_investor(env: &Env, project: &Project, amount: i128) {
     token(env).transfer(&env.current_contract_address(), &project.investor, &amount);
-    // L'investisseur a pu revendre une partie de ses parts : on ne brûle que
-    // ce qu'il détient encore, pour ne jamais bloquer un remboursement.
+    // The investor may have sold some of the shares: burn only what they
+    // still hold, so that a refund is never blocked.
     let s = splitter(env);
     let burnable = s
         .shares_of(&project.license_id, &project.investor)
