@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { Trans, useTranslation } from "react-i18next";
 import { ACCOUNTS } from "../config";
 import { escrow, nft, splitter, type Beneficiary } from "../stellar/contracts";
-import { useWallet } from "../stellar/wallet";
+import { DEMO_ENABLED, useWallet } from "../stellar/wallet";
 import { useToasts } from "../components/toasts";
 import { DIRECTORY, PersonPicker, type PersonKind } from "../components/people";
 import { useAsync } from "../lib/useAsync";
@@ -24,6 +24,34 @@ const INITIAL_STEPS: Step[] = [
   { key: "split", state: "todo" },
   { key: "round", state: "todo" },
 ];
+
+/**
+ * Starting values of the form. The stage demo (local build with demo keys, see
+ * scripts/sync-frontend-config.sh --demo) gets a ready-to-submit sample; the public
+ * site starts empty, so a real lab never names the demo fund or arbiter by accident.
+ */
+const DEFAULTS = DEMO_ENABLED
+  ? {
+      title: "Anti-inflammatory antibody for rheumatoid arthritis",
+      field: "Biotech",
+      territory: "European Union",
+      inventors: [ACCOUNTS.inventor],
+      investor: ACCOUNTS.fund,
+      arbiter: ACCOUNTS.arbiter,
+      milestones: ["2", "2", "2"],
+      challengeWindow: WINDOWS[0].seconds,
+    }
+  : {
+      title: "",
+      field: "",
+      territory: "",
+      inventors: [""],
+      investor: "",
+      arbiter: "",
+      milestones: [""],
+      // The option labelled "recommended".
+      challengeWindow: WINDOWS[2].seconds,
+    };
 
 type FieldKey = "dossier" | "inventors" | "parties" | "split" | "milestones";
 
@@ -92,22 +120,22 @@ export function NewLicence() {
   const { run } = useToasts();
   const navigate = useNavigate();
 
-  const [title, setTitle] = useState("Anti-inflammatory antibody for rheumatoid arthritis");
-  const [field, setField] = useState("Biotech");
-  const [territory, setTerritory] = useState("European Union");
+  const [title, setTitle] = useState(DEFAULTS.title);
+  const [field, setField] = useState(DEFAULTS.field);
+  const [territory, setTerritory] = useState(DEFAULTS.territory);
   const [years, setYears] = useState("10");
   const [exclusive, setExclusive] = useState(true);
-  const [inventors, setInventors] = useState<string[]>([ACCOUNTS.inventor]);
+  const [inventors, setInventors] = useState<string[]>(DEFAULTS.inventors);
   const [file, setFile] = useState<File | null>(null);
   const [hash, setHash] = useState<Uint8Array | null>(null);
   const [metadataUri, setMetadataUri] = useState("");
   const [universityPct, setUniversityPct] = useState(40);
   const [inventorsPct, setInventorsPct] = useState(30);
   const [investorsPct, setInvestorsPct] = useState(30);
-  const [investor, setInvestor] = useState(ACCOUNTS.fund);
-  const [arbiter, setArbiter] = useState(ACCOUNTS.arbiter);
-  const [milestones, setMilestones] = useState<string[]>(["2", "2", "2"]);
-  const [challengeWindow, setChallengeWindow] = useState<number>(WINDOWS[0].seconds);
+  const [investor, setInvestor] = useState(DEFAULTS.investor);
+  const [arbiter, setArbiter] = useState(DEFAULTS.arbiter);
+  const [milestones, setMilestones] = useState<string[]>(DEFAULTS.milestones);
+  const [challengeWindow, setChallengeWindow] = useState<number>(DEFAULTS.challengeWindow);
 
   const [steps, setSteps] = useState<Step[]>(INITIAL_STEPS);
   const [busy, setBusy] = useState(false);
@@ -226,14 +254,14 @@ export function NewLicence() {
           <Card className="flex flex-col gap-5">
             <CardTitle n={1} title={t("newLicence.card1Title")} subtitle={t("newLicence.card1Subtitle")} />
             <Field label={t("newLicence.patentTitle")}>
-              <Input value={title} onChange={(e) => setTitle(e.target.value)} required />
+              <Input value={title} onChange={(e) => setTitle(e.target.value)} placeholder={t("newLicence.patentTitlePlaceholder")} required />
             </Field>
             <div className="grid gap-4 sm:grid-cols-3">
               <Field label={t("newLicence.field")}>
-                <Input value={field} onChange={(e) => setField(e.target.value)} required />
+                <Input value={field} onChange={(e) => setField(e.target.value)} placeholder={t("newLicence.fieldPlaceholder")} required />
               </Field>
               <Field label={t("newLicence.territory")}>
-                <Input value={territory} onChange={(e) => setTerritory(e.target.value)} required />
+                <Input value={territory} onChange={(e) => setTerritory(e.target.value)} placeholder={t("newLicence.territoryPlaceholder")} required />
               </Field>
               <Field label={t("newLicence.years")}>
                 <Input type="number" min={1} value={years} onChange={(e) => setYears(e.target.value)} required />
@@ -378,31 +406,35 @@ export function NewLicence() {
             <div id="section-milestones" className="flex flex-col gap-2">
               <span className="text-sm font-semibold">{t("newLicence.milestones")}</span>
               <p className="text-xs text-muted">{t("newLicence.milestonesHint")}</p>
-              {milestones.map((m, i) => (
-                <div key={i} className="flex flex-wrap items-center gap-x-4 gap-y-2 rounded-2xl bg-subtle px-4 py-2.5">
-                  <span className="w-24 text-sm text-muted">{t("newLicence.milestone", { n: i + 1 })}</span>
-                  <div className="relative">
-                    <Input
-                      type="number"
-                      min={0}
-                      step="any"
-                      value={m}
-                      onChange={(e) => setMilestones((all) => all.map((x, j) => (j === i ? e.target.value : x)))}
-                      aria-invalid={!(Number(m) > 0)}
-                      aria-label={t("newLicence.milestone", { n: i + 1 })}
-                      className={`w-36 pr-14 ${Number(m) > 0 ? "" : "border-danger/60"}`}
-                    />
-                    <span aria-hidden className="pointer-events-none absolute top-1/2 right-3.5 -translate-y-1/2 text-xs font-semibold text-muted">
-                      EURC
-                    </span>
+              {milestones.map((m, i) => {
+                const invalid = m !== "" && !(Number(m) > 0);
+                return (
+                  <div key={i} className="flex flex-wrap items-center gap-x-4 gap-y-2 rounded-2xl bg-subtle px-4 py-2.5">
+                    <span className="w-24 text-sm text-muted">{t("newLicence.milestone", { n: i + 1 })}</span>
+                    <div className="relative">
+                      <Input
+                        type="number"
+                        min={0}
+                        step="any"
+                        value={m}
+                        onChange={(e) => setMilestones((all) => all.map((x, j) => (j === i ? e.target.value : x)))}
+                        aria-invalid={invalid}
+                        aria-label={t("newLicence.milestone", { n: i + 1 })}
+                        placeholder="0"
+                        className={`w-36 pr-14 ${invalid ? "border-danger/60" : ""}`}
+                      />
+                      <span aria-hidden className="pointer-events-none absolute top-1/2 right-3.5 -translate-y-1/2 text-xs font-semibold text-muted">
+                        EURC
+                      </span>
+                    </div>
+                    {milestones.length > 1 && (
+                      <Button type="button" variant="ghost" onClick={() => setMilestones((all) => all.filter((_, j) => j !== i))}>
+                        {t("common.remove")}
+                      </Button>
+                    )}
                   </div>
-                  {milestones.length > 1 && (
-                    <Button type="button" variant="ghost" onClick={() => setMilestones((all) => all.filter((_, j) => j !== i))}>
-                      {t("common.remove")}
-                    </Button>
-                  )}
-                </div>
-              ))}
+                );
+              })}
               <div className="flex items-center justify-between">
                 <Button type="button" variant="ghost" onClick={() => setMilestones((all) => [...all, "1"])}>
                   {t("newLicence.addMilestone")}
