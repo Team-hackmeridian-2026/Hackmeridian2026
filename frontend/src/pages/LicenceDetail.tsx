@@ -11,6 +11,8 @@ import { Address, Badge, Button, Card, ErrorBox, Input, Spinner, StatusIcon, but
 import { FundingProgress } from "../components/Funding";
 import { FinishSetup } from "../components/FinishSetup";
 import { useDocumentTitle } from "../lib/useDocumentTitle";
+import { isContractErr } from "../lib/errors";
+import { NotFound } from "../components/RouteError";
 
 // Decorative helix behind the page (Three.js is shared with the home page chunk).
 
@@ -501,10 +503,19 @@ function Royalties({
 
 // ---------- Page ----------
 
+const U64_MAX = 2n ** 64n - 1n;
+
+/** Licence ids are u64 starting at 1; anything else in the URL (`/licence/abc`) becomes 0, which never exists. */
+function parseLicenceId(id: string | undefined): bigint {
+  if (!id || !/^[1-9]\d{0,19}$/.test(id)) return 0n;
+  const value = BigInt(id);
+  return value <= U64_MAX ? value : 0n;
+}
+
 export function LicenceDetail() {
   const { t } = useTranslation();
   const { id } = useParams();
-  const licenseId = BigInt(id ?? "0");
+  const licenseId = parseLicenceId(id);
   const { signer } = useWallet();
   const [version, setVersion] = useState(0);
   const license = useAsync(() => nft.get(licenseId), [id]);
@@ -518,9 +529,11 @@ export function LicenceDetail() {
     return ids.length ? escrow.get(ids[ids.length - 1]) : undefined;
   }, [id, version]);
 
+  if (licenseId === 0n) return <NotFound title={t("licence.notFound")} />;
   if (license.loading) return <Spinner />;
   if (license.error) return <ErrorBox message={license.error} onRetry={license.reload} />;
-  if (!license.data) return <ErrorBox message={t("licence.notFound")} />;
+  // An unknown id comes back as the contract's LicenseNotFound error value.
+  if (!license.data || isContractErr(license.data)) return <NotFound title={t("licence.notFound")} />;
   const l = license.data;
   const facts = [
     [t("marketplace.table.field"), l.terms.field],
