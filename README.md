@@ -87,7 +87,7 @@ flowchart TB
 
 | Building block | What we use | Role |
 | --- | --- | --- |
-| Smart contracts | 3 Soroban contracts in Rust (`soroban-sdk` 28) | Licences, milestone escrow, shares and royalties |
+| Smart contracts | 3 Soroban contracts in Rust (`soroban-sdk` 29, protocol 29) | Licences, milestone escrow, shares and royalties |
 | Stablecoin | **Circle EURC** on testnet, issuer `GB3Q6QDZYTHWT7E5PVS3W7FUT5GVAFC5KSZFFLPU25GO7VTC3NM2ZTVO`, handled in Soroban through its **Stellar Asset Contract** | Funding and royalties in regulated euros (MiCA) |
 | Wallets | **Stellar Wallets Kit** (Freighter, xBull, Lobstr, Albedo…) | Users sign every transaction themselves |
 | Anchor | **SEP-1** (stellar.toml), **SEP-10** (web auth), **SEP-24** (interactive withdrawal) against the SDF test anchor `testanchor.stellar.org` | Cash-out from Stellar to a bank account |
