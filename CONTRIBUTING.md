@@ -33,6 +33,25 @@ Then open a pull request on GitHub.
 - CI (`.github/workflows/ci.yml`) runs the contract tests, the Wasm build, the
   front-end build and the translation test on every pull request. Wait for a
   green check before asking for review.
+- Visual changes: attach before/after screenshots to the pull request, in the
+  dark and light themes and at phone width.
+
+## Protected areas
+
+Ask Antoine before changing these, and say so in the pull request:
+
+- `contracts/`: the deployed contracts and their tests.
+- `frontend/src/stellar/*`: contract calls, wallet and anchor integration.
+
+Contract redeploys (`scripts/deploy.sh`) are run by Antoine only. Until the
+next one, testnet runs the contracts of release `1.0.1` while `main` is ahead,
+so the front-end must keep working with both.
+
+## Language
+
+Write everything in English: code, comments, script output, commit messages
+and docs. The only French and Portuguese text lives in
+`frontend/src/i18n/fr.json` and `pt.json`.
 
 ## Dependency updates
 

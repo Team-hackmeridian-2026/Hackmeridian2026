@@ -410,7 +410,7 @@ Notable implementation choices:
 | --- | --- | --- |
 | Contracts | 30 tests: demo scenario end to end, ordering, double release, dispute window, splits, refunds after a share sale, pro-rata royalties, transfers, clawback, fee, rounding | All tests use `mock_all_auths()`; only `only_minter_can_mint` asserts who signed. Arbiter-only, investor-only, lab-only and admin-only checks are untested |
 | Front-end | `tsc --noEmit` in the build, i18n parity and interpolation tests | No unit or end-to-end tests for flows, no lint step |
-| CI | None | Nothing blocks a PR that breaks `cargo test` or the i18n test |
+| CI | GitHub Actions on every PR and on `main`: `cargo test`, Wasm build, `npm run build`, `npm run test:i18n` | No lint step, no end-to-end test |
 
 ### 3.5 Maintainability notes
 
