@@ -10,9 +10,12 @@ on:
 permissions:
   contents: read
 
+# On a pull request, a new push replaces the run of the previous one. On main, every
+# merge keeps its own run: merging several PRs in a row must not cancel the checks
+# of the earlier merges.
 concurrency:
-  group: ci-${{ github.ref }}
-  cancel-in-progress: true
+  group: ci-${{ github.event_name == 'pull_request' && github.ref || github.sha }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:
   contracts:
