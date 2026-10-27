@@ -292,7 +292,13 @@
     "owner": "Propriétaire (université)",
     "inventors": "Inventeurs",
     "listedOn": "Déposée le",
-    "noRound": "Pas encore de levée de fonds.",
+    "noRound": "Pas encore de levée de fonds : l'université n'a pas terminé la mise en place de cette licence.",
+    "splitPending": "Le partage des redevances n'est pas encore fixé.",
+    "setup": {
+      "title": "Terminer la mise en place de cette licence",
+      "text": "La licence est sur Stellar, mais le dépôt s'est arrêté avant que toutes les étapes soient confirmées. Confirmez les étapes restantes pour l'ouvrir au financement.",
+      "sameArbiter": "L'arbitre doit être une autre personne que l'investisseur."
+    },
     "splitResult": "{{lab}} % versés au labo, {{refund}} % remboursés à l'investisseur",
     "arbiterTitle": "Décision de l'arbitre",
     "arbiterHelp": "La recherche peut échouer sans faute de personne. Payez le labo pour le travail réalisé et remboursez le reste.",

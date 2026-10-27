@@ -9,6 +9,7 @@ import { useAsync } from "../lib/useAsync";
 import { eurc, formatDate, formatDuration, sha256, shortAddress, toHex } from "../lib/format";
 import { Address, Badge, Button, Card, ErrorBox, Input, Spinner, StatusIcon, buttonClass, type BadgeTone } from "../components/ui";
 import { FundingProgress } from "../components/Funding";
+import { FinishSetup } from "../components/FinishSetup";
 import { useDocumentTitle } from "../lib/useDocumentTitle";
 
 // Decorative helix behind the page (Three.js is shared with the home page chunk).
@@ -374,12 +375,24 @@ function FundingRound({ projectId, signer, onChange }: { projectId: bigint; sign
 
 // ---------- Royalties ----------
 
-function Royalties({ license, signer, version }: { license: License; signer: Signer | null; version: number }) {
+function Royalties({
+  license,
+  signer,
+  version,
+  configured,
+}: {
+  license: License;
+  signer: Signer | null;
+  version: number;
+  /** Whether the owner has locked the split (reading the split of a licence without one fails). */
+  configured: { data?: boolean; error?: string; reload: () => void };
+}) {
   const { t } = useTranslation();
   const { run } = useToasts();
   const [amount, setAmount] = useState("5");
   const [busy, setBusy] = useState<string | null>(null);
   const data = useAsync(async () => {
+    if (configured.data !== true) return null;
     const [config, total, totalShares] = await Promise.all([
       splitter.config(license.id),
       splitter.totalRoyalties(license.id),
@@ -389,11 +402,21 @@ function Royalties({ license, signer, version }: { license: License; signer: Sig
       ? await Promise.all([splitter.claimable(license.id, signer.address), splitter.sharesOf(license.id, signer.address)])
       : null;
     return { config, total, totalShares, claimable: mine?.[0] ?? 0n, shares: mine?.[1] ?? 0n };
-  }, [license.id, signer?.address, version]);
+  }, [license.id, signer?.address, version, configured.data]);
 
-  if (data.loading && !data.data) return <Section id="royalties" title={t("licence.royalties")}><Spinner /></Section>;
+  if (configured.error)
+    return <Section id="royalties" title={t("licence.royalties")}><ErrorBox message={configured.error} onRetry={configured.reload} /></Section>;
+  if (configured.data === false)
+    return (
+      <Section id="royalties" title={t("licence.royalties")}>
+        <p className="text-sm text-muted">{t("licence.splitPending")}</p>
+      </Section>
+    );
+  if (configured.data === undefined || (data.loading && !data.data)) return <Section id="royalties" title={t("licence.royalties")}><Spinner /></Section>;
   if (data.error) return <Section id="royalties" title={t("licence.royalties")}><ErrorBox message={data.error} onRetry={data.reload} /></Section>;
-  const d = data.data!;
+  // First render after the split status changed: the reload has not started yet.
+  if (!data.data) return <Section id="royalties" title={t("licence.royalties")}><Spinner /></Section>;
+  const d = data.data;
   const name = (addr: string) =>
     addr === license.owner
       ? t("licence.university")
@@ -486,7 +509,9 @@ export function LicenceDetail() {
   const [version, setVersion] = useState(0);
   const license = useAsync(() => nft.get(licenseId), [id]);
   useDocumentTitle(license.data?.title);
-  const projects = useAsync(() => escrow.projectsByLicense(licenseId), [id]);
+  const projects = useAsync(() => escrow.projectsByLicense(licenseId), [id, version]);
+  // False when listing stopped before the royalty split was locked (see FinishSetup).
+  const configured = useAsync(() => splitter.isConfigured(licenseId), [id, version]);
   // Latest round, for the funding summary next to the title.
   const latest = useAsync(async () => {
     const ids = await escrow.projectsByLicense(licenseId);
@@ -576,14 +601,19 @@ export function LicenceDetail() {
           <DossierCheck license={l} />
 
           <h2 id="funding" className="mt-4 scroll-mt-36 font-display text-3xl font-bold tracking-tight">{t("licence.fundingTitle")}</h2>
-          {projects.data?.length === 0 && <Card className="text-sm text-muted">{t("licence.noRound")}</Card>}
+          {projects.data?.length === 0 &&
+            (signer?.address === l.owner && configured.data !== undefined ? (
+              <FinishSetup license={l} signer={signer} configured={configured.data} onDone={() => setVersion((v) => v + 1)} />
+            ) : (
+              <Card className="text-sm text-muted">{t("licence.noRound")}</Card>
+            ))}
           {projects.data?.map((pid) => (
             <FundingRound key={String(pid)} projectId={pid} signer={signer} onChange={() => setVersion((v) => v + 1)} />
           ))}
         </div>
 
         <div className="flex flex-col gap-6">
-          <Royalties license={l} signer={signer} version={version} />
+          <Royalties license={l} signer={signer} version={version} configured={configured} />
           <DataRoom license={l} signer={signer} />
         </div>
       </div>

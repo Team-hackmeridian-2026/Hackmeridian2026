@@ -10,12 +10,7 @@ import { useAsync } from "../lib/useAsync";
 import { formatNumber, sha256, toHex } from "../lib/format";
 import { Badge, Button, Card, ErrorBox, Field, Input, Notice, SectionTitle, StatusIcon, TxLink } from "../components/ui";
 import { useDocumentTitle } from "../lib/useDocumentTitle";
-
-const WINDOWS = [
-  { key: "minute", seconds: 60 },
-  { key: "day", seconds: 86_400 },
-  { key: "week", seconds: 604_800 },
-] as const;
+import { SplitPreview, WINDOWS, isAddress, splitEvenly } from "../components/listing";
 
 type Step = { key: "mint" | "split" | "round"; state: "todo" | "running" | "done" | "error"; hash?: string };
 
@@ -65,14 +60,6 @@ function FieldError({ message }: { message?: string }) {
   );
 }
 
-const isAddress = (a: string) => /^G[A-Z2-7]{55}$/.test(a);
-
-/** Splits `total` bps evenly between addresses; the remainder goes to the first one. */
-function splitEvenly(addresses: string[], total: number): Beneficiary[] {
-  const each = Math.floor(total / addresses.length);
-  return addresses.map((addr, i) => ({ addr, bps: each + (i === 0 ? total - each * addresses.length : 0) }));
-}
-
 // Step badges from the Figma: lavender, pink, peach.
 const STEP_COLORS = ["bg-dna-violet/25", "bg-dna-pink/30", "bg-dna-peach/30"];
 
@@ -86,29 +73,6 @@ function CardTitle({ n, title, subtitle }: { n: number; title: string; subtitle:
         <h3 className="font-display text-2xl font-bold tracking-tight">{title}</h3>
         <p className="text-sm text-muted">{subtitle}</p>
       </div>
-    </div>
-  );
-}
-
-function SplitPreview({ parts }: { parts: { label: string; pct: number; color: string; text: string }[] }) {
-  const { t } = useTranslation();
-  const total = parts.reduce((s, p) => s + (Number.isFinite(p.pct) ? p.pct : 0), 0);
-  return (
-    <div className="flex flex-col items-start gap-2">
-      <div className="flex h-8 w-full gap-0.5 overflow-hidden rounded-xl bg-line">
-        {parts.map((p) =>
-          p.pct > 0 ? (
-            <div key={p.label} className={`${p.color} ${p.text} flex items-center justify-center text-xs font-semibold`} style={{ width: `${Math.min(p.pct, 100)}%` }}>
-              {p.pct}%
-            </div>
-          ) : null,
-        )}
-      </div>
-      {total === 100 ? (
-        <Badge tone="success" icon={<StatusIcon kind="done" />}>{t("newLicence.splitOk")}</Badge>
-      ) : (
-        <Badge tone="danger" icon={<StatusIcon kind="error" />}>{t("newLicence.splitBad", { total })}</Badge>
-      )}
     </div>
   );
 }
