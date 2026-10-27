@@ -17,7 +17,7 @@ Contracts, from `contracts/`:
 - `cargo test --locked`: unit tests
 - `stellar contract build`: Wasm build (never `cargo build` for Wasm)
 
-`scripts/*.sh` (setup, deploy, seed) write to testnet: run them only when Antoine asks.
+`scripts/*.sh` (setup, deploy, seed) write to testnet: run them only when Antoine asks. Redeploys normally go through `.github/workflows/deploy-testnet.yml` (manual run, Antoine approves); `scripts/ci-load-testnet.sh` prepares the runner.
 
 ## Architecture
 - `contracts/`: Cargo workspace with `ip_license_nft`, `milestone_escrow` and `royalty_splitter`; tests in `src/test.rs`.

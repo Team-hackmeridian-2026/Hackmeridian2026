@@ -1,0 +1,128 @@
+name: Deploy contracts (testnet)
+
+# Redeploys the three contracts from main to testnet, then opens a pull request
+# that points the front-end at the new contract IDs. Started by hand from the
+# Actions tab. The `testnet` environment holds the keys and makes Antoine
+# approve every run before it starts.
+
+on:
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: "Dry run: check the keys and build the Wasm, deploy nothing"
+        type: boolean
+        default: true
+      seed:
+        description: "Seed demo licences in every state (about 4 minutes)"
+        type: boolean
+        default: true
+      jury:
+        description: "Register the jury accounts on the new contracts"
+        type: boolean
+        default: true
+
+permissions:
+  contents: write
+  pull-requests: write
+
+# Never two deployments at once: the second one waits.
+concurrency:
+  group: deploy-testnet
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    name: Deploy
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main'
+    environment: testnet
+    timeout-minutes: 30
+    env:
+      NETWORK: testnet
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: wasm32v1-none
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: contracts
+      - name: Install the Stellar CLI
+        uses: stellar/stellar-cli@v28.1.0
+
+      - name: Load the testnet identities
+        env:
+          STELLAR_TESTNET_KEYS: ${{ secrets.STELLAR_TESTNET_KEYS }}
+          SEED: ${{ inputs.seed }}
+          JURY: ${{ inputs.jury }}
+        run: |
+          roles=(admin)
+          if [ "$SEED" = true ]; then roles+=(lab fund arbiter pharma); fi
+          if [ "$JURY" = true ]; then roles+=(pharma jury-1 jury-2 jury-3 jury-arbiter); fi
+          ./scripts/ci-load-testnet.sh "${roles[@]}"
+
+      - name: Build the Wasm contracts
+        working-directory: contracts
+        run: stellar contract build
+
+      - name: Deploy and wire the contracts
+        if: ${{ !inputs.dry_run }}
+        run: |
+          # Remember the current IDs to replace them in the README afterwards.
+          cp frontend/src/deployment.json "$RUNNER_TEMP/previous-deployment.json"
+          ./scripts/deploy.sh
+          ./scripts/sync-frontend-config.sh
+
+      - name: Seed the demo licences
+        if: ${{ !inputs.dry_run && inputs.seed }}
+        run: ./scripts/seed-demo.sh
+
+      - name: Register the jury accounts
+        if: ${{ !inputs.dry_run && inputs.jury }}
+        run: ./scripts/jury-accounts.sh
+
+      - name: Open a pull request with the new IDs
+        if: ${{ !inputs.dry_run }}
+        env:
+          GH_TOKEN: ${{ github.token }}
+          BRANCH: chore/redeploy-testnet-${{ github.run_number }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          python3 - "$RUNNER_TEMP/previous-deployment.json" frontend/src/deployment.json > "$RUNNER_TEMP/pr-body.md" <<'EOF'
+          import json, pathlib, sys
+          old = json.load(open(sys.argv[1]))["contracts"]
+          new = json.load(open(sys.argv[2]))["contracts"]
+          readme = pathlib.Path("README.md")
+          text = readme.read_text()
+          rows = []
+          for key, name in [("nft", "ip_license_nft"), ("escrow", "milestone_escrow"), ("splitter", "royalty_splitter")]:
+              text = text.replace(old[key], new[key])
+              rows.append(f"| `{name}` | [`{new[key]}`](https://stellar.expert/explorer/testnet/contract/{new[key]}) |")
+          readme.write_text(text)
+          print("Contracts redeployed to testnet from `main` by the **Deploy contracts (testnet)** workflow.\n")
+          print("| Contract | New ID |\n| --- | --- |")
+          print("\n".join(rows))
+          print("\nThis updates `frontend/src/deployment.json` and the contract IDs in the README.\n")
+          print("Still to do by hand before merging:")
+          print("- [ ] README: the \"Source ahead of the deployment\" note and the on-chain evidence links")
+          print("- [ ] `CLAUDE.md` and `CONTRIBUTING.md`: the lines saying testnet runs release `1.0.1`")
+          print("- [ ] Check the Vercel preview against the new contracts")
+          print("\nCI does not start on pull requests opened by a workflow: close and reopen this one to run it.")
+          EOF
+          echo "Workflow run: $RUN_URL" >> "$RUNNER_TEMP/pr-body.md"
+
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git switch -c "$BRANCH"
+          git add frontend/src/deployment.json README.md
+          git commit -m "Point the front-end at the redeployed testnet contracts"
+          git push -u origin "$BRANCH"
+
+          cat "$RUNNER_TEMP/pr-body.md" >> "$GITHUB_STEP_SUMMARY"
+          if ! gh pr create --base main --head "$BRANCH" \
+              --title "chore: point the front-end at the redeployed contracts" \
+              --body-file "$RUNNER_TEMP/pr-body.md"; then
+            # Happens when the repository does not let workflows open pull requests.
+            echo "Could not open the pull request: open it from $GITHUB_SERVER_URL/$GITHUB_REPOSITORY/compare/$BRANCH" | tee -a "$GITHUB_STEP_SUMMARY"
+          fi

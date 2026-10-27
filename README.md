@@ -182,6 +182,33 @@ EURC_MODE=circle ./scripts/setup-accounts.sh   # testnet accounts, EURC trustlin
 ./scripts/jury-accounts.sh                     # ready-made jury accounts (institution, KYC, 5 EURC)
 ```
 
+### Redeploy from GitHub
+
+The **Deploy contracts (testnet)** workflow (Actions tab → *Run workflow*)
+redeploys the contracts from `main`, optionally seeds the demo and registers
+the jury accounts, then opens a pull request with the new IDs in
+`frontend/src/deployment.json` and the README. Leave **Dry run** ticked for a
+first run: it only checks the keys and builds the contracts.
+
+One-time setup, by a repository admin:
+
+1. *Settings → Environments → New environment* `testnet`, with yourself as
+   **required reviewer**: every run then waits for your approval.
+2. From a machine that holds the `bl-*` identities, store their keys as the
+   environment secret `STELLAR_TESTNET_KEYS` (the keys go straight from the
+   `stellar` CLI to GitHub, without being displayed):
+
+   ```bash
+   for n in admin lab inventor fund pharma arbiter jury-1 jury-2 jury-3 jury-arbiter; do
+     echo "bl-$n=$(stellar keys secret "bl-$n")"
+   done | gh secret set STELLAR_TESTNET_KEYS --env testnet --repo Team-hackmeridian-2026/Hackmeridian2026
+   ```
+3. *Settings → Actions → General*: tick **Allow GitHub Actions to create and
+   approve pull requests**. Otherwise the run ends with a link to open the pull
+   request yourself.
+
+These are testnet keys only. Never put mainnet keys in this secret.
+
 ### Environment variables
 
 | Variable | Where | Default | Meaning |
