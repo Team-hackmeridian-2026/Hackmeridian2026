@@ -171,7 +171,8 @@
       "inventors": "Verifique os endereços dos inventores.",
       "parties": "Escolha um investidor e um árbitro.",
       "split": "A repartição dos royalties tem de somar 100 %.",
-      "milestones": "Cada marco precisa de um montante positivo."
+      "milestones": "Cada marco precisa de um montante positivo.",
+      "arbiter": "O árbitro tem de ser uma pessoa diferente do investidor e da universidade."
     },
     "eyebrow": "Para universidades e laboratórios",
     "title": "Registar uma patente",
@@ -227,7 +228,16 @@
     "done": "Concluído",
     "failed": "Falhou",
     "submit": "Registar a patente",
-    "dataRoomPlaceholder": "https://… ou ipfs://…"
+    "dataRoomPlaceholder": "https://… ou ipfs://…",
+    "period": "Duração da investigação",
+    "periodHint": "Os marcos têm de ser comprovados até {{date}}. Depois disso, o investidor pode recuperar os fundos dos marcos não comprovados.",
+    "periods": {
+      "sixMonths": "6 meses",
+      "oneYear": "1 ano",
+      "twoYears": "2 anos",
+      "threeYears": "3 anos"
+    },
+    "summaryDeadline": "Prazo final"
   },
   "licence": {
     "fingerprint": "Impressão digital do dossiê (SHA-256)",
@@ -268,7 +278,8 @@
       "fund": "Fundos bloqueados no escrow",
       "pay": "Royalty pago e repartido",
       "claim": "Royalties levantados",
-      "split": "Marco dividido"
+      "split": "Marco dividido",
+      "reclaim": "Investidor reembolsado"
     },
     "round": "Ronda de financiamento n.º {{id}}",
     "roundSummary_one": "{{amount}} em {{count}} marco · prazo de contestação {{window}}",
@@ -298,8 +309,7 @@
     "splitPending": "A repartição dos royalties ainda não está definida.",
     "setup": {
       "title": "Concluir a configuração desta licença",
-      "text": "A licença já está na Stellar, mas a publicação parou antes de todos os passos serem confirmados. Confirme os passos em falta para a abrir ao financiamento.",
-      "sameArbiter": "O árbitro tem de ser uma pessoa diferente do investidor."
+      "text": "A licença já está na Stellar, mas a publicação parou antes de todos os passos serem confirmados. Confirme os passos em falta para a abrir ao financiamento."
     },
     "splitResult": "{{lab}} % pagos ao laboratório, {{refund}} % reembolsados ao investidor",
     "arbiterTitle": "Decisão do árbitro",
@@ -314,7 +324,13 @@
     "verifyHelp": "Escolha uma cópia do dossiê: a impressão digital é calculada no seu navegador e nada é enviado.",
     "chooseFile": "Escolher um ficheiro",
     "milestoneN": "Marco {{n}}",
-    "sections": "Nesta página"
+    "sections": "Nesta página",
+    "deadlineText": "Os marcos têm de ser comprovados até {{date}}.",
+    "deadlinePassed": "A duração da investigação terminou: este marco já não pode ser comprovado e os seus fundos podem voltar ao investidor.",
+    "arbiterUntil": "O árbitro tem até {{date}} para decidir. Depois disso, os fundos deste marco podem voltar ao investidor.",
+    "reclaimText_one": "O marco {{milestones}} pode ser reembolsado ao investidor: a duração da investigação terminou ou a contestação não foi decidida a tempo. Qualquer pessoa pode iniciar o reembolso.",
+    "reclaimText_other": "Os marcos {{milestones}} podem ser reembolsados ao investidor: a duração da investigação terminou ou uma contestação não foi decidida a tempo. Qualquer pessoa pode iniciar o reembolso.",
+    "reclaim": "Reembolsar o investidor"
   },
   "admin": {
     "address": "Endereço Stellar",
@@ -444,7 +460,12 @@
       "9": "O prazo de contestação terminou.",
       "10": "O prazo de contestação ainda está aberto.",
       "11": "Configuração inválida.",
-      "12": "A parte do laboratório deve estar entre 0 e 100 %."
+      "12": "A parte do laboratório deve estar entre 0 e 100 %.",
+      "13": "O árbitro tem de ser uma pessoa diferente do investidor e do laboratório.",
+      "14": "O prazo de contestação tem de estar entre 1 minuto e 30 dias.",
+      "15": "O prazo final tem de ser no futuro.",
+      "16": "A duração da investigação terminou: já não é possível submeter marcos.",
+      "17": "Ainda não há nada para reembolsar."
     },
     "contract": "Erro do contrato n.º {{code}}",
     "balance": "EURC insuficiente nesta conta.",

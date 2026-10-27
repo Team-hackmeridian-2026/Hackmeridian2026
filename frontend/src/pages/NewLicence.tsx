@@ -1,16 +1,25 @@
 import { useEffect, useState, type DragEvent, type FormEvent } from "react";
 import { useNavigate } from "react-router-dom";
-import { Trans, useTranslation } from "react-i18next";
+import { useTranslation } from "react-i18next";
 import { ACCOUNTS } from "../config";
 import { escrow, nft, splitter, type Beneficiary } from "../stellar/contracts";
 import { DEMO_ENABLED, useWallet } from "../stellar/wallet";
 import { useToasts } from "../components/toasts";
 import { DIRECTORY, PersonPicker, type PersonKind } from "../components/people";
 import { useAsync } from "../lib/useAsync";
-import { formatNumber, sha256, toHex } from "../lib/format";
+import { formatDate, formatNumber, sha256, toHex } from "../lib/format";
 import { Badge, Button, Card, ErrorBox, Field, Input, Notice, SectionTitle, StatusIcon, TxLink } from "../components/ui";
 import { useDocumentTitle } from "../lib/useDocumentTitle";
-import { SplitPreview, WINDOWS, isAddress, splitEvenly } from "../components/listing";
+import {
+  DEFAULT_PERIOD_DAYS,
+  MilestoneEditor,
+  RoundTimingFields,
+  SplitPreview,
+  WINDOWS,
+  deadlineIn,
+  isAddress,
+  splitEvenly,
+} from "../components/listing";
 
 type Step = { key: "mint" | "split" | "round"; state: "todo" | "running" | "done" | "error"; hash?: string };
 
@@ -100,6 +109,7 @@ export function NewLicence() {
   const [arbiter, setArbiter] = useState(DEFAULTS.arbiter);
   const [milestones, setMilestones] = useState<string[]>(DEFAULTS.milestones);
   const [challengeWindow, setChallengeWindow] = useState<number>(DEFAULTS.challengeWindow);
+  const [periodDays, setPeriodDays] = useState(DEFAULT_PERIOD_DAYS);
 
   const [steps, setSteps] = useState<Step[]>(INITIAL_STEPS);
   const [busy, setBusy] = useState(false);
@@ -158,6 +168,8 @@ export function NewLicence() {
     if (!hash) return fail("dossier", t("newLicence.errors.dossier"));
     if (inventorList.length === 0 || !inventorList.every(isAddress)) return fail("inventors", t("newLicence.errors.inventors"));
     if (!isAddress(investor) || !isAddress(arbiter)) return fail("parties", t("newLicence.errors.parties"));
+    // The contract refuses it too (InvalidParties): the arbiter settles disputes between them.
+    if (arbiter === investor || arbiter === signer.address) return fail("parties", t("newLicence.errors.arbiter"));
     if (universityPct + inventorsPct + investorsPct !== 100) return fail("split", t("newLicence.errors.split"));
     if (milestones.length === 0 || milestones.some((m) => !(Number(m) > 0)))
       return fail("milestones", t("newLicence.errors.milestones"));
@@ -192,7 +204,14 @@ export function NewLicence() {
 
       setStep(2, { state: "running" });
       const created = await run(t("newLicence.toasts.round"), () =>
-        escrow.create(signer, { licenseId, investor, arbiter, amounts: milestones, challengePeriod: challengeWindow }),
+        escrow.create(signer, {
+          licenseId,
+          investor,
+          arbiter,
+          amounts: milestones,
+          challengePeriod: challengeWindow,
+          deadline: deadlineIn(periodDays),
+        }),
       );
       if (!created) return setStep(2, { state: "error" });
       setStep(2, { state: "done", hash: created.hash });
@@ -368,61 +387,16 @@ export function NewLicence() {
             </div>
 
             <div id="section-milestones" className="flex flex-col gap-2">
-              <span className="text-sm font-semibold">{t("newLicence.milestones")}</span>
-              <p className="text-xs text-muted">{t("newLicence.milestonesHint")}</p>
-              {milestones.map((m, i) => {
-                const invalid = m !== "" && !(Number(m) > 0);
-                return (
-                  <div key={i} className="flex flex-wrap items-center gap-x-4 gap-y-2 rounded-2xl bg-subtle px-4 py-2.5">
-                    <span className="w-24 text-sm text-muted">{t("newLicence.milestone", { n: i + 1 })}</span>
-                    <div className="relative">
-                      <Input
-                        type="number"
-                        min={0}
-                        step="any"
-                        value={m}
-                        onChange={(e) => setMilestones((all) => all.map((x, j) => (j === i ? e.target.value : x)))}
-                        aria-invalid={invalid}
-                        aria-label={t("newLicence.milestone", { n: i + 1 })}
-                        placeholder="0"
-                        className={`w-36 pr-14 ${invalid ? "border-danger/60" : ""}`}
-                      />
-                      <span aria-hidden className="pointer-events-none absolute top-1/2 right-3.5 -translate-y-1/2 text-xs font-semibold text-muted">
-                        EURC
-                      </span>
-                    </div>
-                    {milestones.length > 1 && (
-                      <Button type="button" variant="ghost" onClick={() => setMilestones((all) => all.filter((_, j) => j !== i))}>
-                        {t("common.remove")}
-                      </Button>
-                    )}
-                  </div>
-                );
-              })}
-              <div className="flex items-center justify-between">
-                <Button type="button" variant="ghost" onClick={() => setMilestones((all) => [...all, "1"])}>
-                  {t("newLicence.addMilestone")}
-                </Button>
-                <p className="text-sm">
-                  <Trans i18nKey="newLicence.totalRaised" values={{ amount: formatNumber(total) }} components={{ strong: <strong /> }} />
-                </p>
-              </div>
+              <MilestoneEditor milestones={milestones} onChange={setMilestones} />
               <FieldError message={fieldError("milestones")} />
             </div>
 
-            <Field label={t("newLicence.window")}>
-              <select
-                className="rounded-lg border border-line bg-field px-3 py-2 text-sm"
-                value={challengeWindow}
-                onChange={(e) => setChallengeWindow(Number(e.target.value))}
-              >
-                {WINDOWS.map((w) => (
-                  <option key={w.seconds} value={w.seconds}>
-                    {t(`newLicence.windows.${w.key}`)}
-                  </option>
-                ))}
-              </select>
-            </Field>
+            <RoundTimingFields
+              challengeWindow={challengeWindow}
+              onChallengeWindow={setChallengeWindow}
+              periodDays={periodDays}
+              onPeriodDays={setPeriodDays}
+            />
           </Card>
         </div>
 
@@ -433,6 +407,7 @@ export function NewLicence() {
               <div className="flex justify-between gap-3"><dt className="text-muted">{t("newLicence.summaryLicence")}</dt><dd className="text-right">{exclusive ? t("common.exclusive") : t("common.nonExclusive")}, {t("common.years", { count: Number(years) })}</dd></div>
               <div className="flex justify-between gap-3"><dt className="text-muted">{t("newLicence.summaryFunding")}</dt><dd>{t("newLicence.summaryFundingValue", { amount: formatNumber(total), count: milestones.length })}</dd></div>
               <div className="flex justify-between gap-3"><dt className="text-muted">{t("newLicence.summaryRoyalties")}</dt><dd>{universityPct} / {inventorsPct} / {investorsPct} %</dd></div>
+              <div className="flex justify-between gap-3"><dt className="text-muted">{t("newLicence.summaryDeadline")}</dt><dd className="text-right">{formatDate(deadlineIn(periodDays))}</dd></div>
               <div className="flex justify-between gap-3"><dt className="text-muted">{t("newLicence.summaryDossier")}</dt><dd>{hash ? t("newLicence.fingerprinted") : t("newLicence.missing")}</dd></div>
             </dl>
             <div>

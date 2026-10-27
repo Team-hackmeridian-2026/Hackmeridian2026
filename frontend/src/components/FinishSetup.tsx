@@ -4,7 +4,7 @@ import { escrow, splitter, type Beneficiary, type License } from "../stellar/con
 import type { Signer } from "../stellar/wallet";
 import { useToasts } from "./toasts";
 import { DIRECTORY, PersonPicker, type PersonKind } from "./people";
-import { MilestoneEditor, SplitPreview, WINDOWS, isAddress, splitEvenly } from "./listing";
+import { DEFAULT_PERIOD_DAYS, MilestoneEditor, RoundTimingFields, SplitPreview, WINDOWS, deadlineIn, isAddress, splitEvenly } from "./listing";
 import { Button, Card, Field, Input, StatusIcon } from "./ui";
 
 /**
@@ -125,6 +125,7 @@ function RoundForm({ license, signer, onDone }: { license: License; signer: Sign
   const [milestones, setMilestones] = useState<string[]>([""]);
   // The option labelled "recommended".
   const [challengeWindow, setChallengeWindow] = useState<number>(WINDOWS[2].seconds);
+  const [periodDays, setPeriodDays] = useState(DEFAULT_PERIOD_DAYS);
   const [error, setError] = useState<string>();
   const [busy, setBusy] = useState(false);
   const people = (kind: PersonKind) => DIRECTORY.filter((p) => p.kind === kind);
@@ -132,12 +133,19 @@ function RoundForm({ license, signer, onDone }: { license: License; signer: Sign
   async function submit() {
     setError(undefined);
     if (!isAddress(investor) || !isAddress(arbiter)) return setError(t("newLicence.errors.parties"));
-    // The contract refuses it too, with a generic "invalid milestones" error.
-    if (investor === arbiter) return setError(t("licence.setup.sameArbiter"));
+    // The contract refuses it too (InvalidParties): the arbiter settles disputes between them.
+    if (arbiter === investor || arbiter === license.owner) return setError(t("newLicence.errors.arbiter"));
     if (milestones.length === 0 || milestones.some((m) => !(Number(m) > 0))) return setError(t("newLicence.errors.milestones"));
     setBusy(true);
     const done = await run(t("newLicence.toasts.round"), () =>
-      escrow.create(signer, { licenseId: license.id, investor, arbiter, amounts: milestones, challengePeriod: challengeWindow }),
+      escrow.create(signer, {
+        licenseId: license.id,
+        investor,
+        arbiter,
+        amounts: milestones,
+        challengePeriod: challengeWindow,
+        deadline: deadlineIn(periodDays),
+      }),
     );
     setBusy(false);
     if (done) onDone();
@@ -156,19 +164,12 @@ function RoundForm({ license, signer, onDone }: { license: License; signer: Sign
 
       <MilestoneEditor milestones={milestones} onChange={setMilestones} />
 
-      <Field label={t("newLicence.window")}>
-        <select
-          className="rounded-lg border border-line bg-field px-3 py-2 text-sm"
-          value={challengeWindow}
-          onChange={(e) => setChallengeWindow(Number(e.target.value))}
-        >
-          {WINDOWS.map((w) => (
-            <option key={w.seconds} value={w.seconds}>
-              {t(`newLicence.windows.${w.key}`)}
-            </option>
-          ))}
-        </select>
-      </Field>
+      <RoundTimingFields
+        challengeWindow={challengeWindow}
+        onChallengeWindow={setChallengeWindow}
+        periodDays={periodDays}
+        onPeriodDays={setPeriodDays}
+      />
 
       <FormError message={error} />
       <Button busy={busy} onClick={submit} className="self-start">

@@ -57,9 +57,30 @@ export type Project = {
   investor: string;
   arbiter: string;
   challenge_period: bigint;
+  /**
+   * End of the research period (ledger time, seconds): no submission after it, and
+   * Pending milestones can be refunded. Absent on rounds of contracts deployed before 2.0.0.
+   */
+  deadline?: bigint;
   funded: boolean;
   milestones: Milestone[];
 };
+
+/** Time the arbiter has to settle a dispute after the challenge window (ARBITER_PERIOD in milestone_escrow). */
+export const ARBITER_PERIOD = 30 * 24 * 60 * 60;
+
+/** Indexes of the milestones `reclaim` would refund now: Pending after the deadline, or a dispute left unsettled. */
+export function reclaimable(project: Project, now: number): number[] {
+  if (project.deadline === undefined || !project.funded) return [];
+  const deadline = Number(project.deadline);
+  const window = Number(project.challenge_period);
+  return project.milestones.flatMap((m, i) =>
+    (m.status === "Pending" && now >= deadline) ||
+    (m.status === "Disputed" && now >= Number(m.submitted_at) + window + ARBITER_PERIOD)
+      ? [i]
+      : [],
+  );
+}
 
 export type Beneficiary = { addr: string; bps: number };
 export type SplitConfig = { fixed: Beneficiary[]; investors_bps: number };
@@ -207,7 +228,15 @@ export const escrow = {
 
   create: (
     signer: Signer,
-    input: { licenseId: bigint; investor: string; arbiter: string; amounts: string[]; challengePeriod: number },
+    input: {
+      licenseId: bigint;
+      investor: string;
+      arbiter: string;
+      amounts: string[];
+      challengePeriod: number;
+      /** Ledger timestamp (seconds). Contracts deployed before 2.0.0 have no deadline and ignore it. */
+      deadline: number;
+    },
   ) =>
     write<bigint>(
       CONTRACTS.escrow,
@@ -218,6 +247,7 @@ export const escrow = {
         arbiter: input.arbiter,
         amounts: input.amounts.map(toUnits),
         challenge_period: BigInt(input.challengePeriod),
+        deadline: BigInt(input.deadline),
       },
       signer,
     ),
@@ -240,6 +270,8 @@ export const escrow = {
     write(CONTRACTS.escrow, "release", { project_id: projectId, index }, signer),
   resolve: (signer: Signer, projectId: bigint, index: number, approve: boolean) =>
     write(CONTRACTS.escrow, "resolve", { project_id: projectId, index, approve }, signer),
+  /** Anyone can trigger it: refunds the investor for every milestone `reclaimable` lists. */
+  reclaim: (signer: Signer, projectId: bigint) => write(CONTRACTS.escrow, "reclaim", { project_id: projectId }, signer),
   /** labPct: share paid to the lab (0–100); the rest is refunded to the investor. */
   resolvePartial: (signer: Signer, projectId: bigint, index: number, labPct: number) =>
     write(CONTRACTS.escrow, "resolve_partial", { project_id: projectId, index, lab_bps: Math.round(labPct * 100) }, signer),

@@ -1,7 +1,7 @@
 import { Trans, useTranslation } from "react-i18next";
 import type { Beneficiary } from "../stellar/contracts";
-import { formatNumber } from "../lib/format";
-import { Badge, Button, Input, StatusIcon } from "./ui";
+import { formatDate, formatNumber } from "../lib/format";
+import { Badge, Button, Field, Input, StatusIcon } from "./ui";
 
 /** Pieces shared by the listing form and the "finish setup" card of a licence. */
 
@@ -11,6 +11,24 @@ export const WINDOWS = [
   { key: "day", seconds: 86_400 },
   { key: "week", seconds: 604_800 },
 ] as const;
+
+/**
+ * Research periods offered to the lab, in days: milestones must be proven before the
+ * end (`deadline` in milestone_escrow). Labels live in newLicence.periods.<key>.
+ */
+export const PERIODS = [
+  { key: "sixMonths", days: 182 },
+  { key: "oneYear", days: 365 },
+  { key: "twoYears", days: 730 },
+  { key: "threeYears", days: 1095 },
+] as const;
+
+export const DEFAULT_PERIOD_DAYS = 365;
+
+/** Ledger timestamp (seconds) `days` from now. */
+export function deadlineIn(days: number): number {
+  return Math.floor(Date.now() / 1000) + days * 86_400;
+}
 
 export const isAddress = (a: string) => /^G[A-Z2-7]{55}$/.test(a);
 
@@ -91,6 +109,44 @@ export function MilestoneEditor({ milestones, onChange }: { milestones: string[]
           <Trans i18nKey="newLicence.totalRaised" values={{ amount: formatNumber(total) }} components={{ strong: <strong /> }} />
         </p>
       </div>
+    </div>
+  );
+}
+
+/** Challenge window and research period of a funding round. */
+export function RoundTimingFields({
+  challengeWindow,
+  onChallengeWindow,
+  periodDays,
+  onPeriodDays,
+}: {
+  challengeWindow: number;
+  onChallengeWindow: (seconds: number) => void;
+  periodDays: number;
+  onPeriodDays: (days: number) => void;
+}) {
+  const { t } = useTranslation();
+  const select = "rounded-lg border border-line bg-field px-3 py-2 text-sm";
+  return (
+    <div className="grid gap-4 sm:grid-cols-2">
+      <Field label={t("newLicence.window")}>
+        <select className={select} value={challengeWindow} onChange={(e) => onChallengeWindow(Number(e.target.value))}>
+          {WINDOWS.map((w) => (
+            <option key={w.seconds} value={w.seconds}>
+              {t(`newLicence.windows.${w.key}`)}
+            </option>
+          ))}
+        </select>
+      </Field>
+      <Field label={t("newLicence.period")} hint={t("newLicence.periodHint", { date: formatDate(deadlineIn(periodDays)) })}>
+        <select className={select} value={periodDays} onChange={(e) => onPeriodDays(Number(e.target.value))}>
+          {PERIODS.map((p) => (
+            <option key={p.days} value={p.days}>
+              {t(`newLicence.periods.${p.key}`)}
+            </option>
+          ))}
+        </select>
+      </Field>
     </div>
   );
 }
