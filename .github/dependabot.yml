@@ -1,0 +1,37 @@
+# Dependabot opens pull requests to keep dependencies up to date.
+# Each PR gets the usual CI run and a Vercel preview: merge when both are green.
+version: 2
+updates:
+  # Front-end: the site deployed on Vercel.
+  - package-ecosystem: npm
+    directory: /frontend
+    schedule:
+      interval: weekly
+      day: monday
+      time: "07:00"
+      timezone: Europe/Lisbon
+    # Team rule: only versions published at least two weeks ago
+    # (see frontend/src/i18n/README.md).
+    cooldown:
+      default-days: 14
+    # Minor and patch updates arrive together in one PR; each major update
+    # (React, Vite, TypeScript…) gets its own PR, as it may need code changes.
+    groups:
+      frontend-minor-and-patch:
+        update-types: [minor, patch]
+    open-pull-requests-limit: 5
+    commit-message:
+      prefix: "chore(deps)"
+
+  # The actions used by .github/workflows/ci.yml.
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: monthly
+    cooldown:
+      default-days: 14
+    groups:
+      github-actions:
+        patterns: ["*"]
+    commit-message:
+      prefix: "chore(ci)"
