@@ -1,19 +1,19 @@
 #!/usr/bin/env bash
-# Prépare des comptes testnet que le jury importe dans Freighter pour jouer
-# tout le parcours sans attendre l'admin : chaque juré est institution vérifiée,
-# autorisé au KYC et reçoit quelques EURC ; un compte arbitre commun suffit
-# (l'arbitre doit être différent de l'investisseur).
-# Prérequis : scripts/setup-accounts.sh et scripts/deploy.sh, des EURC sur
-# l'industriel (5 par juré).
+# Prepares testnet accounts the jury imports into Freighter to play the whole
+# journey without waiting for the admin: each juror is a verified institution,
+# on the KYC allowlist, and gets a few EURC; one shared arbiter account is
+# enough (the arbiter must differ from the investor).
+# Requires: scripts/setup-accounts.sh and scripts/deploy.sh, and EURC on the
+# licensee (5 per juror).
 #
-# Relançable : chaque étape vérifie l'état du compte avant d'agir ; un juré
-# n'est recrédité que si son solde EURC est à zéro.
+# Rerunnable: each step checks the account before acting; a juror is only
+# topped up again when their EURC balance is zero.
 set -euo pipefail
 shopt -s inherit_errexit
 
 NETWORK="${NETWORK:-testnet}"
 JURORS="${JURORS:-3}"
-EURC_EACH=50000000 # 5 EURC en unités on-chain (7 décimales)
+EURC_EACH=50000000 # 5 EURC in on-chain units (7 decimals)
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 # shellcheck disable=SC1090
 source "$ROOT/deployments/$NETWORK.env"
@@ -25,7 +25,7 @@ invoke() {
 
 HORIZON="https://horizon-testnet.stellar.org"
 
-# Solde EURC du compte : "none" sans trustline, "missing" si le compte n'existe pas.
+# EURC balance of the account: "none" without a trustline, "missing" if the account does not exist.
 eurc_of() {
   curl -sf "$HORIZON/accounts/$1" | python3 -c '
 import sys, json
@@ -35,7 +35,7 @@ lines = [b["balance"] for b in json.load(sys.stdin)["balances"]
 print(lines[0] if lines else "none")' "$EURC_ASSET" 2>/dev/null || echo missing
 }
 
-# Clé, XLM (Friendbot), trustline : chaque étape n'est faite qu'une fois.
+# Key, XLM (Friendbot), trustline: each step is done only once.
 ensure_account() {
   local name="$1" addr
   stellar keys address "$name" >/dev/null 2>&1 || stellar keys generate "$name" --network "$NETWORK" >/dev/null
@@ -49,7 +49,7 @@ ensure_account() {
   fi
 }
 
-echo "==> Arbitre du jury"
+echo "==> Jury arbiter"
 ensure_account bl-jury-arbiter
 
 for i in $(seq 1 "$JURORS"); do
@@ -60,14 +60,14 @@ for i in $(seq 1 "$JURORS"); do
   if [ "$(eurc_of "$addr")" = "0.0000000" ]; then
     stellar tx new payment --source-account bl-pharma --network "$NETWORK" --quiet \
       --destination "$addr" --asset "$EURC_ASSET" --amount "$EURC_EACH" >/dev/null
-    echo "  5 EURC envoyés"
+    echo "  5 EURC sent"
   fi
   invoke "$NFT_ID" set_institution --institution "$addr" --verified true
   invoke "$SPLITTER_ID" set_allowed --who "$addr" --allowed true
   echo "  institution + KYC ok"
 done
 
-echo "==> Comptes (clés secrètes : stellar keys show <nom>)"
+echo "==> Accounts (secret keys: stellar keys show <name>)"
 for name in $(seq -f "bl-jury-%g" 1 "$JURORS") bl-jury-arbiter; do
   echo "  $name $(stellar keys address "$name")"
 done

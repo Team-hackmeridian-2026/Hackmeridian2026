@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
-# Compile et déploie les 3 contrats, puis les relie entre eux.
-# Prérequis : scripts/setup-accounts.sh
+# Builds and deploys the 3 contracts, then wires them together.
+# Requires: scripts/setup-accounts.sh
 #
-#   FEE_BPS=100  commission de la plateforme (100 = 1 %)
+#   FEE_BPS=100  platform fee (100 = 1 %)
 set -euo pipefail
 
 NETWORK="${NETWORK:-testnet}"
@@ -11,16 +11,16 @@ ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 ENV_FILE="$ROOT/deployments/$NETWORK.env"
 WASM="$ROOT/contracts/target/wasm32v1-none/release"
 
-[ -f "$ENV_FILE" ] || { echo "Lancez d'abord scripts/setup-accounts.sh"; exit 1; }
+[ -f "$ENV_FILE" ] || { echo "Run scripts/setup-accounts.sh first"; exit 1; }
 # shellcheck disable=SC1090
 source "$ENV_FILE"
 
-# Le RPC testnet renvoie parfois des timeouts : on réessaie jusqu'à 3 fois.
+# The testnet RPC sometimes times out: retry up to 3 times.
 retry() {
   local n
   for n in 1 2 3; do
     "$@" && return 0
-    echo "  (tentative $n échouée, nouvel essai)" >&2
+    echo "  (attempt $n failed, retrying)" >&2
     sleep 5
   done
   return 1
@@ -40,7 +40,7 @@ deploy() {
 echo "==> Build"
 (cd "$ROOT/contracts" && stellar contract build >/dev/null)
 
-echo "==> Déploiement"
+echo "==> Deploy"
 NFT_ID="$(deploy ip_license_nft --admin "$ADMIN")"
 echo "  ip_license_nft    $NFT_ID"
 
@@ -58,9 +58,9 @@ echo "==> Configuration"
 invoke "$SPLITTER_ID" bl-admin set_minter --minter "$ESCROW_ID" >/dev/null
 invoke "$NFT_ID" bl-admin set_institution --institution "$LAB" --verified true >/dev/null
 invoke "$SPLITTER_ID" bl-admin set_allowed --who "$FUND" --allowed true >/dev/null
-echo "  escrow = émetteur de parts, labo = institution vérifiée, fonds = KYC validé"
+echo "  escrow = share minter, lab = verified institution, fund = KYC approved"
 
-# Remplace les anciens identifiants s'ils existent.
+# Replace the previous IDs if there are any.
 sed -i '/^\(NFT_ID\|SPLITTER_ID\|ESCROW_ID\|FEE_BPS\)=/d' "$ENV_FILE"
 cat >> "$ENV_FILE" <<EOF
 FEE_BPS=$FEE_BPS
@@ -68,4 +68,4 @@ NFT_ID=$NFT_ID
 SPLITTER_ID=$SPLITTER_ID
 ESCROW_ID=$ESCROW_ID
 EOF
-echo "==> Identifiants ajoutés à ${ENV_FILE#"$ROOT"/}"
+echo "==> IDs added to ${ENV_FILE#"$ROOT"/}"

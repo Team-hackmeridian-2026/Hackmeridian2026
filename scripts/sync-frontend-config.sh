@@ -1,9 +1,9 @@
 #!/usr/bin/env bash
-# Copie les identifiants publics du déploiement dans le front
-# (frontend/src/deployment.json : adresses publiques et IDs de contrats uniquement).
+# Copies the public IDs of the deployment into the front-end
+# (frontend/src/deployment.json: public addresses and contract IDs only).
 #
-#   --demo  écrit aussi frontend/.env.local avec les clés secrètes testnet des
-#           comptes de démo (fichier ignoré par git, à n'utiliser qu'en local).
+#   --demo  also writes frontend/.env.local with the testnet secret keys of the
+#           demo accounts (gitignored, for local use only).
 set -euo pipefail
 
 NETWORK="${NETWORK:-testnet}"

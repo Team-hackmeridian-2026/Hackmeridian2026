@@ -329,7 +329,7 @@ contracts/          Soroban contracts (Rust) and their tests
 frontend/           React + Vite app
 scripts/            Testnet accounts, deployment, front-end config
 deployments/        Example of the local deployment state
-docs/PLAN.md        Development plan (French)
+docs/PLAN.md        Development plan
 ```
 
 ## Prior work (disclosed)

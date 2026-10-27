@@ -76,7 +76,7 @@ fn setup(fee_bps: u32) -> Setup<'static> {
     }
 }
 
-/// Université 40 %, inventeur 30 %, investisseurs 30 %.
+/// University 40 %, inventor 30 %, investors 30 %.
 fn configure(s: &Setup) {
     s.splitter.configure(
         &s.license_id,
@@ -189,7 +189,7 @@ fn transfer_keeps_past_earnings_with_seller() {
 
     pay(&s, 10_000); // a gagne 3 000
     s.splitter.transfer_shares(&s.license_id, &a, &b, &100);
-    pay(&s, 10_000); // b gagne 3 000
+    pay(&s, 10_000); // b earns 3,000
 
     assert_eq!(s.splitter.shares_of(&s.license_id, &a), 0);
     assert_eq!(s.splitter.shares_of(&s.license_id, &b), 100);
@@ -251,7 +251,7 @@ fn rounding_dust_goes_to_first_beneficiary() {
     let s = setup(0);
     configure(&s);
     pay(&s, 7);
-    // 7 * 40 % = 2, 7 * 30 % = 2, part investisseurs 2 -> université, reste 1 -> université
+    // 7 * 40 % = 2, 7 * 30 % = 2, investors' part 2 -> university, remainder 1 -> university
     assert_eq!(s.splitter.claimable(&s.license_id, &s.university), 5);
     assert_eq!(s.splitter.claimable(&s.license_id, &s.inventor), 2);
     assert_eq!(s.token.balance(&s.splitter.address), 7);
