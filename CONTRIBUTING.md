@@ -43,9 +43,10 @@ Ask Antoine before changing these, and say so in the pull request:
 - `contracts/`: the deployed contracts and their tests.
 - `frontend/src/stellar/*`: contract calls, wallet and anchor integration.
 
-Contract redeploys (`scripts/deploy.sh`) are run by Antoine only. Until the
-next one, testnet runs the contracts of release `1.0.1` while `main` is ahead,
-so the front-end must keep working with both.
+Contract redeploys go through the **Deploy contracts (testnet)** GitHub
+workflow, and every run waits for Antoine's approval (see the README). Until
+the next one, testnet runs the contracts of release `1.0.1` while `main` is
+ahead, so the front-end must keep working with both.
 
 ## Language
 
