@@ -171,7 +171,8 @@
       "inventors": "Check the inventors' addresses.",
       "parties": "Choose an investor and an arbiter.",
       "split": "The royalty split must add up to 100 %.",
-      "milestones": "Every milestone needs a positive amount."
+      "milestones": "Every milestone needs a positive amount.",
+      "arbiter": "The arbiter must be someone other than the investor and the university."
     },
     "eyebrow": "For universities and labs",
     "title": "List a patent",
@@ -227,7 +228,16 @@
     "done": "Done",
     "failed": "Failed",
     "submit": "List the patent",
-    "dataRoomPlaceholder": "https://… or ipfs://…"
+    "dataRoomPlaceholder": "https://… or ipfs://…",
+    "period": "Research period",
+    "periodHint": "Milestones must be proven by {{date}}. After that, the investor can take back the funds of the milestones not proven.",
+    "periods": {
+      "sixMonths": "6 months",
+      "oneYear": "1 year",
+      "twoYears": "2 years",
+      "threeYears": "3 years"
+    },
+    "summaryDeadline": "Deadline"
   },
   "licence": {
     "fingerprint": "Dossier fingerprint (SHA-256)",
@@ -268,7 +278,8 @@
       "fund": "Funds locked in escrow",
       "pay": "Royalty paid and split",
       "claim": "Royalties withdrawn",
-      "split": "Milestone split"
+      "split": "Milestone split",
+      "reclaim": "Investor refunded"
     },
     "round": "Funding round #{{id}}",
     "roundSummary_one": "{{amount}} in {{count}} milestone · challenge window {{window}}",
@@ -298,8 +309,7 @@
     "splitPending": "The royalty split is not set yet.",
     "setup": {
       "title": "Finish setting up this licence",
-      "text": "The licence is on Stellar, but the listing stopped before every step was confirmed. Confirm the remaining steps to open it to funding.",
-      "sameArbiter": "The arbiter must be someone other than the investor."
+      "text": "The licence is on Stellar, but the listing stopped before every step was confirmed. Confirm the remaining steps to open it to funding."
     },
     "splitResult": "{{lab}} % paid to the lab, {{refund}} % refunded to the investor",
     "arbiterTitle": "Arbiter decision",
@@ -314,7 +324,13 @@
     "verifyHelp": "Choose a copy of the dossier: it is fingerprinted in your browser and never uploaded.",
     "chooseFile": "Choose a file",
     "milestoneN": "Milestone {{n}}",
-    "sections": "On this page"
+    "sections": "On this page",
+    "deadlineText": "Milestones must be proven by {{date}}.",
+    "deadlinePassed": "The research period is over: this milestone can no longer be proven, and its funds can go back to the investor.",
+    "arbiterUntil": "The arbiter has until {{date}} to decide. After that, the funds of this milestone can go back to the investor.",
+    "reclaimText_one": "Milestone {{milestones}} can be refunded to the investor: the research period is over or the dispute was not settled in time. Anyone can trigger the refund.",
+    "reclaimText_other": "Milestones {{milestones}} can be refunded to the investor: the research period is over or a dispute was not settled in time. Anyone can trigger the refund.",
+    "reclaim": "Refund the investor"
   },
   "admin": {
     "address": "Stellar address",
@@ -444,7 +460,12 @@
       "9": "The challenge window is closed.",
       "10": "The challenge window is still open.",
       "11": "Invalid configuration.",
-      "12": "The lab's share must be between 0 and 100 %."
+      "12": "The lab's share must be between 0 and 100 %.",
+      "13": "The arbiter must be someone other than the investor and the lab.",
+      "14": "The challenge window must be between 1 minute and 30 days.",
+      "15": "The deadline must be in the future.",
+      "16": "The research period is over: no milestone can be submitted any more.",
+      "17": "Nothing to refund yet."
     },
     "contract": "Contract error #{{code}}",
     "balance": "Not enough EURC on this account.",

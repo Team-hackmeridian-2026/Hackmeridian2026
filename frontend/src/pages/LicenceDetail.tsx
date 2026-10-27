@@ -1,7 +1,17 @@
 import { useEffect, useState, type ReactNode } from "react";
 import { Link, useParams } from "react-router-dom";
 import { Trans, useTranslation } from "react-i18next";
-import { escrow, isSettled, nft, splitter, type License, type Milestone, type Project } from "../stellar/contracts";
+import {
+  ARBITER_PERIOD,
+  escrow,
+  isSettled,
+  nft,
+  reclaimable,
+  splitter,
+  type License,
+  type Milestone,
+  type Project,
+} from "../stellar/contracts";
 import { useWallet, type Signer } from "../stellar/wallet";
 import { useToasts } from "../components/toasts";
 import { BurstHeading } from "../components/BurstHeading";
@@ -211,6 +221,8 @@ function MilestoneRow({
     .every((m) => isSettled(m.status));
   const deadline = Number(milestone.submitted_at) + Number(project.challenge_period);
   const windowOpen = milestone.status === "Submitted" && now < deadline;
+  // Rounds of contracts deployed before 2.0.0 have no deadline.
+  const pastDeadline = project.deadline !== undefined && now >= Number(project.deadline);
   const look = STATUS_LOOK[milestone.status];
 
   async function act(
@@ -254,10 +266,16 @@ function MilestoneRow({
             : t("licence.windowClosed")}
         </p>
       )}
+      {milestone.status === "Pending" && project.funded && pastDeadline && (
+        <p className="text-sm text-muted">{t("licence.deadlinePassed")}</p>
+      )}
+      {milestone.status === "Disputed" && project.deadline !== undefined && (
+        <p className="text-sm text-muted">{t("licence.arbiterUntil", { date: formatDate(deadline + ARBITER_PERIOD) })}</p>
+      )}
 
       {signer && (
         <div className="flex flex-wrap items-center gap-2">
-          {isLab && project.funded && milestone.status === "Pending" && previousSettled && (
+          {isLab && project.funded && milestone.status === "Pending" && previousSettled && !pastDeadline && (
             <>
               <Input placeholder={t("licence.reportPlaceholder")} value={note} onChange={(e) => setNote(e.target.value)} className="min-w-64 flex-1" />
               <Button
@@ -310,11 +328,13 @@ function FundingRound({ projectId, signer, onChange }: { projectId: bigint; sign
   const now = useNow();
   const project = useAsync(() => escrow.get(projectId), [String(projectId)]);
   const [busy, setBusy] = useState(false);
+  const [reclaiming, setReclaiming] = useState(false);
 
   if (project.loading && !project.data) return <Spinner />;
   if (project.error) return <ErrorBox message={project.error} onRetry={project.reload} />;
   const p = project.data!;
   const total = p.milestones.reduce((s, m) => s + m.amount, 0n);
+  const toReclaim = reclaimable(p, now);
   const refresh = () => {
     project.reload();
     onChange();
@@ -332,6 +352,9 @@ function FundingRound({ projectId, signer, onChange }: { projectId: bigint; sign
               window: formatDuration(Number(p.challenge_period)),
             })}
           </p>
+          {p.deadline !== undefined && (
+            <p className="text-sm text-muted">{t("licence.deadlineText", { date: formatDate(p.deadline) })}</p>
+          )}
         </div>
         <div className="w-full sm:w-56">
           <FundingProgress project={p} />
@@ -365,6 +388,26 @@ function FundingRound({ projectId, signer, onChange }: { projectId: bigint; sign
       )}
       {!p.funded && signer?.address !== p.investor && (
         <p className="text-sm text-muted">{t("licence.waitingInvestor", { address: shortAddress(p.investor) })}</p>
+      )}
+      {toReclaim.length > 0 && (
+        <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-amber/40 bg-amber/10 px-4 py-3 text-sm">
+          <p className="max-w-xl">
+            {t("licence.reclaimText", { milestones: toReclaim.map((i) => i + 1).join(", "), count: toReclaim.length })}
+          </p>
+          {signer && (
+            <Button
+              variant="secondary"
+              busy={reclaiming}
+              onClick={async () => {
+                setReclaiming(true);
+                if (await run(t("licence.toasts.reclaim"), () => escrow.reclaim(signer, p.id))) refresh();
+                setReclaiming(false);
+              }}
+            >
+              {t("licence.reclaim")}
+            </Button>
+          )}
+        </div>
       )}
       <ol className="flex flex-col">
         {p.milestones.map((m, i) => (

@@ -171,7 +171,8 @@
       "inventors": "Vérifiez les adresses des inventeurs.",
       "parties": "Choisissez un investisseur et un arbitre.",
       "split": "Le partage des redevances doit totaliser 100 %.",
-      "milestones": "Chaque jalon doit avoir un montant positif."
+      "milestones": "Chaque jalon doit avoir un montant positif.",
+      "arbiter": "L'arbitre doit être une autre personne que l'investisseur et l'université."
     },
     "eyebrow": "Pour les universités et les labos",
     "title": "Déposer un brevet",
@@ -227,7 +228,16 @@
     "done": "Fait",
     "failed": "Échec",
     "submit": "Déposer le brevet",
-    "dataRoomPlaceholder": "https://… ou ipfs://…"
+    "dataRoomPlaceholder": "https://… ou ipfs://…",
+    "period": "Durée de la recherche",
+    "periodHint": "Les jalons doivent être prouvés avant le {{date}}. Ensuite, l'investisseur peut récupérer les fonds des jalons non prouvés.",
+    "periods": {
+      "sixMonths": "6 mois",
+      "oneYear": "1 an",
+      "twoYears": "2 ans",
+      "threeYears": "3 ans"
+    },
+    "summaryDeadline": "Échéance"
   },
   "licence": {
     "fingerprint": "Empreinte du dossier (SHA-256)",
@@ -268,7 +278,8 @@
       "fund": "Fonds bloqués dans l'escrow",
       "pay": "Redevance payée et répartie",
       "claim": "Redevances retirées",
-      "split": "Jalon partagé"
+      "split": "Jalon partagé",
+      "reclaim": "Investisseur remboursé"
     },
     "round": "Levée de fonds n° {{id}}",
     "roundSummary_one": "{{amount}} en {{count}} jalon · délai de contestation {{window}}",
@@ -298,8 +309,7 @@
     "splitPending": "Le partage des redevances n'est pas encore fixé.",
     "setup": {
       "title": "Terminer la mise en place de cette licence",
-      "text": "La licence est sur Stellar, mais le dépôt s'est arrêté avant que toutes les étapes soient confirmées. Confirmez les étapes restantes pour l'ouvrir au financement.",
-      "sameArbiter": "L'arbitre doit être une autre personne que l'investisseur."
+      "text": "La licence est sur Stellar, mais le dépôt s'est arrêté avant que toutes les étapes soient confirmées. Confirmez les étapes restantes pour l'ouvrir au financement."
     },
     "splitResult": "{{lab}} % versés au labo, {{refund}} % remboursés à l'investisseur",
     "arbiterTitle": "Décision de l'arbitre",
@@ -314,7 +324,13 @@
     "verifyHelp": "Choisissez une copie du dossier : son empreinte est calculée dans votre navigateur et rien n'est envoyé.",
     "chooseFile": "Choisir un fichier",
     "milestoneN": "Jalon {{n}}",
-    "sections": "Sur cette page"
+    "sections": "Sur cette page",
+    "deadlineText": "Les jalons doivent être prouvés avant le {{date}}.",
+    "deadlinePassed": "La durée de la recherche est écoulée : ce jalon ne peut plus être prouvé et ses fonds peuvent revenir à l'investisseur.",
+    "arbiterUntil": "L'arbitre a jusqu'au {{date}} pour trancher. Ensuite, les fonds de ce jalon peuvent revenir à l'investisseur.",
+    "reclaimText_one": "Le jalon {{milestones}} peut être remboursé à l'investisseur : la durée de la recherche est écoulée ou le litige n'a pas été tranché à temps. Tout le monde peut déclencher le remboursement.",
+    "reclaimText_other": "Les jalons {{milestones}} peuvent être remboursés à l'investisseur : la durée de la recherche est écoulée ou un litige n'a pas été tranché à temps. Tout le monde peut déclencher le remboursement.",
+    "reclaim": "Rembourser l'investisseur"
   },
   "admin": {
     "address": "Adresse Stellar",
@@ -444,7 +460,12 @@
       "9": "Le délai de contestation est écoulé.",
       "10": "Le délai de contestation est encore ouvert.",
       "11": "Configuration invalide.",
-      "12": "La part du labo doit être comprise entre 0 et 100 %."
+      "12": "La part du labo doit être comprise entre 0 et 100 %.",
+      "13": "L'arbitre doit être une autre personne que l'investisseur et le labo.",
+      "14": "Le délai de contestation doit être compris entre 1 minute et 30 jours.",
+      "15": "L'échéance doit être dans le futur.",
+      "16": "La durée de la recherche est écoulée : plus aucun jalon ne peut être soumis.",
+      "17": "Rien à rembourser pour l'instant."
     },
     "contract": "Erreur du contrat n° {{code}}",
     "balance": "Pas assez d'EURC sur ce compte.",
