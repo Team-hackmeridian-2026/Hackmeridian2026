@@ -160,7 +160,7 @@ No configuration is needed: the public contract IDs are committed.
 
 ```bash
 cd contracts
-cargo test           # 30 tests, including the full demo scenario
+cargo test           # unit tests: full demo scenario, edge cases, who must sign
 ```
 
 ### Deploy your own instance (optional)

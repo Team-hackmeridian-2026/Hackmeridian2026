@@ -7,6 +7,7 @@ use soroban_sdk::{
 
 struct Setup<'a> {
     env: Env,
+    admin: Address,
     splitter: RoyaltySplitterClient<'a>,
     token: TokenClient<'a>,
     token_admin: StellarAssetClient<'a>,
@@ -63,6 +64,7 @@ fn setup(fee_bps: u32) -> Setup<'static> {
 
     Setup {
         env,
+        admin,
         splitter,
         token,
         token_admin,
@@ -263,4 +265,143 @@ fn only_minter_can_mint() {
     s.splitter.mint_shares(&s.license_id, &a, &5);
     let auths = s.env.auths();
     assert_eq!(auths[0].0, s.minter);
+}
+
+// ---------- Who must sign ----------
+// `mock_all_auths` accepts any signature, so the tests above do not prove who has
+// to sign. Here `env.auths()` lists the addresses whose authorisation the last call
+// required, and `sign_as` lets exactly one address sign the next call: the wrong
+// party must be refused, the right one accepted.
+
+extern crate std;
+
+use soroban_sdk::testutils::{MockAuth, MockAuthInvoke};
+use soroban_sdk::{IntoVal, Val};
+
+/// Addresses that had to authorise the last call.
+fn signers(env: &Env) -> std::vec::Vec<Address> {
+    env.auths().into_iter().map(|(who, _)| who).collect()
+}
+
+/// Only `who` signs the next call to `fn_name` with `args`.
+fn sign_as(s: &Setup, who: &Address, fn_name: &str, args: soroban_sdk::Vec<Val>) {
+    s.env.mock_auths(&[MockAuth {
+        address: who,
+        invoke: &MockAuthInvoke {
+            contract: &s.splitter.address,
+            fn_name,
+            args,
+            sub_invokes: &[],
+        },
+    }]);
+}
+
+#[test]
+fn admin_functions_are_signed_by_the_admin() {
+    let s = setup(0);
+    configure(&s);
+    let a = investor(&s, 10);
+    assert_eq!(signers(&s.env), [s.minter.clone()]);
+
+    s.splitter.set_allowed(&a, &true);
+    assert_eq!(signers(&s.env), [s.admin.clone()]);
+    s.splitter.clawback(&s.license_id, &a, &1);
+    assert_eq!(signers(&s.env), [s.admin.clone()]);
+    s.splitter.set_minter(&s.minter);
+    assert_eq!(signers(&s.env), [s.admin.clone()]);
+}
+
+#[test]
+fn only_the_admin_manages_kyc_and_clawback() {
+    let s = setup(0);
+    configure(&s);
+    let a = investor(&s, 10);
+    let stranger = Address::generate(&s.env);
+
+    let args: soroban_sdk::Vec<Val> = (stranger.clone(), true).into_val(&s.env);
+    sign_as(&s, &s.university, "set_allowed", args.clone());
+    assert!(s.splitter.try_set_allowed(&stranger, &true).is_err());
+    sign_as(&s, &s.admin, "set_allowed", args);
+    s.splitter.set_allowed(&stranger, &true);
+    assert!(s.splitter.is_allowed(&stranger));
+
+    let args: soroban_sdk::Vec<Val> = (s.license_id, a.clone(), 10i128).into_val(&s.env);
+    sign_as(&s, &s.university, "clawback", args.clone());
+    assert!(s.splitter.try_clawback(&s.license_id, &a, &10).is_err());
+    sign_as(&s, &s.admin, "clawback", args);
+    s.splitter.clawback(&s.license_id, &a, &10);
+    assert_eq!(s.splitter.shares_of(&s.license_id, &a), 0);
+
+    // The minter can only be changed by the admin: it decides who can create shares.
+    let args: soroban_sdk::Vec<Val> = (stranger.clone(),).into_val(&s.env);
+    sign_as(&s, &s.minter, "set_minter", args);
+    assert!(s.splitter.try_set_minter(&stranger).is_err());
+}
+
+#[test]
+fn only_the_minter_creates_and_burns_shares() {
+    let s = setup(0);
+    configure(&s);
+    let a = investor(&s, 10);
+
+    let args: soroban_sdk::Vec<Val> = (s.license_id, a.clone(), 5i128).into_val(&s.env);
+    sign_as(&s, &s.admin, "mint_shares", args.clone());
+    assert!(s.splitter.try_mint_shares(&s.license_id, &a, &5).is_err());
+    sign_as(&s, &s.minter, "mint_shares", args);
+    s.splitter.mint_shares(&s.license_id, &a, &5);
+    assert_eq!(s.splitter.shares_of(&s.license_id, &a), 15);
+
+    let args: soroban_sdk::Vec<Val> = (s.license_id, a.clone(), 5i128).into_val(&s.env);
+    sign_as(&s, &a, "burn_shares", args.clone());
+    assert!(s.splitter.try_burn_shares(&s.license_id, &a, &5).is_err());
+    sign_as(&s, &s.minter, "burn_shares", args);
+    s.splitter.burn_shares(&s.license_id, &a, &5);
+    assert_eq!(s.splitter.shares_of(&s.license_id, &a), 10);
+}
+
+#[test]
+fn only_the_licence_owner_configures_the_split() {
+    let s = setup(0);
+    let config = SplitConfig {
+        fixed: vec![
+            &s.env,
+            Beneficiary {
+                addr: s.inventor.clone(),
+                bps: 10_000,
+            },
+        ],
+        investors_bps: 0,
+    };
+    let args: soroban_sdk::Vec<Val> = (s.license_id, config.clone()).into_val(&s.env);
+    sign_as(&s, &s.inventor, "configure", args.clone());
+    assert!(s.splitter.try_configure(&s.license_id, &config).is_err());
+    assert!(!s.splitter.is_configured(&s.license_id));
+
+    sign_as(&s, &s.university, "configure", args);
+    s.splitter.configure(&s.license_id, &config);
+    assert!(s.splitter.is_configured(&s.license_id));
+}
+
+#[test]
+fn holders_sign_their_own_transfers_payments_and_claims() {
+    let s = setup(0);
+    configure(&s);
+    let a = investor(&s, 10);
+    let b = investor(&s, 0);
+
+    let payer = pay(&s, 1_000);
+    assert_eq!(signers(&s.env), [payer]);
+    s.splitter.claim(&s.license_id, &s.university);
+    assert_eq!(signers(&s.env), [s.university.clone()]);
+    s.splitter.transfer_shares(&s.license_id, &a, &b, &4);
+    assert_eq!(signers(&s.env), [a.clone()]);
+
+    // The receiver cannot pull shares, and nobody can claim for someone else.
+    let args: soroban_sdk::Vec<Val> = (s.license_id, a.clone(), b.clone(), 6i128).into_val(&s.env);
+    sign_as(&s, &b, "transfer_shares", args);
+    assert!(s.splitter.try_transfer_shares(&s.license_id, &a, &b, &6).is_err());
+    let args: soroban_sdk::Vec<Val> = (s.license_id, a.clone()).into_val(&s.env);
+    sign_as(&s, &b, "claim", args);
+    assert!(s.splitter.try_claim(&s.license_id, &a).is_err());
+    assert_eq!(s.splitter.shares_of(&s.license_id, &a), 6);
 }

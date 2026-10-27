@@ -404,3 +404,118 @@ fn unverified_investor_cannot_fund() {
     assert!(s.escrow.try_fund(&pid).is_err());
     assert_eq!(s.token.balance(&stranger), 30_000);
 }
+
+// ---------- Who must sign ----------
+// `mock_all_auths` accepts any signature, so the tests above do not prove who has
+// to sign. Here `env.auths()` lists the addresses whose authorisation the last call
+// required, and `sign_as` lets exactly the given addresses sign the next call: the
+// wrong party must be refused, the right one accepted.
+
+extern crate std;
+
+use soroban_sdk::testutils::{MockAuth, MockAuthInvoke};
+use soroban_sdk::{IntoVal, Val};
+
+/// Addresses that had to authorise the last call.
+fn signers(env: &Env) -> std::vec::Vec<Address> {
+    env.auths().into_iter().map(|(who, _)| who).collect()
+}
+
+/// Only `who` sign the next call to `fn_name` with `args`.
+fn sign_as(s: &Setup, who: &[&Address], fn_name: &str, args: soroban_sdk::Vec<Val>) {
+    let invoke = MockAuthInvoke {
+        contract: &s.escrow.address,
+        fn_name,
+        args,
+        sub_invokes: &[],
+    };
+    let auths: std::vec::Vec<MockAuth> = who
+        .iter()
+        .map(|address| MockAuth {
+            address,
+            invoke: &invoke,
+        })
+        .collect();
+    s.env.mock_auths(&auths);
+}
+
+#[test]
+fn each_step_is_signed_by_its_party() {
+    let s = setup(0);
+    let pid = create(&s);
+    assert_eq!(signers(&s.env), [s.lab.clone()]);
+    s.escrow.fund(&pid);
+    assert_eq!(signers(&s.env), [s.investor.clone()]);
+    s.escrow.submit_milestone(&pid, &0, &proof(&s, 1));
+    assert_eq!(signers(&s.env), [s.lab.clone()]);
+    s.escrow.dispute(&pid, &0, &proof(&s, 2));
+    assert_eq!(signers(&s.env), [s.investor.clone()]);
+    s.escrow.resolve_partial(&pid, &0, &5_000);
+    assert_eq!(signers(&s.env), [s.arbiter.clone()]);
+
+    // Release after the window needs no signature at all: anyone can trigger it.
+    s.escrow.submit_milestone(&pid, &1, &proof(&s, 3));
+    advance(&s, WINDOW);
+    s.escrow.release(&pid, &1);
+    assert!(signers(&s.env).is_empty());
+
+    s.escrow.cancel(&pid);
+    assert_eq!(signers(&s.env), [s.lab.clone(), s.investor.clone()]);
+}
+
+#[test]
+fn only_the_lab_submits_and_only_the_investor_disputes() {
+    let s = setup(0);
+    let pid = create(&s);
+    s.escrow.fund(&pid);
+
+    let args: soroban_sdk::Vec<Val> = (pid, 0u32, proof(&s, 1)).into_val(&s.env);
+    sign_as(&s, &[&s.investor], "submit_milestone", args.clone());
+    assert!(s.escrow.try_submit_milestone(&pid, &0, &proof(&s, 1)).is_err());
+    sign_as(&s, &[&s.lab], "submit_milestone", args);
+    s.escrow.submit_milestone(&pid, &0, &proof(&s, 1));
+
+    let args: soroban_sdk::Vec<Val> = (pid, 0u32, proof(&s, 2)).into_val(&s.env);
+    for wrong in [&s.lab, &s.arbiter] {
+        sign_as(&s, &[wrong], "dispute", args.clone());
+        assert!(s.escrow.try_dispute(&pid, &0, &proof(&s, 2)).is_err());
+    }
+    sign_as(&s, &[&s.investor], "dispute", args);
+    s.escrow.dispute(&pid, &0, &proof(&s, 2));
+    assert_eq!(status(&s, pid, 0), MilestoneStatus::Disputed);
+}
+
+#[test]
+fn only_the_arbiter_settles_a_dispute() {
+    let s = setup(0);
+    let pid = disputed(&s);
+
+    let args: soroban_sdk::Vec<Val> = (pid, 0u32, 6_000u32).into_val(&s.env);
+    for wrong in [&s.lab, &s.investor] {
+        sign_as(&s, &[wrong], "resolve_partial", args.clone());
+        assert!(s.escrow.try_resolve_partial(&pid, &0, &6_000).is_err());
+    }
+    assert_eq!(status(&s, pid, 0), MilestoneStatus::Disputed);
+
+    sign_as(&s, &[&s.arbiter], "resolve_partial", args);
+    s.escrow.resolve_partial(&pid, &0, &6_000);
+    assert_eq!(status(&s, pid, 0), MilestoneStatus::Split);
+}
+
+#[test]
+fn cancel_needs_both_the_lab_and_the_investor() {
+    let s = setup(0);
+    let pid = create(&s);
+    s.escrow.fund(&pid);
+
+    let args: soroban_sdk::Vec<Val> = (pid,).into_val(&s.env);
+    sign_as(&s, &[&s.lab], "cancel", args.clone());
+    assert!(s.escrow.try_cancel(&pid).is_err());
+    sign_as(&s, &[&s.investor], "cancel", args.clone());
+    assert!(s.escrow.try_cancel(&pid).is_err());
+    assert_eq!(status(&s, pid, 0), MilestoneStatus::Pending);
+
+    sign_as(&s, &[&s.lab, &s.investor], "cancel", args);
+    s.escrow.cancel(&pid);
+    assert_eq!(status(&s, pid, 0), MilestoneStatus::Refunded);
+}
