@@ -20,6 +20,10 @@ on:
         description: "Register the jury accounts on the new contracts"
         type: boolean
         default: true
+      new_accounts:
+        description: "Switch to new demo accounts (their addresses replace those in deployment.json)"
+        type: boolean
+        default: false
 
 permissions:
   contents: write
@@ -56,6 +60,7 @@ jobs:
           STELLAR_TESTNET_KEYS: ${{ secrets.STELLAR_TESTNET_KEYS }}
           SEED: ${{ inputs.seed }}
           JURY: ${{ inputs.jury }}
+          NEW_ACCOUNTS: ${{ inputs.new_accounts }}
         run: |
           roles=(admin)
           if [ "$SEED" = true ]; then roles+=(lab fund arbiter pharma); fi
@@ -67,6 +72,7 @@ jobs:
         run: stellar contract build
 
       - name: Deploy and wire the contracts
+        id: deploy
         if: ${{ !inputs.dry_run }}
         run: |
           # Remember the current IDs to replace them in the README afterwards.
@@ -82,8 +88,10 @@ jobs:
         if: ${{ !inputs.dry_run && inputs.jury }}
         run: ./scripts/jury-accounts.sh
 
+      # Still runs when seeding or the jury step failed: the contracts are deployed
+      # by then, and the front-end must not lose track of them.
       - name: Open a pull request with the new IDs
-        if: ${{ !inputs.dry_run }}
+        if: ${{ !cancelled() && steps.deploy.outcome == 'success' }}
         env:
           GH_TOKEN: ${{ github.token }}
           BRANCH: chore/redeploy-testnet-${{ github.run_number }}
@@ -91,8 +99,9 @@ jobs:
         run: |
           python3 - "$RUNNER_TEMP/previous-deployment.json" frontend/src/deployment.json > "$RUNNER_TEMP/pr-body.md" <<'EOF'
           import json, pathlib, sys
-          old = json.load(open(sys.argv[1]))["contracts"]
-          new = json.load(open(sys.argv[2]))["contracts"]
+          before = json.load(open(sys.argv[1]))
+          after = json.load(open(sys.argv[2]))
+          old, new = before["contracts"], after["contracts"]
           readme = pathlib.Path("README.md")
           text = readme.read_text()
           rows = []
@@ -103,11 +112,15 @@ jobs:
           print("Contracts redeployed to testnet from `main` by the **Deploy contracts (testnet)** workflow.\n")
           print("| Contract | New ID |\n| --- | --- |")
           print("\n".join(rows))
+          moved = [r for r in after["accounts"] if after["accounts"][r] != before["accounts"].get(r)]
+          if moved:
+              print("\nNew demo accounts: " + ", ".join(f"`{r}`" for r in moved) + ".")
           print("\nThis updates `frontend/src/deployment.json` and the contract IDs in the README.\n")
           print("Still to do by hand before merging:")
           print("- [ ] README: the \"Source ahead of the deployment\" note and the on-chain evidence links")
           print("- [ ] `CLAUDE.md` and `CONTRIBUTING.md`: the lines saying testnet runs release `1.0.1`")
           print("- [ ] Check the Vercel preview against the new contracts")
+          print("- [ ] If seeding or the jury step failed, check the workflow log and rerun the script that failed")
           print("\nCI does not start on pull requests opened by a workflow: close and reopen this one to run it.")
           EOF
           echo "Workflow run: $RUN_URL" >> "$RUNNER_TEMP/pr-body.md"

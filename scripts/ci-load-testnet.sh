@@ -9,8 +9,10 @@
 #   2. Checks that every identity named on the command line is there, and that
 #      the demo roles match the addresses in frontend/src/deployment.json, so a
 #      wrong key never deploys contracts with the wrong admin.
-#   3. Rebuilds deployments/testnet.env from frontend/src/deployment.json: the
-#      committed file holds every public address the scripts need.
+#      NEW_ACCOUNTS=true switches to a new set of demo accounts instead: all six
+#      roles are then required, and their addresses replace the committed ones.
+#   3. Rebuilds deployments/testnet.env: addresses from the loaded keys, the
+#      EURC asset and contract from frontend/src/deployment.json.
 #
 #   ci-load-testnet.sh admin lab fund   # identities that must be present
 set -euo pipefail
@@ -43,8 +45,12 @@ while IFS= read -r line || [ -n "$line" ]; do
 done <<<"$STELLAR_TESTNET_KEYS"
 echo "==> ${#loaded[@]} identities loaded"
 
+ROLES=(admin lab inventor fund pharma arbiter)
+required=("$@")
+if [ "${NEW_ACCOUNTS:-false}" = true ]; then required+=("${ROLES[@]}"); fi
+
 missing=()
-for role in "$@"; do
+for role in "${required[@]}"; do
   stellar keys address "bl-$role" >/dev/null 2>&1 || missing+=("bl-$role")
 done
 if [ "${#missing[@]}" -gt 0 ]; then
@@ -61,16 +67,25 @@ for key in sys.argv[2:]:
 print(d)' "$DEPLOYMENT" "$@"
 }
 
+# Address of a demo role: its loaded key, else the committed address.
+declare -A ADDRESS
 echo "==> Checking the demo roles against deployment.json"
-for role in admin lab inventor fund pharma arbiter; do
-  stellar keys address "bl-$role" >/dev/null 2>&1 || continue
+for role in "${ROLES[@]}"; do
   expected="$(read_json accounts "$role")"
-  actual="$(stellar keys address "bl-$role")"
-  if [ "$expected" != "$actual" ]; then
+  if ! actual="$(stellar keys address "bl-$role" 2>/dev/null)"; then
+    ADDRESS[$role]="$expected"
+    continue
+  fi
+  ADDRESS[$role]="$actual"
+  if [ "$expected" = "$actual" ]; then
+    echo "  bl-$role ok"
+  elif [ "${NEW_ACCOUNTS:-false}" = true ]; then
+    echo "  bl-$role new address $actual (was $expected)"
+  else
     echo "bl-$role is $actual but deployment.json expects $expected" >&2
+    echo "To switch to new demo accounts, run with new_accounts ticked." >&2
     exit 1
   fi
-  echo "  bl-$role ok"
 done
 
 EURC_ASSET="$(read_json eurcAsset)"
@@ -81,11 +96,11 @@ NETWORK=$NETWORK
 EURC_MODE=$([ "${EURC_ASSET#*:}" = "$CIRCLE_EURC_ISSUER" ] && echo circle || echo mock)
 EURC_ASSET=$EURC_ASSET
 EURC_CONTRACT=$(read_json contracts eurc)
-ADMIN=$(read_json accounts admin)
-LAB=$(read_json accounts lab)
-INVENTOR=$(read_json accounts inventor)
-FUND=$(read_json accounts fund)
-PHARMA=$(read_json accounts pharma)
-ARBITER=$(read_json accounts arbiter)
+ADMIN=${ADDRESS[admin]}
+LAB=${ADDRESS[lab]}
+INVENTOR=${ADDRESS[inventor]}
+FUND=${ADDRESS[fund]}
+PHARMA=${ADDRESS[pharma]}
+ARBITER=${ADDRESS[arbiter]}
 EOF
-echo "==> deployments/$NETWORK.env rebuilt from deployment.json"
+echo "==> deployments/$NETWORK.env rebuilt"
