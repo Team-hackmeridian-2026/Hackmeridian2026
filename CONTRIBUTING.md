@@ -34,6 +34,19 @@ Then open a pull request on GitHub.
   front-end build and the translation test on every pull request. Wait for a
   green check before asking for review.
 
+## Dependency updates
+
+Dependabot (`.github/dependabot.yml`) opens pull requests on its own:
+
+- **Front-end (npm), every Monday:** one grouped PR for minor and patch
+  updates, and one PR per major update (React, Vite, TypeScript…), which may
+  need code changes. Only versions published at least 14 days earlier.
+- **GitHub Actions, monthly:** one grouped PR.
+
+Merge them like any other PR: green CI, then a quick look at the Vercel
+preview. Contract dependencies (`soroban-sdk`) are upgraded by hand: their
+major versions follow Stellar protocol upgrades and need a redeploy.
+
 ## Commit messages
 
 Short imperative summary, in English, under 72 characters:
