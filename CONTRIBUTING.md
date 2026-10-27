@@ -44,7 +44,8 @@ Dependabot (`.github/dependabot.yml`) opens pull requests on its own:
 - **GitHub Actions, monthly:** one grouped PR.
 
 Merge them like any other PR: green CI, then a quick look at the Vercel
-preview. Contract dependencies (`soroban-sdk`) are upgraded by hand: their
+preview. Use npm 11 locally too (`npm install -g npm@11`): npm 10 writes and
+expects a slightly different `package-lock.json` than Dependabot. Contract dependencies (`soroban-sdk`) are upgraded by hand: their
 major versions follow Stellar protocol upgrades and need a redeploy.
 
 ## Commit messages

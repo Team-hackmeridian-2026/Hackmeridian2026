@@ -53,6 +53,10 @@ jobs:
           node-version: 22
           cache: npm
           cache-dependency-path: frontend/package-lock.json
+      # Dependabot writes package-lock.json with npm 11; the npm 10 bundled with
+      # Node 22 rejects those lockfiles in `npm ci` (optional peer dependencies).
+      - name: Use npm 11
+        run: npm install -g npm@11
       - run: npm ci
       - name: Type check and build
         run: npm run build
