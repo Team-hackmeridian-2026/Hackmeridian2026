@@ -1,9 +1,12 @@
+import { useState } from "react";
 import { Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { escrow, nft, type License, type Project } from "../stellar/contracts";
 import { BurstHeading } from "../components/BurstHeading";
 import { useAsync } from "../lib/useAsync";
-import { ErrorBox, Skeleton, buttonClass } from "../components/ui";
+import { Button, ErrorBox, Skeleton, buttonClass } from "../components/ui";
+import { useToasts } from "../components/toasts";
+import { isNetworkError } from "../lib/errors";
 import { HeroVisual } from "../components/HeroVisual";
 import { FundingProgress, fundingStatus } from "../components/Funding";
 import { Molecule } from "../components/Molecule";
@@ -11,15 +14,20 @@ import { useDocumentTitle } from "../lib/useDocumentTitle";
 
 type Listing = { license: License; project?: Project };
 
-async function loadListings(): Promise<Listing[]> {
-  const licenses = await nft.list(1n, 50);
-  return Promise.all(
+/** Licences per page: the most `list_licenses` returns in one call (MAX_PAGE in ip_license_nft). */
+const PAGE = 50;
+
+/** One page of licences, from id `start`, with the latest funding round of each. */
+async function loadListings(start: number): Promise<{ total: number; listings: Listing[] }> {
+  const [total, licenses] = await Promise.all([nft.total(), nft.list(BigInt(start), PAGE)]);
+  const listings = await Promise.all(
     licenses.map(async (license) => {
       const ids = await escrow.projectsByLicense(license.id);
       const project = ids.length ? await escrow.get(ids[ids.length - 1]) : undefined;
       return { license, project };
     }),
   );
+  return { total: Number(total), listings };
 }
 
 export { fundingStatus };
@@ -125,7 +133,30 @@ const STEPS = [
 export function Marketplace() {
   const { t } = useTranslation();
   useDocumentTitle(t("marketplace.heroTitle"), { brandFirst: true });
-  const { data, error, loading, reload } = useAsync(loadListings, []);
+  const { push } = useToasts();
+  const first = useAsync(() => loadListings(1), []);
+  // Pages after the first one, appended by "Show more". Ids are contiguous from 1.
+  const [more, setMore] = useState<Listing[]>([]);
+  const [pages, setPages] = useState(1);
+  const [loadingMore, setLoadingMore] = useState(false);
+  const { error, loading, reload } = first;
+  const data = first.data && [...first.data.listings, ...more];
+  const total = first.data?.total ?? 0;
+  const remaining = data ? total - data.length : 0;
+
+  async function showMore() {
+    setLoadingMore(true);
+    try {
+      const page = await loadListings(1 + PAGE * pages);
+      setMore((all) => [...all, ...page.listings]);
+      setPages((n) => n + 1);
+    } catch (err) {
+      const raw = err instanceof Error ? err.message : String(err);
+      push({ kind: "error", text: t("common.failed", { message: isNetworkError(raw) ? t("common.networkError") : raw }) });
+    } finally {
+      setLoadingMore(false);
+    }
+  }
 
   return (
     <div className="flex flex-col">
@@ -193,7 +224,7 @@ export function Marketplace() {
         <div className="flex flex-wrap items-end justify-between gap-6">
           <div>
             <BurstHeading className="font-display text-4xl font-extrabold tracking-[-0.03em] sm:text-5xl" text={t("marketplace.title")} />
-            {data && <p className="mt-3 text-muted">{t("marketplace.count", { count: data.length })}</p>}
+            {data && <p className="mt-3 text-muted">{t("marketplace.count", { count: total })}</p>}
           </div>
           <Link to="/new" className={buttonClass({ variant: "secondary" })}>
             {t("marketplace.listPatent")}
@@ -202,6 +233,14 @@ export function Marketplace() {
         <div className="mt-10 flex flex-col gap-4">
           {error && <ErrorBox message={error} onRetry={reload} />}
           {!error && <LicenceTable data={data} loading={loading} />}
+          {!error && remaining > 0 && (
+            <div className="flex flex-wrap items-center justify-center gap-4">
+              <p className="text-sm text-muted">{t("marketplace.shown", { shown: data!.length, total })}</p>
+              <Button variant="secondary" busy={loadingMore} onClick={showMore}>
+                {t("marketplace.showMore")}
+              </Button>
+            </div>
+          )}
         </div>
       </section>
     </div>
