@@ -30,6 +30,9 @@ Then open a pull request on GitHub.
 - Merge with **Squash and merge** so `main` keeps one commit per change.
 - Delete the branch after merging.
 - Contracts: `cd contracts && cargo test` must pass before you ask for review.
+- CI (`.github/workflows/ci.yml`) runs the contract tests, the Wasm build, the
+  front-end build and the translation test on every pull request. Wait for a
+  green check before asking for review.
 
 ## Commit messages
 
