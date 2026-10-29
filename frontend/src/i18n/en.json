@@ -168,6 +168,7 @@
     },
     "errors": {
       "dossier": "Add the scientific dossier: only its fingerprint goes on-chain.",
+      "dataRoom": "The data room link must start with https:// or ipfs://.",
       "inventors": "Check the inventors' addresses.",
       "parties": "Choose an investor and an arbiter.",
       "split": "The royalty split must add up to 100 %.",
@@ -249,6 +250,8 @@
     "connectToAccess": "Connect a wallet to request access.",
     "ndaSigned": "NDA signed on-chain",
     "noDataRoom": "No data room link provided by the university.",
+    "openDataRoom": "Open the data room on {{host}} ↗",
+    "unsafeDataRoom": "This data room link is not opened: only https:// and ipfs:// links are allowed.",
     "signNda": "Sign the NDA on-chain",
     "toastNda": "NDA signed",
     "status": {

@@ -7,7 +7,7 @@ import { DEMO_ENABLED, useWallet } from "../stellar/wallet";
 import { useToasts } from "../components/toasts";
 import { DIRECTORY, PersonPicker, type PersonKind } from "../components/people";
 import { useAsync } from "../lib/useAsync";
-import { formatDate, formatNumber, sha256, toHex } from "../lib/format";
+import { formatDate, formatNumber, safeLink, sha256, toHex } from "../lib/format";
 import { Badge, Button, Card, ErrorBox, Field, Input, Notice, SectionTitle, StatusIcon, TxLink } from "../components/ui";
 import { useDocumentTitle } from "../lib/useDocumentTitle";
 import {
@@ -122,7 +122,7 @@ export function NewLicence() {
   useEffect(() => {
     setErrorField(null);
     setFormError(undefined);
-  }, [hash, inventors, investor, arbiter, universityPct, inventorsPct, investorsPct, milestones]);
+  }, [hash, metadataUri, inventors, investor, arbiter, universityPct, inventorsPct, investorsPct, milestones]);
 
   /** Shows a validation message next to its section and brings that section into view. */
   function fail(key: FieldKey, message: string) {
@@ -166,6 +166,7 @@ export function NewLicence() {
 
     const inventorList = inventors.filter(Boolean);
     if (!hash) return fail("dossier", t("newLicence.errors.dossier"));
+    if (metadataUri.trim() && !safeLink(metadataUri)) return fail("dossier", t("newLicence.errors.dataRoom"));
     if (inventorList.length === 0 || !inventorList.every(isAddress)) return fail("inventors", t("newLicence.errors.inventors"));
     if (!isAddress(investor) || !isAddress(arbiter)) return fail("parties", t("newLicence.errors.parties"));
     // The contract refuses it too (InvalidParties): the arbiter settles disputes between them.
@@ -184,7 +185,7 @@ export function NewLicence() {
           inventors: inventorList,
           terms: { exclusive, territory, field, duration_years: Number(years) },
           dossierHash: hash,
-          metadataUri,
+          metadataUri: metadataUri.trim(),
         }),
       );
       if (!minted) return setStep(0, { state: "error" });

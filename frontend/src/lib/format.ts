@@ -68,3 +68,18 @@ export function formatDuration(seconds: number): string {
   if (m) return `${m} ${u("minute")} ${s} ${u("second")}`;
   return `${s} ${u("second")}`;
 }
+
+/**
+ * Any verified institution writes the data room link, so it is untrusted: only
+ * https: and ipfs: links become clickable, never javascript:, data: or http:.
+ */
+const SAFE_LINK_PROTOCOLS = ["https:", "ipfs:"];
+
+export function safeLink(uri: string): URL | null {
+  try {
+    const url = new URL(uri.trim());
+    return SAFE_LINK_PROTOCOLS.includes(url.protocol) ? url : null;
+  } catch {
+    return null;
+  }
+}
