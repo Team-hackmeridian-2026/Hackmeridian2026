@@ -6,6 +6,7 @@ import { eurcBalance } from "../stellar/contracts";
 import { DEMO_ENABLED, DEMO_ROLES, useWallet, type DemoRole } from "../stellar/wallet";
 import { LANGUAGES } from "../i18n";
 import { useAsync } from "../lib/useAsync";
+import { useSlidingIndicator } from "../lib/useSlidingIndicator";
 import { formatNumber, shortAddress } from "../lib/format";
 import { Button } from "./ui";
 import { Logo } from "./Logo";
@@ -22,8 +23,15 @@ const NAV = [
 
 function LanguageSwitcher() {
   const { t, i18n } = useTranslation();
+  const { containerRef, indicatorProps } = useSlidingIndicator<HTMLDivElement>(i18n.resolvedLanguage);
   return (
-    <div role="group" aria-label={t("language.label")} className="flex items-center gap-0.5 rounded-full border border-line bg-card p-1 text-xs font-semibold shadow-pill">
+    <div
+      ref={containerRef}
+      role="group"
+      aria-label={t("language.label")}
+      className="relative flex items-center gap-0.5 rounded-full border border-line bg-card p-1 text-xs font-semibold shadow-pill"
+    >
+      <span {...indicatorProps} className={`${indicatorProps.className} rounded-full bg-ink`} />
       {LANGUAGES.map((lang) => {
         const active = i18n.resolvedLanguage === lang.code;
         return (
@@ -34,7 +42,7 @@ function LanguageSwitcher() {
             title={lang.name}
             aria-pressed={active}
             onClick={() => i18n.changeLanguage(lang.code)}
-            className={`flex size-8 items-center justify-center rounded-full transition duration-200 ${active ? "bg-ink text-canvas" : "text-muted hover:text-ink"}`}
+            className={`relative flex size-8 items-center justify-center rounded-full transition duration-200 ${active ? "text-canvas" : "text-muted hover:text-ink"}`}
           >
             {lang.label}
           </button>
@@ -161,9 +169,29 @@ function useIsDesktop(): boolean {
 }
 
 const linkClass = (stacked: boolean) => ({ isActive }: { isActive: boolean }) =>
-  `rounded-full px-4 py-1.5 text-sm font-medium whitespace-nowrap transition duration-200 ${stacked ? "block py-2.5 text-base" : ""} ${
-    isActive ? "bg-card text-ink shadow-pill ring-1 ring-inset ring-line" : "text-muted hover:text-ink"
+  `relative rounded-full px-4 py-1.5 text-sm font-medium whitespace-nowrap transition duration-200 ${stacked ? "block py-2.5 text-base" : ""} ${
+    isActive ? "text-ink" : "text-muted hover:text-ink"
   }`;
+
+function MainNav({ items, stacked }: { items: readonly (typeof NAV)[number][]; stacked: boolean }) {
+  const { t } = useTranslation();
+  const { pathname } = useLocation();
+  const { containerRef, indicatorProps } = useSlidingIndicator<HTMLElement>(`${pathname}|${items.map((item) => item.to).join()}`);
+  return (
+    <nav
+      ref={containerRef}
+      aria-label={t("nav.main")}
+      className={`relative flex gap-1 bg-subtle ${stacked ? "flex-col rounded-3xl p-1.5" : "justify-self-center rounded-full p-1"}`}
+    >
+      <span {...indicatorProps} className={`${indicatorProps.className} rounded-full bg-card shadow-pill ring-1 ring-line ring-inset`} />
+      {items.map((item) => (
+        <NavLink key={item.to} to={item.to} end className={linkClass(stacked)}>
+          {t(item.key)}
+        </NavLink>
+      ))}
+    </nav>
+  );
+}
 
 export function Layout() {
   const { t } = useTranslation();
@@ -210,12 +238,6 @@ export function Layout() {
   // Admin tools only show up for the platform admin wallet; /admin stays reachable by URL.
   const isAdmin = signer?.address === ACCOUNTS.admin;
   const nav = NAV.filter((item) => item.to !== "/admin" || isAdmin);
-  const links = (stacked: boolean) =>
-    nav.map((item) => (
-      <NavLink key={item.to} to={item.to} end className={linkClass(stacked)}>
-        {t(item.key)}
-      </NavLink>
-    ));
 
   return (
     <div className="flex min-h-screen flex-col overflow-x-clip">
@@ -228,11 +250,7 @@ export function Layout() {
                 <Logo wordmarkClassName="max-[359px]:hidden" />
               </NavLink>
             </div>
-            {desktop && (
-              <nav aria-label={t("nav.main")} className="flex gap-1 justify-self-center rounded-full bg-subtle p-1">
-                {links(false)}
-              </nav>
-            )}
+            {desktop && <MainNav items={nav} stacked={false} />}
             {desktop ? (
               <div className="flex items-center justify-end gap-2">
                 <LanguageSwitcher />
@@ -263,9 +281,7 @@ export function Layout() {
           </div>
           {!desktop && menuOpen && (
             <div id="mobile-menu" className="flex flex-col gap-4 border-t border-line py-4">
-              <nav aria-label={t("nav.main")} className="flex flex-col gap-1 rounded-3xl bg-subtle p-1.5">
-                {links(true)}
-              </nav>
+              <MainNav items={nav} stacked />
               <div className="flex items-center gap-2">
                 <LanguageSwitcher />
                 <ThemeToggle />
