@@ -446,7 +446,8 @@
       "5": "Amount must be positive.",
       "6": "Not enough shares.",
       "7": "No share issuer configured.",
-      "8": "Nothing to claim yet."
+      "8": "Nothing to claim yet.",
+      "9": "The share issuer is already set and cannot be changed."
     },
     "escrow": {
       "1": "Invalid milestones.",

@@ -307,8 +307,30 @@ fn admin_functions_are_signed_by_the_admin() {
     assert_eq!(signers(&s.env), [s.admin.clone()]);
     s.splitter.clawback(&s.license_id, &a, &1);
     assert_eq!(signers(&s.env), [s.admin.clone()]);
-    s.splitter.set_minter(&s.minter);
+}
+
+#[test]
+fn minter_is_set_once_by_the_admin() {
+    let s = setup(0);
+    let id = s.env.register(
+        RoyaltySplitter,
+        (
+            s.admin.clone(),
+            s.token.address.clone(),
+            Address::generate(&s.env),
+            s.treasury.clone(),
+            0u32,
+        ),
+    );
+    let fresh = RoyaltySplitterClient::new(&s.env, &id);
+    fresh.set_minter(&s.minter);
     assert_eq!(signers(&s.env), [s.admin.clone()]);
+
+    // Even the admin cannot take over share issuance afterwards.
+    assert_eq!(
+        fresh.try_set_minter(&s.admin),
+        Err(Ok(Error::MinterAlreadySet.into()))
+    );
 }
 
 #[test]
@@ -332,7 +354,7 @@ fn only_the_admin_manages_kyc_and_clawback() {
     s.splitter.clawback(&s.license_id, &a, &10);
     assert_eq!(s.splitter.shares_of(&s.license_id, &a), 0);
 
-    // The minter can only be changed by the admin: it decides who can create shares.
+    // Only the admin sets the minter: it decides who can create shares.
     let args: soroban_sdk::Vec<Val> = (stranger.clone(),).into_val(&s.env);
     sign_as(&s, &s.minter, "set_minter", args);
     assert!(s.splitter.try_set_minter(&stranger).is_err());
