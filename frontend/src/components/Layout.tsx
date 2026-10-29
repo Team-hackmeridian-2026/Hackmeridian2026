@@ -126,6 +126,9 @@ function TrustlineHint() {
   );
 }
 
+const iconClass = "col-start-1 row-start-1 size-4.5 transition-[rotate,scale,opacity] duration-500 ease-[cubic-bezier(0.34,1.56,0.64,1)]";
+const iconShown = "rotate-0 scale-100 opacity-100";
+
 function ThemeToggle() {
   const { t } = useTranslation();
   const [theme] = useTheme();
@@ -137,20 +140,35 @@ function ThemeToggle() {
       onClick={(e) => switchTheme(next, e.currentTarget)}
       aria-label={label}
       title={label}
-      className="flex size-10 items-center justify-center rounded-full border border-line bg-card text-ink shadow-pill transition duration-200 hover:border-ink/25"
+      className="theme-toggle grid size-10 place-items-center rounded-full border border-line bg-card text-ink shadow-pill transition duration-200 hover:border-ink/25"
     >
-      {theme === "dark" ? (
-        // Sun: switch to light.
-        <svg viewBox="0 0 24 24" className="size-4.5" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden>
-          <circle cx="12" cy="12" r="4" />
-          <path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4" />
-        </svg>
-      ) : (
-        // Moon: switch to dark.
-        <svg viewBox="0 0 24 24" className="size-4.5" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
-          <path d="M20 14.5A8 8 0 0 1 9.5 4 8 8 0 1 0 20 14.5z" />
-        </svg>
-      )}
+      {/* Both icons stay mounted and stacked so one can spin out while the other spins in. */}
+      {/* Sun: switch to light. */}
+      <svg
+        viewBox="0 0 24 24"
+        className={`${iconClass} ${theme === "dark" ? iconShown : "-rotate-90 scale-0 opacity-0"}`}
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeLinecap="round"
+        aria-hidden
+      >
+        <circle cx="12" cy="12" r="4" />
+        <path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4" />
+      </svg>
+      {/* Moon: switch to dark. */}
+      <svg
+        viewBox="0 0 24 24"
+        className={`${iconClass} ${theme === "light" ? iconShown : "rotate-90 scale-0 opacity-0"}`}
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        aria-hidden
+      >
+        <path d="M20 14.5A8 8 0 0 1 9.5 4 8 8 0 1 0 20 14.5z" />
+      </svg>
     </button>
   );
 }

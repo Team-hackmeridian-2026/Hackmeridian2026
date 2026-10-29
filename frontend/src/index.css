@@ -154,6 +154,21 @@ body {
 :root.theme-transition::view-transition-old(root) {
   z-index: 1;
 }
+/* The circle closes onto the toggle, so the toggle would be revealed last and its icon
+   animation hidden. Lift it into its own layer above the snapshots and show it live. */
+:root.theme-transition .theme-toggle {
+  view-transition-name: theme-toggle;
+}
+:root.theme-transition::view-transition-group(theme-toggle) {
+  z-index: 2;
+  animation: none;
+}
+:root.theme-transition::view-transition-old(theme-toggle) {
+  display: none;
+}
+:root.theme-transition::view-transition-new(theme-toggle) {
+  animation: none;
+}
 
 @media (prefers-reduced-motion: reduce) {
   html {
