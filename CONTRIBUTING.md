@@ -45,7 +45,7 @@ Ask Antoine before changing these, and say so in the pull request:
 
 Contract redeploys go through the **Deploy contracts (testnet)** GitHub
 workflow, and every run waits for Antoine's approval (see the README).
-Testnet runs the contracts of release `2.0.1`; when `main`'s contracts move
+Testnet runs the contracts of release `3.0.0`; when `main`'s contracts move
 ahead of it, the front-end must keep working with both until the next
 redeploy.
 

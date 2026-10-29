@@ -46,7 +46,7 @@ Read when needed (too long to import): `OVERVIEW.md` (architecture and data mode
 
 ## Do not
 - Hand-edit `deployment.json`.
-- Assume `main`'s contracts are deployed: testnet runs the contracts of release `2.0.1` (soroban-sdk 29), redeployed on 2026-10-29. Contract changes merged after that wait for the next redeploy, so new contract functions must degrade gracefully in the front-end.
+- Assume `main`'s contracts are deployed: testnet runs the contracts of release `3.0.0` (soroban-sdk 29), redeployed on 2026-10-29. Contract changes merged after that wait for the next redeploy, so new contract functions must degrade gracefully in the front-end.
 - Add an instance `extend_ttl` in `ip_license_nft`; it cost ~1,059 XLM of rent per licence.
 - Bump `soroban-sdk` casually: it means a redeploy.
 - Add a dependency with `^`/`~`. Pin exact versions published at least 14 days ago.

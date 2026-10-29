@@ -104,19 +104,22 @@ flowchart TB
 
 | Contract | ID |
 | --- | --- |
-| `ip_license_nft` | [`CD3GFB2IBH5JQDEG3TJXB574QTN5S5HP2DEC7KJKFBHNOW6PTFEYQCUN`](https://stellar.expert/explorer/testnet/contract/CD3GFB2IBH5JQDEG3TJXB574QTN5S5HP2DEC7KJKFBHNOW6PTFEYQCUN) |
-| `milestone_escrow` | [`CCXQCCV73ORL6CUIFVWKHX3FPM2TVE7HLDKOY2WTELVWQ44HCFJEG6B6`](https://stellar.expert/explorer/testnet/contract/CCXQCCV73ORL6CUIFVWKHX3FPM2TVE7HLDKOY2WTELVWQ44HCFJEG6B6) |
-| `royalty_splitter` | [`CB3MEDXBSYROJBXLW2B5CQRMB3F5FP4SAL7YEEWHKI3NF7R7HN34URIR`](https://stellar.expert/explorer/testnet/contract/CB3MEDXBSYROJBXLW2B5CQRMB3F5FP4SAL7YEEWHKI3NF7R7HN34URIR) |
+| `ip_license_nft` | [`CDPJW7XKFRNMQ7LHSMOBFZQRVZ7DVISTMGUGH5HCAJSUSR6GCZZBYOZN`](https://stellar.expert/explorer/testnet/contract/CDPJW7XKFRNMQ7LHSMOBFZQRVZ7DVISTMGUGH5HCAJSUSR6GCZZBYOZN) |
+| `milestone_escrow` | [`CBANTOEQPYKJIFFDJHUQ2DKYUV4J7RY5YZSBRETO6KP7PNBR5J5TS2J6`](https://stellar.expert/explorer/testnet/contract/CBANTOEQPYKJIFFDJHUQ2DKYUV4J7RY5YZSBRETO6KP7PNBR5J5TS2J6) |
+| `royalty_splitter` | [`CBHYTMQBZMYYS2RXFJNE5LWNARGQKRNQ2YGI2YJ6EJRNHBLSVLJNT5S3`](https://stellar.expert/explorer/testnet/contract/CBHYTMQBZMYYS2RXFJNE5LWNARGQKRNQ2YGI2YJ6EJRNHBLSVLJNT5S3) |
 | Circle EURC (SAC) | [`CCUUDM434BMZMYWYDITHFXHDMIVTGGD6T2I5UKNX5BSLXLW7HVR4MCGZ`](https://stellar.expert/explorer/testnet/contract/CCUUDM434BMZMYWYDITHFXHDMIVTGGD6T2I5UKNX5BSLXLW7HVR4MCGZ) |
 
 The front-end reads these IDs from `frontend/src/deployment.json`.
 
 > **Source and deployment.** These contracts match the contract source of
-> release [`2.0.1`](https://github.com/Team-hackmeridian-2026/Hackmeridian2026/releases/tag/2.0.1)
-> (`soroban-sdk` 29), with the round deadline, `reclaim` and the stricter
-> arbiter and window checks ([#46](https://github.com/Team-hackmeridian-2026/Hackmeridian2026/pull/46)).
-> They were redeployed on 2026-10-29 with new demo accounts, so licences
-> created on the previous contracts no longer appear in the app.
+> release [`3.0.0`](https://github.com/Team-hackmeridian-2026/Hackmeridian2026/releases/tag/3.0.0)
+> (`soroban-sdk` 29): shares minted when a milestone pays the lab
+> ([#67](https://github.com/Team-hackmeridian-2026/Hackmeridian2026/pull/67)) and a one-time
+> share minter ([#68](https://github.com/Team-hackmeridian-2026/Hackmeridian2026/pull/68)), on top of
+> the round deadline, `reclaim` and the arbiter checks of 2.0
+> ([#46](https://github.com/Team-hackmeridian-2026/Hackmeridian2026/pull/46)).
+> They were redeployed on 2026-10-29, so licences created on the previous
+> contracts no longer appear in the app.
 
 ### On-chain evidence (testnet)
 
