@@ -12,7 +12,7 @@ import { Button } from "./ui";
 import { Logo } from "./Logo";
 import { PageHelix } from "./PageHelix";
 import { TX_CONFIRMED_EVENT } from "./toasts";
-import { useTheme } from "../lib/theme";
+import { switchTheme, useTheme } from "../lib/theme";
 
 const NAV = [
   { to: "/", key: "nav.marketplace" },
@@ -128,13 +128,13 @@ function TrustlineHint() {
 
 function ThemeToggle() {
   const { t } = useTranslation();
-  const [theme, setTheme] = useTheme();
+  const [theme] = useTheme();
   const next = theme === "dark" ? "light" : "dark";
   const label = t(next === "light" ? "theme.toLight" : "theme.toDark");
   return (
     <button
       type="button"
-      onClick={() => setTheme(next)}
+      onClick={(e) => switchTheme(next, e.currentTarget)}
       aria-label={label}
       title={label}
       className="flex size-10 items-center justify-center rounded-full border border-line bg-card text-ink shadow-pill transition duration-200 hover:border-ink/25"

@@ -145,6 +145,16 @@ body {
   }
 }
 
+/* Theme switch (lib/theme.ts): the old theme sits on top and its clip-path closes onto the toggle. */
+:root.theme-transition::view-transition-old(root),
+:root.theme-transition::view-transition-new(root) {
+  animation: none;
+  mix-blend-mode: normal;
+}
+:root.theme-transition::view-transition-old(root) {
+  z-index: 1;
+}
+
 @media (prefers-reduced-motion: reduce) {
   html {
     scroll-behavior: auto;
