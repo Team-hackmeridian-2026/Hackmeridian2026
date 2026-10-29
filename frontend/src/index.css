@@ -154,6 +154,35 @@ body {
 :root.theme-transition::view-transition-old(root) {
   z-index: 1;
 }
+/* The circle closes onto the toggle, so the toggle would be revealed last and its icon
+   animation hidden. Only the icon is lifted above the snapshots; the button itself
+   follows the circle like the rest of the page. The old icon (old colours) spins out
+   on its snapshot, and the live outgoing icon is hidden so it doesn't show in the new
+   colour on the old background. */
+:root.theme-transition .theme-toggle-icon {
+  view-transition-name: theme-toggle-icon;
+}
+:root.theme-transition .theme-toggle-icon .icon-off {
+  opacity: 0;
+  transition: none;
+}
+:root.theme-transition::view-transition-group(theme-toggle-icon) {
+  z-index: 2;
+  animation: none;
+}
+:root.theme-transition::view-transition-old(theme-toggle-icon) {
+  animation: theme-icon-out 200ms ease-in forwards;
+}
+:root.theme-transition::view-transition-new(theme-toggle-icon) {
+  animation: none;
+}
+@keyframes theme-icon-out {
+  to {
+    rotate: 90deg;
+    scale: 0;
+    opacity: 0;
+  }
+}
 
 @media (prefers-reduced-motion: reduce) {
   html {
