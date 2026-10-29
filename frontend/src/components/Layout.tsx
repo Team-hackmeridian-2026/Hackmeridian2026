@@ -126,8 +126,10 @@ function TrustlineHint() {
   );
 }
 
-const iconClass = "col-start-1 row-start-1 size-4.5 transition-[rotate,scale,opacity] duration-500 ease-[cubic-bezier(0.34,1.56,0.64,1)]";
-const iconShown = "rotate-0 scale-100 opacity-100";
+const iconClass = "col-start-1 row-start-1 size-4.5 transition-[rotate,scale,opacity]";
+// The incoming icon waits for the outgoing one, and lands just as the theme circle reaches the toggle.
+const iconShown = "rotate-0 scale-100 opacity-100 delay-150 duration-300 ease-[cubic-bezier(0.34,1.56,0.64,1)]";
+const iconHidden = "icon-off scale-0 opacity-0 duration-200 ease-in";
 
 function ThemeToggle() {
   const { t } = useTranslation();
@@ -140,13 +142,14 @@ function ThemeToggle() {
       onClick={(e) => switchTheme(next, e.currentTarget)}
       aria-label={label}
       title={label}
-      className="theme-toggle grid size-10 place-items-center rounded-full border border-line bg-card text-ink shadow-pill transition duration-200 hover:border-ink/25"
+      className="grid size-10 place-items-center rounded-full border border-line bg-card text-ink shadow-pill transition duration-200 hover:border-ink/25"
     >
       {/* Both icons stay mounted and stacked so one can spin out while the other spins in. */}
+      <span className="theme-toggle-icon grid place-items-center">
       {/* Sun: switch to light. */}
       <svg
         viewBox="0 0 24 24"
-        className={`${iconClass} ${theme === "dark" ? iconShown : "-rotate-90 scale-0 opacity-0"}`}
+        className={`${iconClass} ${theme === "dark" ? iconShown : `-rotate-90 ${iconHidden}`}`}
         fill="none"
         stroke="currentColor"
         strokeWidth="2"
@@ -159,7 +162,7 @@ function ThemeToggle() {
       {/* Moon: switch to dark. */}
       <svg
         viewBox="0 0 24 24"
-        className={`${iconClass} ${theme === "light" ? iconShown : "rotate-90 scale-0 opacity-0"}`}
+        className={`${iconClass} ${theme === "light" ? iconShown : `rotate-90 ${iconHidden}`}`}
         fill="none"
         stroke="currentColor"
         strokeWidth="2"
@@ -169,6 +172,7 @@ function ThemeToggle() {
       >
         <path d="M20 14.5A8 8 0 0 1 9.5 4 8 8 0 1 0 20 14.5z" />
       </svg>
+      </span>
     </button>
   );
 }
