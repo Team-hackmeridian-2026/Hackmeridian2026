@@ -111,14 +111,12 @@ flowchart TB
 
 The front-end reads these IDs from `frontend/src/deployment.json`.
 
-> **Source ahead of the deployment.** These contracts match the contract source
-> of release [`1.0.1`](https://github.com/Team-hackmeridian-2026/Hackmeridian2026/releases/tag/1.0.1)
-> (`soroban-sdk` 28). The round deadline, `reclaim` and the stricter arbiter and
-> window checks ([#46](https://github.com/Team-hackmeridian-2026/Hackmeridian2026/pull/46)),
-> and `soroban-sdk` 29 ([#49](https://github.com/Team-hackmeridian-2026/Hackmeridian2026/pull/49)),
-> are on `main` but not deployed yet: they ship with the next redeploy
-> (`scripts/deploy.sh`). The front-end works with both: the deadline and refund
-> features appear once the new contracts are deployed.
+> **Source and deployment.** These contracts match the contract source of
+> release [`2.0.1`](https://github.com/Team-hackmeridian-2026/Hackmeridian2026/releases/tag/2.0.1)
+> (`soroban-sdk` 29), with the round deadline, `reclaim` and the stricter
+> arbiter and window checks ([#46](https://github.com/Team-hackmeridian-2026/Hackmeridian2026/pull/46)).
+> They were redeployed on 2026-10-29 with new demo accounts, so licences
+> created on the previous contracts no longer appear in the app.
 
 ### On-chain evidence (testnet)
 
