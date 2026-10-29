@@ -168,6 +168,7 @@
     },
     "errors": {
       "dossier": "Adicione o dossiê científico: apenas a sua impressão digital vai on-chain.",
+      "dataRoom": "O link da data room deve começar com https:// ou ipfs://.",
       "inventors": "Verifique os endereços dos inventores.",
       "parties": "Escolha um investidor e um árbitro.",
       "split": "A repartição dos royalties tem de somar 100 %.",
@@ -249,6 +250,8 @@
     "connectToAccess": "Ligue uma carteira para pedir acesso.",
     "ndaSigned": "Acordo de confidencialidade assinado on-chain",
     "noDataRoom": "A universidade não forneceu link para a data room.",
+    "openDataRoom": "Abrir a data room em {{host}} ↗",
+    "unsafeDataRoom": "Este link da data room não é aberto: só são aceites links https:// e ipfs://.",
     "signNda": "Assinar o acordo de confidencialidade on-chain",
     "toastNda": "Acordo de confidencialidade assinado",
     "status": {

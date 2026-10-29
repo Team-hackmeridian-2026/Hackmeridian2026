@@ -16,7 +16,7 @@ import { useWallet, type Signer } from "../stellar/wallet";
 import { useToasts } from "../components/toasts";
 import { BurstHeading } from "../components/BurstHeading";
 import { useAsync } from "../lib/useAsync";
-import { eurc, formatDate, formatDuration, sha256, shortAddress, toHex } from "../lib/format";
+import { eurc, formatDate, formatDuration, safeLink, sha256, shortAddress, toHex } from "../lib/format";
 import { Address, Badge, Button, Card, ErrorBox, Input, Spinner, StatusIcon, buttonClass, type BadgeTone } from "../components/ui";
 import { FundingProgress } from "../components/Funding";
 import { FinishSetup } from "../components/FinishSetup";
@@ -91,6 +91,7 @@ function DataRoom({ license, signer }: { license: License; signer: Signer | null
     [license.id, signer?.address],
   );
   const [busy, setBusy] = useState(false);
+  const link = safeLink(license.metadata_uri);
 
   return (
     <Section id="dataroom" title={t("licence.dataRoom")} className="gap-3">
@@ -100,10 +101,18 @@ function DataRoom({ license, signer }: { license: License; signer: Signer | null
       ) : signed.data ? (
         <div className="flex flex-col gap-1 text-sm">
           <Badge tone="success" icon={<StatusIcon kind="done" />}>{t("licence.ndaSigned")}</Badge>
-          {license.metadata_uri ? (
-            <a href={license.metadata_uri} className="break-all text-brand-ink hover:underline">
-              {license.metadata_uri}
-            </a>
+          {link ? (
+            <>
+              <a href={link.href} target="_blank" rel="noopener noreferrer" className="break-all font-semibold text-brand-ink hover:underline">
+                {t("licence.openDataRoom", { host: link.host || link.href })}
+              </a>
+              <p className="break-all font-mono text-xs text-muted">{link.href}</p>
+            </>
+          ) : license.metadata_uri ? (
+            <>
+              <p className="text-danger">{t("licence.unsafeDataRoom")}</p>
+              <p className="break-all font-mono text-xs text-muted">{license.metadata_uri}</p>
+            </>
           ) : (
             <p className="text-muted">{t("licence.noDataRoom")}</p>
           )}
