@@ -152,7 +152,8 @@ fn demo_scenario_end_to_end() {
 
     s.escrow.fund(&pid);
     assert_eq!(s.token.balance(&s.escrow.address), 30_000);
-    assert_eq!(s.splitter.shares_of(&s.license_id, &s.investor), 30_000);
+    // No shares until the lab is paid.
+    assert_eq!(s.splitter.shares_of(&s.license_id, &s.investor), 0);
 
     s.escrow.submit_milestone(&pid, &0, &proof(&s, 9));
     assert_eq!(
@@ -163,6 +164,7 @@ fn demo_scenario_end_to_end() {
     s.escrow.release(&pid, &0);
     assert_eq!(s.token.balance(&s.lab), 10_000);
     assert_eq!(status(&s, pid, 0), MilestoneStatus::Released);
+    assert_eq!(s.splitter.shares_of(&s.license_id, &s.investor), 10_000);
 
     let pharma = Address::generate(&s.env);
     s.token_admin.mint(&pharma, &5_000);
@@ -241,8 +243,8 @@ fn arbiter_splits_a_milestone_after_a_good_faith_failure() {
     assert_eq!(s.token.balance(&s.lab), 6_000);
     assert_eq!(s.token.balance(&s.investor), 1_000_000 - 30_000 + 4_000);
     assert_eq!(s.token.balance(&s.escrow.address), 20_000);
-    // Shares follow the money actually committed.
-    assert_eq!(s.splitter.shares_of(&s.license_id, &s.investor), 26_000);
+    // Shares follow the money actually paid to the lab.
+    assert_eq!(s.splitter.shares_of(&s.license_id, &s.investor), 6_000);
 
     // A split milestone is settled: the next one can be submitted.
     s.escrow.submit_milestone(&pid, &1, &proof(&s, 3));
@@ -270,7 +272,7 @@ fn split_extremes_match_approve_and_refund() {
     s.escrow.dispute(&pid, &1, &proof(&s, 4));
     s.escrow.resolve_partial(&pid, &1, &0);
     assert_eq!(status(&s, pid, 1), MilestoneStatus::Refunded);
-    assert_eq!(s.splitter.shares_of(&s.license_id, &s.investor), 20_000);
+    assert_eq!(s.splitter.shares_of(&s.license_id, &s.investor), 10_000);
 }
 
 #[test]
@@ -292,7 +294,7 @@ fn split_rejects_invalid_shares_and_undisputed_milestones() {
 }
 
 #[test]
-fn dispute_then_arbiter_refunds_and_burns_shares() {
+fn dispute_then_arbiter_refunds_without_minting_shares() {
     let s = setup(0);
     let pid = create(&s);
     s.escrow.fund(&pid);
@@ -302,7 +304,7 @@ fn dispute_then_arbiter_refunds_and_burns_shares() {
 
     assert_eq!(status(&s, pid, 0), MilestoneStatus::Refunded);
     assert_eq!(s.token.balance(&s.investor), 1_000_000 - 20_000);
-    assert_eq!(s.splitter.shares_of(&s.license_id, &s.investor), 20_000);
+    assert_eq!(s.splitter.shares_of(&s.license_id, &s.investor), 0);
 
     // The next milestone can be submitted after a refund.
     s.escrow.submit_milestone(&pid, &1, &proof(&s, 3));
@@ -370,10 +372,11 @@ fn investor_reclaims_unsubmitted_milestones_after_the_deadline() {
     assert_eq!(status(&s, pid, 1), MilestoneStatus::Submitted);
     assert_eq!(status(&s, pid, 2), MilestoneStatus::Refunded);
     assert_eq!(s.token.balance(&s.investor), 1_000_000 - 20_000);
-    assert_eq!(s.splitter.shares_of(&s.license_id, &s.investor), 20_000);
+    assert_eq!(s.splitter.shares_of(&s.license_id, &s.investor), 10_000);
 
     s.escrow.release(&pid, &1);
     assert_eq!(s.token.balance(&s.lab), 20_000);
+    assert_eq!(s.splitter.shares_of(&s.license_id, &s.investor), 20_000);
     assert_eq!(s.token.balance(&s.escrow.address), 0);
     assert_eq!(s.escrow.try_reclaim(&pid), Err(Ok(Error::NothingToReclaim.into())));
 }
@@ -421,20 +424,57 @@ fn cancel_refunds_pending_milestones() {
     assert_eq!(s.splitter.shares_of(&s.license_id, &s.investor), 10_000);
 }
 
+/// Shares minted at funding could be sold before a full refund, leaving
+/// shares that earn royalties with no money behind them.
 #[test]
-fn refund_does_not_block_when_shares_were_sold() {
+fn shares_cannot_be_sold_before_the_lab_is_paid() {
     let s = setup(0);
     let pid = create(&s);
     s.escrow.fund(&pid);
     let buyer = Address::generate(&s.env);
     s.splitter.set_allowed(&buyer, &true);
-    s.splitter
-        .transfer_shares(&s.license_id, &s.investor, &buyer, &25_000);
+    assert!(s
+        .splitter
+        .try_transfer_shares(&s.license_id, &s.investor, &buyer, &25_000)
+        .is_err());
 
     s.escrow.cancel(&pid);
-    assert_eq!(s.splitter.shares_of(&s.license_id, &s.investor), 0);
-    assert_eq!(s.splitter.shares_of(&s.license_id, &buyer), 25_000);
+    assert_eq!(s.token.balance(&s.investor), 1_000_000);
+    assert_eq!(s.splitter.total_shares(&s.license_id), 0);
+}
+
+#[test]
+fn shares_sold_after_a_release_stay_backed_after_a_refund() {
+    let s = setup(0);
+    let pid = create(&s);
+    s.escrow.fund(&pid);
+    s.escrow.submit_milestone(&pid, &0, &proof(&s, 1));
+    advance(&s, WINDOW);
+    s.escrow.release(&pid, &0);
+    let buyer = Address::generate(&s.env);
+    s.splitter.set_allowed(&buyer, &true);
+    s.splitter
+        .transfer_shares(&s.license_id, &s.investor, &buyer, &10_000);
+
+    s.escrow.cancel(&pid);
     assert_eq!(s.token.balance(&s.escrow.address), 0);
+    assert_eq!(s.token.balance(&s.investor), 1_000_000 - 10_000);
+    // Every share in circulation matches EURC the lab received.
+    assert_eq!(s.splitter.total_shares(&s.license_id), 10_000);
+    assert_eq!(s.splitter.shares_of(&s.license_id, &buyer), 10_000);
+}
+
+#[test]
+fn delisted_investor_does_not_block_the_lab_payment() {
+    let s = setup(0);
+    let pid = create(&s);
+    s.escrow.fund(&pid);
+    s.escrow.submit_milestone(&pid, &0, &proof(&s, 1));
+    s.splitter.set_allowed(&s.investor, &false);
+    advance(&s, WINDOW);
+    s.escrow.release(&pid, &0);
+    assert_eq!(s.token.balance(&s.lab), 10_000);
+    assert_eq!(s.splitter.total_shares(&s.license_id), 0);
 }
 
 #[test]
@@ -496,7 +536,10 @@ fn unverified_investor_cannot_fund() {
         &WINDOW,
         &DEADLINE,
     );
-    assert!(s.escrow.try_fund(&pid).is_err());
+    assert_eq!(
+        s.escrow.try_fund(&pid),
+        Err(Ok(Error::InvestorNotAllowed.into()))
+    );
     assert_eq!(s.token.balance(&stranger), 30_000);
 }
 

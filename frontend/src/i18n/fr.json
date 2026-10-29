@@ -287,7 +287,7 @@
     "lab": "Labo",
     "investor": "Investisseur",
     "arbiter": "Arbitre",
-    "fund": "Financer {{amount}} : bloquer dans l'escrow et recevoir des parts",
+    "fund": "Financer {{amount}} : bloquer dans l'escrow contre des parts de revenus",
     "waitingInvestor": "En attente du blocage des fonds par l'investisseur {{address}}.",
     "royalties": "Redevances",
     "university": "Université",
@@ -465,7 +465,8 @@
       "14": "Le délai de contestation doit être compris entre 1 minute et 30 jours.",
       "15": "L'échéance doit être dans le futur.",
       "16": "La durée de la recherche est écoulée : plus aucun jalon ne peut être soumis.",
-      "17": "Rien à rembourser pour l'instant."
+      "17": "Rien à rembourser pour l'instant.",
+      "18": "L'investisseur n'est pas encore sur la liste KYC."
     },
     "contract": "Erreur du contrat n° {{code}}",
     "balance": "Pas assez d'EURC sur ce compte.",

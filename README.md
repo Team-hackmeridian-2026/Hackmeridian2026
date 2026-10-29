@@ -46,8 +46,8 @@ little of how their money is used.
    the challenge window, anyone can release the funds; a dispute goes to an
    arbiter named upfront (optimistic validation). Research can fail without
    anyone being at fault, so the arbiter can also **split** a milestone: pay
-   the lab for the work done and refund the rest, with the investor's shares
-   reduced accordingly.
+   the lab for the work done and refund the rest. The investor receives
+   revenue shares only for money actually paid to the lab.
 4. **An industrial licensee pays royalties in EURC**, split in one transaction
    between the university, its inventors and the investors (pro rata).
 5. **The lab cashes out to its bank account** through a Stellar anchor
