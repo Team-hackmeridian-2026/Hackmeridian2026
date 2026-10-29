@@ -45,11 +45,14 @@ export function switchTheme(theme: Theme, origin: HTMLElement) {
     .then(() =>
       root.animate(
         { clipPath: [`circle(${radius}px at ${x}px ${y}px)`, `circle(0px at ${x}px ${y}px)`] },
-        { duration: 650, easing: "cubic-bezier(0.65, 0, 0.35, 1)", pseudoElement: "::view-transition-old(root)" },
-      ).finished,
+        // fill: the old snapshot must stay fully clipped until the pseudo-elements are torn down.
+        { duration: 400, easing: "cubic-bezier(0.4, 0, 0.2, 1)", fill: "forwards", pseudoElement: "::view-transition-old(root)" },
+      ),
     )
-    .catch(() => {})
-    .finally(() => root.classList.remove("theme-transition"));
+    .catch(() => {});
+  // Wait for the whole transition: dropping the class earlier brings back the browser's
+  // default cross-fade for a frame, which flashes the old theme.
+  transition.finished.finally(() => root.classList.remove("theme-transition"));
 }
 
 function subscribe(notify: () => void) {
