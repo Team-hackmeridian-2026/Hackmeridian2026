@@ -446,7 +446,8 @@
       "5": "Le montant doit être positif.",
       "6": "Parts insuffisantes.",
       "7": "Aucun émetteur de parts configuré.",
-      "8": "Rien à retirer pour l'instant."
+      "8": "Rien à retirer pour l'instant.",
+      "9": "L'émetteur de parts est déjà défini et ne peut plus changer."
     },
     "escrow": {
       "1": "Jalons invalides.",

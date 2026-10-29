@@ -446,7 +446,8 @@
       "5": "O montante tem de ser positivo.",
       "6": "Participações insuficientes.",
       "7": "Nenhum emissor de participações configurado.",
-      "8": "Ainda não há nada para levantar."
+      "8": "Ainda não há nada para levantar.",
+      "9": "O emissor de participações já está definido e não pode ser alterado."
     },
     "escrow": {
       "1": "Marcos inválidos.",

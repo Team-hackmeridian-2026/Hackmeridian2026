@@ -74,6 +74,8 @@ pub enum Error {
     InsufficientShares = 6,
     NoMinter = 7,
     NothingToClaim = 8,
+    /// The minter is fixed once set (see `set_minter`).
+    MinterAlreadySet = 9,
 }
 
 #[contractevent]
@@ -169,9 +171,15 @@ impl RoyaltySplitter {
         env.storage().instance().get(&DataKey::Token).unwrap()
     }
 
-    /// The authorised share minter: the escrow contract.
+    /// The authorised share minter: the escrow contract. Set once, right after
+    /// the escrow is deployed: if the admin could change it, the admin key could
+    /// make itself minter and issue shares that capture every licence's
+    /// investor royalties.
     pub fn set_minter(env: Env, minter: Address) {
         Self::admin(env.clone()).require_auth();
+        if env.storage().instance().has(&DataKey::Minter) {
+            panic_with_error!(&env, Error::MinterAlreadySet);
+        }
         env.storage().instance().set(&DataKey::Minter, &minter);
     }
 
