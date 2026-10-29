@@ -114,7 +114,7 @@ flowchart TB
     subgraph SPLc["royalty_splitter"]
         S1["set_minter · set_allowed · clawback"]
         S2["configure (licence owner, once)"]
-        S3["mint_shares · burn_shares (minter only)"]
+        S3["mint_shares (minter only)"]
         S4["pay_royalty · claim · transfer_shares"]
     end
 
@@ -133,15 +133,15 @@ flowchart TB
     S2 -- "owner_of" --> N3
     E1 -- "owner_of" --> N3
     E1 -- "is_configured" --> S2
-    E2 -- "mint_shares" --> S3
-    E4 -- "burn_shares on refund" --> S3
+    E4 -- "mint_shares on payment to the lab" --> S3
     E2 & E4 & E5 -- "transfer" --> EURC
     S4 -- "transfer" --> EURC
 ```
 
 `milestone_escrow` is the only contract that calls the other two. It is the
-registered **minter** of the splitter, so funding a round creates revenue
-shares 1:1 with the EURC locked (7 decimals), and refunds burn them.
+registered **minter** of the splitter: each milestone paid to the lab creates
+revenue shares 1:1 with the EURC it paid (7 decimals). Refunded money never
+becomes shares, so a share cannot outlive the capital behind it.
 
 ### 2.3 Key design decisions
 
@@ -458,17 +458,18 @@ sequenceDiagram
     Lab->>App: List a patent (3 sections)
     App->>Chain: mint → configure → create_project (3 signatures)
     Investor->>App: Open licence, Fund
-    App->>Chain: fund (EURC locked, shares minted)
+    App->>Chain: fund (EURC locked)
     Lab->>App: Submit proof of milestone 1
     App->>Chain: submit_milestone (window opens)
     alt No dispute before the window closes
         App->>Chain: release (anyone)
         Chain-->>Lab: EURC minus platform fee
+        Chain-->>Investor: shares for the milestone
     else Investor disputes
         Investor->>Chain: dispute
         Arbiter->>Chain: resolve_partial (0 to 100 %)
         Chain-->>Lab: lab share
-        Chain-->>Investor: refund, shares burned
+        Chain-->>Investor: refund, shares for the lab share only
     end
     Licensee->>Chain: pay_royalty
     Lab->>Chain: claim
@@ -553,7 +554,7 @@ none of these is urgent for the demo.
 | 8 | Medium | Product | Proof text is not stored anywhere reachable | Upload the proof file (or text) to off-chain storage and keep its hash on-chain, as for the dossier |
 | 9 | Medium | UX | Non-atomic 3-step listing with no resume | Detect the missing step on the licence page and offer "Finish setup" to the owner |
 | 10 | Medium | Design | Licence transfer leaves the escrow `lab` and the royalty beneficiaries unchanged | Decide whether payouts follow the licence owner; document either way |
-| 11 | Low | Economics | After a refund, shares the investor already sold stay with the buyer although the capital went back (by design, see comment at line 481) | Confirm with the team that this is the intended rule |
+| 11 | Low | Economics | After a refund, shares the investor already sold stay with the buyer although the capital went back (by design, see comment at line 481) | **Fixed:** shares are now minted when a milestone pays the lab, not at funding |
 | 12 | Low | Scalability | Marketplace does 1 + 2N RPC simulations and stops at 50 licences | Paginate, then add an event indexer or cached read model |
 | 13 | Low | UX | Demo defaults in the public listing form | Keep them behind demo mode only |
 | 14 | Low | UX | Browser clock vs ledger time around the deadline | Add a small margin or read the latest ledger time |

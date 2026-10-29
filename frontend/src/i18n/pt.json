@@ -287,7 +287,7 @@
     "lab": "Laboratório",
     "investor": "Investidor",
     "arbiter": "Árbitro",
-    "fund": "Financiar {{amount}}: bloquear no escrow e receber participações",
+    "fund": "Financiar {{amount}}: bloquear no escrow por participações nas receitas",
     "waitingInvestor": "A aguardar que o investidor {{address}} bloqueie os fundos.",
     "royalties": "Royalties",
     "university": "Universidade",
@@ -465,7 +465,8 @@
       "14": "O prazo de contestação tem de estar entre 1 minuto e 30 dias.",
       "15": "O prazo final tem de ser no futuro.",
       "16": "A duração da investigação terminou: já não é possível submeter marcos.",
-      "17": "Ainda não há nada para reembolsar."
+      "17": "Ainda não há nada para reembolsar.",
+      "18": "O investidor ainda não está na lista KYC."
     },
     "contract": "Erro do contrato n.º {{code}}",
     "balance": "EURC insuficiente nesta conta.",

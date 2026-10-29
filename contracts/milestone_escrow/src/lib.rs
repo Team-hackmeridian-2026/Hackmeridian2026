@@ -35,9 +35,8 @@ pub trait LicenseNftInterface {
 #[contractclient(name = "SplitterClient")]
 pub trait SplitterInterface {
     fn is_configured(env: Env, license_id: u64) -> bool;
+    fn is_allowed(env: Env, who: Address) -> bool;
     fn mint_shares(env: Env, license_id: u64, to: Address, amount: i128);
-    fn burn_shares(env: Env, license_id: u64, from: Address, amount: i128);
-    fn shares_of(env: Env, license_id: u64, who: Address) -> i128;
 }
 
 #[contracttype]
@@ -117,6 +116,8 @@ pub enum Error {
     InvalidDeadline = 15,
     DeadlinePassed = 16,
     NothingToReclaim = 17,
+    /// The investor is not on the splitter's KYC allowlist.
+    InvestorNotAllowed = 18,
 }
 
 #[contractevent]
@@ -299,16 +300,20 @@ impl MilestoneEscrow {
         id
     }
 
-    /// Deposits the full amount and mints the matching shares.
+    /// Deposits the full amount. Shares are minted only when a milestone pays
+    /// the lab: minting them here let an investor sell them and still be
+    /// refunded in full, leaving shares backed by nothing.
     pub fn fund(env: Env, project_id: u64) {
         let mut project = load(&env, project_id);
         project.investor.require_auth();
         if project.funded {
             panic_with_error!(&env, Error::AlreadyFunded);
         }
+        if !splitter(&env).is_allowed(&project.investor) {
+            panic_with_error!(&env, Error::InvestorNotAllowed);
+        }
         let total = total_of(&project);
         token(&env).transfer(&project.investor, &env.current_contract_address(), &total);
-        splitter(&env).mint_shares(&project.license_id, &project.investor, &total);
 
         project.funded = true;
         save(&env, &project);
@@ -395,7 +400,7 @@ impl MilestoneEscrow {
 
     /// Research can fail without anyone being at fault: the arbiter gives
     /// `lab_bps` of the milestone to the lab (work done) and refunds the rest to
-    /// the investor, whose shares shrink accordingly.
+    /// the investor, who gets shares only for the part paid to the lab.
     pub fn resolve_partial(env: Env, project_id: u64, index: u32, lab_bps: u32) {
         let project = load(&env, project_id);
         project.arbiter.require_auth();
@@ -541,17 +546,23 @@ fn transfer_to_lab(env: &Env, lab: &Address, gross: i128) -> (i128, i128) {
     (gross - fee, fee)
 }
 
-/// Refunds `amount` to the investor and burns the matching shares.
+/// Refunds `amount` to the investor. No shares exist for it: they are only
+/// minted for money paid to the lab.
 fn refund_investor(env: &Env, project: &Project, amount: i128) {
     token(env).transfer(&env.current_contract_address(), &project.investor, &amount);
-    // The investor may have sold some of the shares: burn only what they
-    // still hold, so that a refund is never blocked.
+}
+
+/// Mints shares for money the lab actually received.
+fn mint_for(env: &Env, project: &Project, amount: i128) {
+    if amount <= 0 {
+        return;
+    }
     let s = splitter(env);
-    let burnable = s
-        .shares_of(&project.license_id, &project.investor)
-        .min(amount);
-    if burnable > 0 {
-        s.burn_shares(&project.license_id, &project.investor, &burnable);
+    // An investor removed from the allowlist after funding must not block the
+    // lab's payment: the milestone is paid, the shares are not minted, as
+    // with a regulatory clawback.
+    if s.is_allowed(&project.investor) {
+        s.mint_shares(&project.license_id, &project.investor, &amount);
     }
 }
 
@@ -559,6 +570,7 @@ fn split(env: &Env, mut project: Project, index: u32, mut m: Milestone, lab_bps:
     let lab_gross = m.amount * lab_bps as i128 / BPS_DENOMINATOR;
     let refunded = m.amount - lab_gross;
     let (to_lab, fee) = transfer_to_lab(env, &project.lab, lab_gross);
+    mint_for(env, &project, lab_gross);
     refund_investor(env, &project, refunded);
 
     m.status = MilestoneStatus::Split;
@@ -578,6 +590,7 @@ fn split(env: &Env, mut project: Project, index: u32, mut m: Milestone, lab_bps:
 
 fn pay_lab(env: &Env, mut project: Project, index: u32, mut m: Milestone) {
     let (to_lab, fee) = transfer_to_lab(env, &project.lab, m.amount);
+    mint_for(env, &project, m.amount);
 
     m.status = MilestoneStatus::Released;
     m.lab_bps = BPS_DENOMINATOR as u32;

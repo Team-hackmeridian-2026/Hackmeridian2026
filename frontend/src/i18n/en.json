@@ -287,7 +287,7 @@
     "lab": "Lab",
     "investor": "Investor",
     "arbiter": "Arbiter",
-    "fund": "Fund {{amount}}: lock in escrow and receive shares",
+    "fund": "Fund {{amount}}: lock in escrow for revenue shares",
     "waitingInvestor": "Waiting for the investor {{address}} to lock the funds.",
     "royalties": "Royalties",
     "university": "University",
@@ -465,7 +465,8 @@
       "14": "The challenge window must be between 1 minute and 30 days.",
       "15": "The deadline must be in the future.",
       "16": "The research period is over: no milestone can be submitted any more.",
-      "17": "Nothing to refund yet."
+      "17": "Nothing to refund yet.",
+      "18": "The investor is not on the KYC allowlist yet."
     },
     "contract": "Contract error #{{code}}",
     "balance": "Not enough EURC on this account.",
