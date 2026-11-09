@@ -32,8 +32,7 @@ Then open a pull request on GitHub.
 - Contracts: `cd contracts && cargo test` must pass before you ask for review.
 - CI (`.github/workflows/ci.yml`) runs the contract tests, the Wasm build, the
   front-end build, the translation test and the amount-parsing test on every
-  pull request. Wait for a
-  green check before asking for review.
+  pull request. Wait for a green check before asking for review.
 - Visual changes: attach before/after screenshots to the pull request, in the
   dark and light themes and at phone width.
 
