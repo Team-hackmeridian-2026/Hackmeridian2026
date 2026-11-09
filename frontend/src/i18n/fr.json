@@ -294,6 +294,7 @@
     "arbiter": "Arbitre",
     "fund": "Financer {{amount}} : bloquer dans l'escrow contre des parts de revenus",
     "waitingInvestor": "En attente du blocage des fonds par l'investisseur {{address}}.",
+    "roundExpired": "La durée de la recherche s'est écoulée avant le financement de ce tour : il ne peut plus être financé.",
     "royalties": "Redevances",
     "university": "Université",
     "inventor": "Inventeur {{address}}",

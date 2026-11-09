@@ -294,6 +294,7 @@
     "arbiter": "Arbiter",
     "fund": "Fund {{amount}}: lock in escrow for revenue shares",
     "waitingInvestor": "Waiting for the investor {{address}} to lock the funds.",
+    "roundExpired": "The research period ended before this round was funded: it can no longer be funded.",
     "royalties": "Royalties",
     "university": "University",
     "inventor": "Inventor {{address}}",
