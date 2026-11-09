@@ -83,6 +83,7 @@
   "marketplace": {
     "released": "{{released}} débloqués sur {{total}}",
     "noRound": "Pas encore de levée",
+    "roundUnavailable": "État du financement indisponible pour le moment.",
     "heroTitle": "Donnez un avenir à la recherche.",
     "heroText": "Explorez des licences de brevets, financez la recherche jalon par jalon et suivez le partage des redevances, sur Stellar.",
     "listPatent": "Déposer un brevet",

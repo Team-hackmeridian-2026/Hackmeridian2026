@@ -83,6 +83,7 @@
   "marketplace": {
     "released": "{{released}} released of {{total}}",
     "noRound": "No funding round yet",
+    "roundUnavailable": "Funding status unavailable right now.",
     "heroTitle": "Give research a future.",
     "heroText": "Explore patent licences, fund research milestone by milestone and follow how royalties are shared, on Stellar.",
     "listPatent": "List a patent",
