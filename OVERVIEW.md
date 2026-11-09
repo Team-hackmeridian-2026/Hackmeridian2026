@@ -12,6 +12,10 @@ findings and the questions we should answer before the next iteration.
 >
 > **Checked at that commit:** `cargo test` passes (30/30), `npm run build`
 > succeeds and `npm run test:i18n` passes (3/3).
+>
+> **Findings status** ([section 5](#5-findings-prioritised)) was re-checked against
+> `main` at `15b897c` (9 November 2026), when testnet ran release `3.0.0`;
+> everything else is still the snapshot.
 
 ## Contents
 
@@ -542,27 +546,27 @@ sequenceDiagram
 Severity reflects the impact **before mainnet**; on testnet with test assets
 none of these is urgent for the demo.
 
-| # | Severity | Area | Finding | Suggested direction |
-| --- | --- | --- | --- | --- |
-| 1 | High | Escrow | **Funds can stay locked forever.** No deadline for submitting a milestone, `cancel` needs both lab and investor (lib.rs line 383), and a disputed milestone waits for the arbiter with no timeout | Add a per-milestone deadline after which the investor can reclaim Pending funds, and an arbiter timeout |
-| 2 | High | Escrow | **The lab picks the arbiter and the window.** Only `arbiter == investor` is rejected (line 212); `arbiter == lab` is allowed, and `challenge_period = 0` makes disputes impossible. The investor's only protection is reading these before funding | Reject `arbiter == lab`, enforce a minimum window, show both prominently on the Fund button |
-| 3 | High | Platform | **Single admin key** is also the treasury and can `set_minter` to itself, then mint shares to any allowlisted address, besides clawback and both registries | Role split and multisig (already on the roadmap). **Partly fixed:** `set_minter` is now one-time |
-| 4 | Medium | Contracts | **No upgrade path and manual TTL management.** Any fix means new contract IDs; quiet entries are archived after 30 days on mainnet | Admin-gated `upgrade` behind a timelock; a scheduled job that extends TTLs |
-| 5 | Medium | Tests | Role checks are untested (all tests mock every auth) | Add `try_*` tests with `mock_auths` for each role-gated function |
-| 6 | Medium | Process | No CI | GitHub Actions: `cargo test`, `npm run build`, `npm run test:i18n` on every PR |
-| 7 | Medium | Product | Data room promise does not match the code (finding in [4.5](#45-ux-observations)) | Reword the copy now; encrypted data room later |
-| 8 | Medium | Product | Proof text is not stored anywhere reachable | Upload the proof file (or text) to off-chain storage and keep its hash on-chain, as for the dossier |
-| 9 | Medium | UX | Non-atomic 3-step listing with no resume | Detect the missing step on the licence page and offer "Finish setup" to the owner |
-| 10 | Medium | Design | Licence transfer leaves the escrow `lab` and the royalty beneficiaries unchanged | Decide whether payouts follow the licence owner; document either way |
-| 11 | Low | Economics | After a refund, shares the investor already sold stay with the buyer although the capital went back (by design, see comment at line 481) | **Fixed:** shares are now minted when a milestone pays the lab, not at funding |
-| 12 | Low | Scalability | Marketplace does 1 + 2N RPC simulations and stops at 50 licences | Paginate, then add an event indexer or cached read model |
-| 13 | Low | UX | Demo defaults in the public listing form | Keep them behind demo mode only |
-| 14 | Low | UX | Browser clock vs ledger time around the deadline | Add a small margin or read the latest ledger time |
-| 15 | Low | Robustness | `/licence/abc` throws in `BigInt(id)` during render (line 484) and the router shows its default error page | Validate the param; add an `errorElement` |
-| 16 | Low | Robustness | Cash-out state lives in memory (a refresh mid-withdrawal loses the transaction id) and the SEP-10 token is cached without expiry | Persist the withdrawal id per account; drop the token on 401 |
-| 17 | Low | Security hygiene | The README publishes testnet secret keys for the jury; `VITE_DEMO_SECRETS` would be baked into the public bundle if ever set on Vercel | Rotate the jury accounts after judging; fail the build if that variable is set in production |
-| 18 | Low | Performance | 914 kB main chunk, routes not code-split; the WebGL helix runs behind every page except home | Lazy-load routes; consider a static helix on inner pages |
-| 19 | Info | Maths | Accumulator rounding leaves a few stroops of dust in the splitter; amounts are shown truncated to 2 decimals | Document; no action needed |
+| # | Severity | Area | Finding | Suggested direction | Status on `main` (9 November 2026) |
+| --- | --- | --- | --- | --- | --- |
+| 1 | High | Escrow | **Funds can stay locked forever.** No deadline for submitting a milestone, `cancel` needs both lab and investor (lib.rs line 383), and a disputed milestone waits for the arbiter with no timeout | Add a per-milestone deadline after which the investor can reclaim Pending funds, and an arbiter timeout | **Fixed in 2.0.1, live on testnet**: a project `deadline` after which `reclaim` refunds unproven milestones, and a dispute the arbiter leaves unsettled for `ARBITER_PERIOD` (30 days) can be reclaimed too |
+| 2 | High | Escrow | **The lab picks the arbiter and the window.** Only `arbiter == investor` is rejected (line 212); `arbiter == lab` is allowed, and `challenge_period = 0` makes disputes impossible. The investor's only protection is reading these before funding | Reject `arbiter == lab`, enforce a minimum window, show both prominently on the Fund button | **Fixed in 2.0.1, live on testnet**: the arbiter can be neither the lab nor the investor (`InvalidParties`), and the window must be 60 s to 30 days (`InvalidWindow`) |
+| 3 | High | Platform | **Single admin key** is also the treasury and can `set_minter` to itself, then mint shares to any allowlisted address, besides clawback and both registries | Role split and multisig (already on the roadmap). **Partly fixed:** `set_minter` is now one-time | Partly fixed in 3.0.0: `set_minter` is one-time (`MinterAlreadySet`); one key is still admin and treasury |
+| 4 | Medium | Contracts | **No upgrade path and manual TTL management.** Any fix means new contract IDs; quiet entries are archived after 30 days on mainnet | Admin-gated `upgrade` behind a timelock; a scheduled job that extends TTLs | Open |
+| 5 | Medium | Tests | Role checks are untested (all tests mock every auth) | Add `try_*` tests with `mock_auths` for each role-gated function | **Fixed**: each contract has `env.auths()` tests for its role-gated functions |
+| 6 | Medium | Process | No CI | GitHub Actions: `cargo test`, `npm run build`, `npm run test:i18n` on every PR | **Fixed**: `.github/workflows/ci.yml` runs all four checks |
+| 7 | Medium | Product | Data room promise does not match the code (finding in [4.5](#45-ux-observations)) | Reword the copy now; encrypted data room later | **Fixed**: the licence page now says only the dossier's fingerprint is on Stellar |
+| 8 | Medium | Product | Proof text is not stored anywhere reachable | Upload the proof file (or text) to off-chain storage and keep its hash on-chain, as for the dossier | Open: only the proof's SHA-256 is stored |
+| 9 | Medium | UX | Non-atomic 3-step listing with no resume | Detect the missing step on the licence page and offer "Finish setup" to the owner | **Fixed**: the licence page offers `FinishSetup` to the owner |
+| 10 | Medium | Design | Licence transfer leaves the escrow `lab` and the royalty beneficiaries unchanged | Decide whether payouts follow the licence owner; document either way | Open (design decision) |
+| 11 | Low | Economics | After a refund, shares the investor already sold stay with the buyer although the capital went back (by design, see comment at line 481) | **Fixed:** shares are now minted when a milestone pays the lab, not at funding | **Fixed in 3.0.0, live on testnet**: shares are minted when a milestone pays the lab |
+| 12 | Low | Scalability | Marketplace does 1 + 2N RPC simulations and stops at 50 licences | Paginate, then add an event indexer or cached read model | Partly: "Show more" loads further pages of 50; still 1 + 2N simulations |
+| 13 | Low | UX | Demo defaults in the public listing form | Keep them behind demo mode only | **Fixed**: sample values only in the local demo build |
+| 14 | Low | UX | Browser clock vs ledger time around the deadline | Add a small margin or read the latest ledger time | Open |
+| 15 | Low | Robustness | `/licence/abc` throws in `BigInt(id)` during render (line 484) and the router shows its default error page | Validate the param; add an `errorElement` | **Fixed**: the router's `errorElement` shows `RouteError`; the param itself is still not validated |
+| 16 | Low | Robustness | Cash-out state lives in memory (a refresh mid-withdrawal loses the transaction id) and the SEP-10 token is cached without expiry | Persist the withdrawal id per account; drop the token on 401 | Open |
+| 17 | Low | Security hygiene | The README publishes testnet secret keys for the jury; `VITE_DEMO_SECRETS` would be baked into the public bundle if ever set on Vercel | Rotate the jury accounts after judging; fail the build if that variable is set in production | Open |
+| 18 | Low | Performance | 914 kB main chunk, routes not code-split; the WebGL helix runs behind every page except home | Lazy-load routes; consider a static helix on inner pages | Open: routes are not code-split and `PageHelix` still runs on inner pages |
+| 19 | Info | Maths | Accumulator rounding leaves a few stroops of dust in the splitter; amounts are shown truncated to 2 decimals | Document; no action needed | No action |
 
 ---
 
