@@ -265,12 +265,6 @@ impl RoyaltySplitter {
         .publish(&env);
     }
 
-    /// Called by the escrow when a milestone is refunded to the investor.
-    pub fn burn_shares(env: Env, license_id: u64, from: Address, amount: i128) {
-        minter(&env).require_auth();
-        burn(&env, license_id, &from, amount);
-    }
-
     /// Regulatory clawback (court order, error).
     pub fn clawback(env: Env, license_id: u64, from: Address, amount: i128) {
         Self::admin(env.clone()).require_auth();
