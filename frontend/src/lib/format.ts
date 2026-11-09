@@ -3,11 +3,20 @@ import i18n, { currentLocale } from "../i18n";
 
 const UNIT = 10n ** BigInt(DECIMALS);
 
-/** "12.5" EURC -> 125000000n (on-chain units). */
+/** "." in English, "," in French and Portuguese. */
+function decimalMark(): string {
+  return (1.5).toLocaleString(currentLocale()).charAt(1);
+}
+
+/** "12.5" EURC -> 125000000n (on-chain units). French and Portuguese may type "12,5". */
 export function toUnits(amount: string): bigint {
-  const [whole, frac = ""] = amount.trim().split(".");
-  if (!/^\d+$/.test(whole || "0") || !/^\d*$/.test(frac) || frac.length > DECIMALS) {
-    throw new Error(`Invalid amount: ${amount}`);
+  let text = amount.trim();
+  // Only where the comma is the decimal mark: in English "1,000" means a thousand, so it stays invalid.
+  if (decimalMark() === ",") text = text.replace(",", ".");
+  const parts = text.split(".");
+  const [whole, frac = ""] = parts;
+  if (parts.length > 2 || !/^\d+$/.test(whole || "0") || !/^\d*$/.test(frac) || frac.length > DECIMALS) {
+    throw new Error(i18n.t("errors.amount", { amount }));
   }
   return BigInt(whole || "0") * UNIT + BigInt(frac.padEnd(DECIMALS, "0") || "0");
 }
@@ -18,9 +27,7 @@ export function fromUnits(units: bigint): string {
   const abs = negative ? -units : units;
   const whole = abs / UNIT;
   const frac = (abs % UNIT).toString().padStart(DECIMALS, "0").replace(/0+$/, "");
-  const locale = currentLocale();
-  const decimal = (1.5).toLocaleString(locale).charAt(1);
-  return `${negative ? "-" : ""}${whole.toLocaleString(locale)}${frac ? decimal + frac.slice(0, 2) : ""}`;
+  return `${negative ? "-" : ""}${whole.toLocaleString(currentLocale())}${frac ? decimalMark() + frac.slice(0, 2) : ""}`;
 }
 
 export function eurc(units: bigint): string {

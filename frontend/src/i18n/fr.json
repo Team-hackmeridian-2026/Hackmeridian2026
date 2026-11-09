@@ -474,6 +474,7 @@
       "18": "L'investisseur n'est pas encore sur la liste KYC."
     },
     "contract": "Erreur du contrat n° {{code}}",
+    "amount": "Montant invalide : {{amount}}. Utilisez des chiffres, une seule virgule et 7 décimales au plus.",
     "balance": "Pas assez d'EURC sur ce compte.",
     "trustline": "Ce compte n'a pas encore de trustline EURC.",
     "cancelled": "Transaction annulée dans le wallet.",
