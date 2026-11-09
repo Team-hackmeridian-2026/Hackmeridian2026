@@ -1,11 +1,22 @@
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
-import { escrow, splitter, type Beneficiary, type License } from "../stellar/contracts";
+import { escrow, splitter, type License } from "../stellar/contracts";
 import type { Signer } from "../stellar/wallet";
 import { useToasts } from "./toasts";
 import { DIRECTORY, PersonPicker, type PersonKind } from "./people";
-import { DEFAULT_PERIOD_DAYS, MilestoneEditor, RoundTimingFields, SplitPreview, WINDOWS, deadlineIn, isAddress, splitEvenly } from "./listing";
-import { Button, Card, Field, Input, StatusIcon } from "./ui";
+import {
+  DEFAULT_PERIOD_DAYS,
+  DEFAULT_SPLIT,
+  MilestoneEditor,
+  RoundTimingFields,
+  SplitFields,
+  WINDOWS,
+  deadlineIn,
+  roundProblem,
+  splitConfig,
+  splitProblem,
+} from "./listing";
+import { Button, Card, Field, StatusIcon } from "./ui";
 
 /**
  * Listing a patent takes three transactions (mint, royalty split, funding round). If the
@@ -66,23 +77,17 @@ function FormError({ message }: { message?: string }) {
 function SplitForm({ license, signer, onDone }: { license: License; signer: Signer; onDone: () => void }) {
   const { t } = useTranslation();
   const { run } = useToasts();
-  const [universityPct, setUniversityPct] = useState(40);
-  const [inventorsPct, setInventorsPct] = useState(30);
-  const [investorsPct, setInvestorsPct] = useState(30);
+  const [split, setSplit] = useState(DEFAULT_SPLIT);
   const [error, setError] = useState<string>();
   const [busy, setBusy] = useState(false);
 
   async function submit() {
     setError(undefined);
-    if (universityPct + inventorsPct + investorsPct !== 100) return setError(t("newLicence.errors.split"));
-    // Same rule as the listing form: the university first, then the inventors written in the licence.
-    const fixed: Beneficiary[] = [
-      { addr: license.owner, bps: universityPct * 100 },
-      ...splitEvenly(license.inventors, inventorsPct * 100),
-    ].filter((b) => b.bps > 0);
+    const problem = splitProblem(split);
+    if (problem) return setError(t(problem.message));
     setBusy(true);
     const done = await run(t("newLicence.toasts.split"), () =>
-      splitter.configure(signer, license.id, { fixed, investors_bps: investorsPct * 100 }),
+      splitter.configure(signer, license.id, splitConfig(license.owner, license.inventors, split)),
     );
     setBusy(false);
     if (done) onDone();
@@ -91,24 +96,7 @@ function SplitForm({ license, signer, onDone }: { license: License; signer: Sign
   return (
     <div className="flex flex-col gap-4">
       <p className="text-sm font-semibold">{t("newLicence.royaltySplit")}</p>
-      <div className="grid gap-4 sm:grid-cols-3">
-        <Field label={t("newLicence.university")}>
-          <Input type="number" min={0} max={100} value={universityPct} onChange={(e) => setUniversityPct(Number(e.target.value))} />
-        </Field>
-        <Field label={t("newLicence.inventors")}>
-          <Input type="number" min={0} max={100} value={inventorsPct} onChange={(e) => setInventorsPct(Number(e.target.value))} />
-        </Field>
-        <Field label={t("newLicence.investors")}>
-          <Input type="number" min={0} max={100} value={investorsPct} onChange={(e) => setInvestorsPct(Number(e.target.value))} />
-        </Field>
-      </div>
-      <SplitPreview
-        parts={[
-          { label: t("newLicence.university"), pct: universityPct, color: "bg-brand", text: "text-on-brand" },
-          { label: t("newLicence.inventors"), pct: inventorsPct, color: "bg-rose", text: "text-navy" },
-          { label: t("newLicence.investors"), pct: investorsPct, color: "bg-amber", text: "text-navy" },
-        ]}
-      />
+      <SplitFields split={split} onChange={setSplit} />
       <FormError message={error} />
       <Button busy={busy} onClick={submit} className="self-start">
         {t("newLicence.steps.split")}
@@ -132,12 +120,8 @@ function RoundForm({ license, signer, onDone }: { license: License; signer: Sign
 
   async function submit() {
     setError(undefined);
-    if (!isAddress(investor) || !isAddress(arbiter)) return setError(t("newLicence.errors.parties"));
-    // The contract refuses it too (InvalidParties): the arbiter settles disputes between them.
-    if (arbiter === investor || arbiter === license.owner) return setError(t("newLicence.errors.arbiter"));
-    // The contracts of release 3.0.0 accept it, so the form is the only guard until the next redeploy.
-    if (investor === license.owner) return setError(t("newLicence.errors.selfInvestor"));
-    if (milestones.length === 0 || milestones.some((m) => !(Number(m) > 0))) return setError(t("newLicence.errors.milestones"));
+    const problem = roundProblem(license.owner, investor, arbiter, milestones);
+    if (problem) return setError(t(problem.message));
     setBusy(true);
     const done = await run(t("newLicence.toasts.round"), () =>
       escrow.create(signer, {

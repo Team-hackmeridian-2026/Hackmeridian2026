@@ -1,5 +1,5 @@
 import { Trans, useTranslation } from "react-i18next";
-import type { Beneficiary } from "../stellar/contracts";
+import type { Beneficiary, SplitConfig } from "../stellar/contracts";
 import { formatDate, formatNumber } from "../lib/format";
 import { Badge, Button, Field, Input, StatusIcon } from "./ui";
 
@@ -32,13 +32,47 @@ export function deadlineIn(days: number): number {
 
 export const isAddress = (a: string) => /^G[A-Z2-7]{55}$/.test(a);
 
+/** Royalty split as typed in the form, in percent. */
+export type SplitPercents = { university: number; inventors: number; investors: number };
+
+export const DEFAULT_SPLIT: SplitPercents = { university: 40, inventors: 30, investors: 30 };
+
+/** A form rule that failed: the section it is about and the i18n key of its message. */
+export type FormProblem = { field: "split" | "parties" | "milestones"; message: string };
+
+export function splitProblem(split: SplitPercents): FormProblem | null {
+  if (split.university + split.inventors + split.investors !== 100) return { field: "split", message: "newLicence.errors.split" };
+  // The splitter needs a fixed beneficiary (it receives the rounding remainders); without one,
+  // `configure` fails, and when listing that happens after the licence is minted.
+  if (split.university + split.inventors === 0) return { field: "split", message: "newLicence.errors.splitFixed" };
+  return null;
+}
+
+/** The parties and milestones of a funding round opened by the licence `owner`. */
+export function roundProblem(owner: string, investor: string, arbiter: string, milestones: string[]): FormProblem | null {
+  if (!isAddress(investor) || !isAddress(arbiter)) return { field: "parties", message: "newLicence.errors.parties" };
+  // The contract refuses it too (InvalidParties): the arbiter settles disputes between them.
+  if (arbiter === investor || arbiter === owner) return { field: "parties", message: "newLicence.errors.arbiter" };
+  // The contracts of release 3.0.0 accept it, so the forms are the only guard until the next redeploy.
+  if (investor === owner) return { field: "parties", message: "newLicence.errors.selfInvestor" };
+  if (milestones.length === 0 || milestones.some((m) => !(Number(m) > 0)))
+    return { field: "milestones", message: "newLicence.errors.milestones" };
+  return null;
+}
+
 /** Splits `total` bps evenly between addresses; the remainder goes to the first one. */
-export function splitEvenly(addresses: string[], total: number): Beneficiary[] {
+function splitEvenly(addresses: string[], total: number): Beneficiary[] {
   const each = Math.floor(total / addresses.length);
   return addresses.map((addr, i) => ({ addr, bps: each + (i === 0 ? total - each * addresses.length : 0) }));
 }
 
-export function SplitPreview({ parts }: { parts: { label: string; pct: number; color: string; text: string }[] }) {
+/** The university first (it receives the rounding remainders), then the inventors written in the licence. */
+export function splitConfig(owner: string, inventors: string[], split: SplitPercents): SplitConfig {
+  const fixed = [{ addr: owner, bps: split.university * 100 }, ...splitEvenly(inventors, split.inventors * 100)];
+  return { fixed: fixed.filter((b) => b.bps > 0), investors_bps: split.investors * 100 };
+}
+
+function SplitPreview({ parts }: { parts: { label: string; pct: number; color: string; text: string }[] }) {
   const { t } = useTranslation();
   const total = parts.reduce((s, p) => s + (Number.isFinite(p.pct) ? p.pct : 0), 0);
   return (
@@ -58,6 +92,34 @@ export function SplitPreview({ parts }: { parts: { label: string; pct: number; c
         <Badge tone="danger" icon={<StatusIcon kind="error" />}>{t("newLicence.splitBad", { total })}</Badge>
       )}
     </div>
+  );
+}
+
+/** The three percentage inputs of the royalty split, with their preview bar. */
+export function SplitFields({ split, onChange }: { split: SplitPercents; onChange: (split: SplitPercents) => void }) {
+  const { t } = useTranslation();
+  const parts = [
+    { key: "university", color: "bg-brand", text: "text-on-brand" },
+    { key: "inventors", color: "bg-rose", text: "text-navy" },
+    { key: "investors", color: "bg-amber", text: "text-navy" },
+  ] as const;
+  return (
+    <>
+      <div className="grid gap-4 sm:grid-cols-3">
+        {parts.map((p) => (
+          <Field key={p.key} label={t(`newLicence.${p.key}`)}>
+            <Input
+              type="number"
+              min={0}
+              max={100}
+              value={split[p.key]}
+              onChange={(e) => onChange({ ...split, [p.key]: Number(e.target.value) })}
+            />
+          </Field>
+        ))}
+      </div>
+      <SplitPreview parts={parts.map((p) => ({ label: t(`newLicence.${p.key}`), pct: split[p.key], color: p.color, text: p.text }))} />
+    </>
   );
 }
 

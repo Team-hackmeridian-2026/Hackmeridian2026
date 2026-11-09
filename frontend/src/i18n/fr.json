@@ -173,6 +173,7 @@
       "inventors": "Vérifiez les adresses des inventeurs.",
       "parties": "Choisissez un investisseur et un arbitre.",
       "split": "Le partage des redevances doit totaliser 100 %.",
+      "splitFixed": "Attribuez une part des redevances à l'université ou aux inventeurs : le partage a besoin d'au moins un bénéficiaire fixe.",
       "milestones": "Chaque jalon doit avoir un montant positif.",
       "arbiter": "L'arbitre doit être une autre personne que l'investisseur et l'université.",
       "selfInvestor": "L'investisseur doit être une autre personne que l'université : un labo ne peut pas financer son propre tour."

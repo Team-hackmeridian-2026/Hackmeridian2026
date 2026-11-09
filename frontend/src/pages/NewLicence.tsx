@@ -2,7 +2,7 @@ import { useEffect, useState, type DragEvent, type FormEvent } from "react";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { ACCOUNTS } from "../config";
-import { escrow, nft, splitter, type Beneficiary } from "../stellar/contracts";
+import { escrow, nft, splitter } from "../stellar/contracts";
 import { DEMO_ENABLED, useWallet } from "../stellar/wallet";
 import { useToasts } from "../components/toasts";
 import { DIRECTORY, PersonPicker, type PersonKind } from "../components/people";
@@ -12,13 +12,16 @@ import { Badge, Button, Card, ErrorBox, Field, Input, Notice, SectionTitle, Stat
 import { useDocumentTitle } from "../lib/useDocumentTitle";
 import {
   DEFAULT_PERIOD_DAYS,
+  DEFAULT_SPLIT,
   MilestoneEditor,
   RoundTimingFields,
-  SplitPreview,
+  SplitFields,
   WINDOWS,
   deadlineIn,
   isAddress,
-  splitEvenly,
+  roundProblem,
+  splitConfig,
+  splitProblem,
 } from "../components/listing";
 
 type Step = { key: "mint" | "split" | "round"; state: "todo" | "running" | "done" | "error"; hash?: string };
@@ -102,9 +105,7 @@ export function NewLicence() {
   const [file, setFile] = useState<File | null>(null);
   const [hash, setHash] = useState<Uint8Array | null>(null);
   const [metadataUri, setMetadataUri] = useState("");
-  const [universityPct, setUniversityPct] = useState(40);
-  const [inventorsPct, setInventorsPct] = useState(30);
-  const [investorsPct, setInvestorsPct] = useState(30);
+  const [split, setSplit] = useState(DEFAULT_SPLIT);
   const [investor, setInvestor] = useState(DEFAULTS.investor);
   const [arbiter, setArbiter] = useState(DEFAULTS.arbiter);
   const [milestones, setMilestones] = useState<string[]>(DEFAULTS.milestones);
@@ -122,7 +123,7 @@ export function NewLicence() {
   useEffect(() => {
     setErrorField(null);
     setFormError(undefined);
-  }, [hash, metadataUri, inventors, investor, arbiter, universityPct, inventorsPct, investorsPct, milestones]);
+  }, [hash, metadataUri, inventors, investor, arbiter, split, milestones]);
 
   /** Shows a validation message next to its section and brings that section into view. */
   function fail(key: FieldKey, message: string) {
@@ -168,14 +169,9 @@ export function NewLicence() {
     if (!hash) return fail("dossier", t("newLicence.errors.dossier"));
     if (metadataUri.trim() && !safeLink(metadataUri)) return fail("dossier", t("newLicence.errors.dataRoom"));
     if (inventorList.length === 0 || !inventorList.every(isAddress)) return fail("inventors", t("newLicence.errors.inventors"));
-    if (!isAddress(investor) || !isAddress(arbiter)) return fail("parties", t("newLicence.errors.parties"));
-    // The contract refuses it too (InvalidParties): the arbiter settles disputes between them.
-    if (arbiter === investor || arbiter === signer.address) return fail("parties", t("newLicence.errors.arbiter"));
-    // The contracts of release 3.0.0 accept it, so the form is the only guard until the next redeploy.
-    if (investor === signer.address) return fail("parties", t("newLicence.errors.selfInvestor"));
-    if (universityPct + inventorsPct + investorsPct !== 100) return fail("split", t("newLicence.errors.split"));
-    if (milestones.length === 0 || milestones.some((m) => !(Number(m) > 0)))
-      return fail("milestones", t("newLicence.errors.milestones"));
+    // In the order of the sections on screen: split, then parties and milestones.
+    const problem = splitProblem(split) ?? roundProblem(signer.address, investor, arbiter, milestones);
+    if (problem) return fail(problem.field, t(problem.message));
 
     setBusy(true);
     setSteps(INITIAL_STEPS);
@@ -195,12 +191,8 @@ export function NewLicence() {
       setStep(0, { state: "done", hash: minted.hash });
 
       setStep(1, { state: "running" });
-      const fixed: Beneficiary[] = [
-        { addr: signer.address, bps: universityPct * 100 },
-        ...splitEvenly(inventorList, inventorsPct * 100),
-      ].filter((b) => b.bps > 0);
       const configured = await run(t("newLicence.toasts.split"), () =>
-        splitter.configure(signer, licenseId, { fixed, investors_bps: investorsPct * 100 }),
+        splitter.configure(signer, licenseId, splitConfig(signer.address, inventorList, split)),
       );
       if (!configured) return setStep(1, { state: "error" });
       setStep(1, { state: "done", hash: configured.hash });
@@ -356,24 +348,7 @@ export function NewLicence() {
 
             <div id="section-split" className="flex flex-col gap-3">
               <span className="text-sm font-semibold">{t("newLicence.royaltySplit")}</span>
-              <div className="grid gap-4 sm:grid-cols-3">
-                <Field label={t("newLicence.university")}>
-                  <Input type="number" min={0} max={100} value={universityPct} onChange={(e) => setUniversityPct(Number(e.target.value))} />
-                </Field>
-                <Field label={t("newLicence.inventors")}>
-                  <Input type="number" min={0} max={100} value={inventorsPct} onChange={(e) => setInventorsPct(Number(e.target.value))} />
-                </Field>
-                <Field label={t("newLicence.investors")}>
-                  <Input type="number" min={0} max={100} value={investorsPct} onChange={(e) => setInvestorsPct(Number(e.target.value))} />
-                </Field>
-              </div>
-              <SplitPreview
-                parts={[
-                  { label: t("newLicence.university"), pct: universityPct, color: "bg-brand", text: "text-on-brand" },
-                  { label: t("newLicence.inventors"), pct: inventorsPct, color: "bg-rose", text: "text-navy" },
-                  { label: t("newLicence.investors"), pct: investorsPct, color: "bg-amber", text: "text-navy" },
-                ]}
-              />
+              <SplitFields split={split} onChange={setSplit} />
               <FieldError message={fieldError("split")} />
             </div>
 
@@ -409,7 +384,7 @@ export function NewLicence() {
             <dl className="flex flex-col text-sm [&>div]:border-b [&>div]:border-line [&>div]:py-2.5 [&>div:first-child]:pt-0">
               <div className="flex justify-between gap-3"><dt className="text-muted">{t("newLicence.summaryLicence")}</dt><dd className="text-right">{exclusive ? t("common.exclusive") : t("common.nonExclusive")}, {t("common.years", { count: Number(years) })}</dd></div>
               <div className="flex justify-between gap-3"><dt className="text-muted">{t("newLicence.summaryFunding")}</dt><dd>{t("newLicence.summaryFundingValue", { amount: formatNumber(total), count: milestones.length })}</dd></div>
-              <div className="flex justify-between gap-3"><dt className="text-muted">{t("newLicence.summaryRoyalties")}</dt><dd>{universityPct} / {inventorsPct} / {investorsPct} %</dd></div>
+              <div className="flex justify-between gap-3"><dt className="text-muted">{t("newLicence.summaryRoyalties")}</dt><dd>{split.university} / {split.inventors} / {split.investors} %</dd></div>
               <div className="flex justify-between gap-3"><dt className="text-muted">{t("newLicence.summaryDeadline")}</dt><dd className="text-right">{formatDate(deadlineIn(periodDays))}</dd></div>
               <div className="flex justify-between gap-3"><dt className="text-muted">{t("newLicence.summaryDossier")}</dt><dd>{hash ? t("newLicence.fingerprinted") : t("newLicence.missing")}</dd></div>
             </dl>
