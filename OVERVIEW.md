@@ -313,10 +313,11 @@ stateDiagram-v2
     Split --> [*]
 ```
 
-Money flows: `fund` pulls the whole round from the investor and mints the same
-number of shares; a release pays `amount − fee` to the lab and the fee to the
-treasury; a refund returns EURC to the investor and burns
-`min(investor shares, amount)` (the investor may have sold shares meanwhile).
+Money flows: `fund` pulls the whole round from the investor and mints no
+shares; a release pays `amount − fee` to the lab and the fee to the treasury,
+and mints `amount` shares for the investor (a split mints only the lab's
+part); a refund returns EURC to the investor and mints nothing. Shares are
+only ever burned by the admin's `clawback`.
 
 **`royalty_splitter`.** For each licence the owner configures, once, fixed
 beneficiaries (university first, then inventors) and an investors' percentage

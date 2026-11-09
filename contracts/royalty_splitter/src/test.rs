@@ -285,7 +285,7 @@ fn amounts_must_be_positive() {
             invalid
         );
         assert_eq!(
-            s.splitter.try_burn_shares(&s.license_id, &holder, &amount),
+            s.splitter.try_clawback(&s.license_id, &holder, &amount),
             invalid
         );
         assert_eq!(
@@ -422,7 +422,7 @@ fn only_the_admin_manages_kyc_and_clawback() {
 }
 
 #[test]
-fn only_the_minter_creates_and_burns_shares() {
+fn only_the_minter_creates_shares() {
     let s = setup(0);
     configure(&s);
     let a = investor(&s, 10);
@@ -433,13 +433,6 @@ fn only_the_minter_creates_and_burns_shares() {
     sign_as(&s, &s.minter, "mint_shares", args);
     s.splitter.mint_shares(&s.license_id, &a, &5);
     assert_eq!(s.splitter.shares_of(&s.license_id, &a), 15);
-
-    let args: soroban_sdk::Vec<Val> = (s.license_id, a.clone(), 5i128).into_val(&s.env);
-    sign_as(&s, &a, "burn_shares", args.clone());
-    assert!(s.splitter.try_burn_shares(&s.license_id, &a, &5).is_err());
-    sign_as(&s, &s.minter, "burn_shares", args);
-    s.splitter.burn_shares(&s.license_id, &a, &5);
-    assert_eq!(s.splitter.shares_of(&s.license_id, &a), 10);
 }
 
 #[test]

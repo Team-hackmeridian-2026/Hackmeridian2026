@@ -76,7 +76,7 @@ flowchart TB
     F -->|"Soroban RPC"| NFT["ip_license_nft"]
     F -->|"Soroban RPC"| ESC["milestone_escrow"]
     F -->|"Soroban RPC"| SPL["royalty_splitter"]
-    ESC -->|"mint / burn shares"| SPL
+    ESC -->|"mint shares"| SPL
     ESC -->|"owner_of"| NFT
     SPL -->|"owner_of"| NFT
     ESC --> EURC["Circle EURC<br/>(Stellar Asset Contract)"]
