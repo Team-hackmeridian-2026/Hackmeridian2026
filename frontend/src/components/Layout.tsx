@@ -2,10 +2,10 @@ import { useEffect, useRef, useState } from "react";
 import { NavLink, Outlet, useLocation } from "react-router-dom";
 import { Trans, useTranslation } from "react-i18next";
 import { ACCOUNTS, CIRCLE_FAUCET_URL, CONTRACTS, explorer } from "../config";
-import { eurcBalance } from "../stellar/contracts";
 import { DEMO_ENABLED, DEMO_ROLES, useWallet, type DemoRole } from "../stellar/wallet";
 import { LANGUAGES } from "../i18n";
 import { useAsync } from "../lib/useAsync";
+import { accountSnapshot, type AccountSnapshot } from "../lib/account";
 import { useSlidingIndicator } from "../lib/useSlidingIndicator";
 import { formatNumber, shortAddress } from "../lib/format";
 import { Button } from "./ui";
@@ -52,7 +52,7 @@ function LanguageSwitcher() {
   );
 }
 
-type Balance = { balance: string; hasTrustline: boolean } | null | undefined;
+type Balance = AccountSnapshot | null | undefined;
 
 function WalletArea({ balance }: { balance: Balance }) {
   const { t } = useTranslation();
@@ -83,7 +83,7 @@ function WalletArea({ balance }: { balance: Balance }) {
           <span aria-hidden className="size-7 shrink-0 rounded-full bg-[conic-gradient(from_120deg,var(--color-dna-indigo),var(--color-dna-pink),var(--color-dna-yellow),var(--color-dna-indigo))]" />
           <span className="font-mono text-xs">{shortAddress(signer.address)}</span>
           <span className="rounded-full bg-subtle px-2.5 py-1 text-xs font-semibold" aria-label={t("wallet.balance")}>
-            {balance ? `${formatNumber(balance.balance)} EURC` : "—"}
+            {balance?.exists ? `${formatNumber(balance.eurc)} EURC` : "—"}
           </span>
           <button
             onClick={disconnect}
@@ -218,7 +218,7 @@ function MainNav({ items, stacked }: { items: readonly (typeof NAV)[number][]; s
 export function Layout() {
   const { t } = useTranslation();
   const { signer, connecting, connectWallet } = useWallet();
-  const balance = useAsync(() => (signer ? eurcBalance(signer.address) : Promise.resolve(null)), [signer?.address]);
+  const balance = useAsync(() => (signer ? accountSnapshot(signer.address) : Promise.resolve(null)), [signer?.address]);
   // Refresh the balance after each confirmed transaction; Horizon can lag a ledger behind, so check again shortly after.
   const reloadBalance = balance.reload;
   useEffect(() => {
@@ -312,7 +312,7 @@ export function Layout() {
             </div>
           )}
         </div>
-        {signer && balance.data && !balance.data.hasTrustline && <TrustlineHint />}
+        {signer && balance.data?.exists && !balance.data.hasTrustline && <TrustlineHint />}
       </header>
       {pathname !== "/" && <PageHelix />}
       <main className="mx-auto w-full max-w-6xl flex-1 px-4 py-8 sm:px-6 sm:py-12">
