@@ -172,6 +172,7 @@
       "inventors": "Check the inventors' addresses.",
       "parties": "Choose an investor and an arbiter.",
       "split": "The royalty split must add up to 100 %.",
+      "splitFixed": "Give part of the royalties to the university or the inventors: the split needs at least one fixed beneficiary.",
       "milestones": "Every milestone needs a positive amount.",
       "arbiter": "The arbiter must be someone other than the investor and the university.",
       "selfInvestor": "The investor must be someone other than the university: a lab cannot fund its own round."

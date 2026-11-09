@@ -172,6 +172,7 @@
       "inventors": "Verifique os endereços dos inventores.",
       "parties": "Escolha um investidor e um árbitro.",
       "split": "A repartição dos royalties tem de somar 100 %.",
+      "splitFixed": "Atribua parte dos royalties à universidade ou aos inventores: a repartição precisa de pelo menos um beneficiário fixo.",
       "milestones": "Cada marco precisa de um montante positivo.",
       "arbiter": "O árbitro tem de ser uma pessoa diferente do investidor e da universidade.",
       "selfInvestor": "O investidor tem de ser uma pessoa diferente da universidade: um laboratório não pode financiar a sua própria ronda."

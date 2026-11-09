@@ -174,6 +174,9 @@ export function NewLicence() {
     // The contracts of release 3.0.0 accept it, so the form is the only guard until the next redeploy.
     if (investor === signer.address) return fail("parties", t("newLicence.errors.selfInvestor"));
     if (universityPct + inventorsPct + investorsPct !== 100) return fail("split", t("newLicence.errors.split"));
+    // The splitter needs a fixed beneficiary (it receives the rounding remainders); without one,
+    // the split would only fail after the licence is minted.
+    if (universityPct + inventorsPct === 0) return fail("split", t("newLicence.errors.splitFixed"));
     if (milestones.length === 0 || milestones.some((m) => !(Number(m) > 0)))
       return fail("milestones", t("newLicence.errors.milestones"));
 

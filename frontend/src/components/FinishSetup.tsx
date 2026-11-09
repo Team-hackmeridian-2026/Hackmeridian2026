@@ -75,6 +75,8 @@ function SplitForm({ license, signer, onDone }: { license: License; signer: Sign
   async function submit() {
     setError(undefined);
     if (universityPct + inventorsPct + investorsPct !== 100) return setError(t("newLicence.errors.split"));
+    // The splitter needs a fixed beneficiary: it receives the rounding remainders.
+    if (universityPct + inventorsPct === 0) return setError(t("newLicence.errors.splitFixed"));
     // Same rule as the listing form: the university first, then the inventors written in the licence.
     const fixed: Beneficiary[] = [
       { addr: license.owner, bps: universityPct * 100 },
