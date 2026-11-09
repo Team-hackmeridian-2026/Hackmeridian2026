@@ -19,3 +19,6 @@ dist/
 
 # Deployment state (local only)
 deployments/*.env
+
+# Local knowledge graph (graphify)
+graphify-out/
