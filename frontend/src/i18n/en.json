@@ -473,6 +473,7 @@
       "18": "The investor is not on the KYC allowlist yet."
     },
     "contract": "Contract error #{{code}}",
+    "amount": "Invalid amount: {{amount}}. Use digits, one decimal mark and at most 7 decimals.",
     "balance": "Not enough EURC on this account.",
     "trustline": "This account has no EURC trustline yet.",
     "cancelled": "Transaction cancelled in the wallet.",

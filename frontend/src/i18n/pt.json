@@ -473,6 +473,7 @@
       "18": "O investidor ainda não está na lista KYC."
     },
     "contract": "Erro do contrato n.º {{code}}",
+    "amount": "Montante inválido: {{amount}}. Use algarismos, uma só vírgula decimal e no máximo 7 casas decimais.",
     "balance": "EURC insuficiente nesta conta.",
     "trustline": "Esta conta ainda não tem trustline de EURC.",
     "cancelled": "Transação cancelada na carteira.",
