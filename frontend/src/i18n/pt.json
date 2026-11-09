@@ -83,6 +83,7 @@
   "marketplace": {
     "released": "{{released}} libertados de {{total}}",
     "noRound": "Ainda sem ronda de financiamento",
+    "roundUnavailable": "Estado do financiamento indisponível de momento.",
     "heroTitle": "Dê um futuro à investigação.",
     "heroText": "Explore licenças de patentes, financie a investigação marco a marco e acompanhe a repartição dos royalties, na Stellar.",
     "listPatent": "Registar uma patente",

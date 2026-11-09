@@ -12,30 +12,38 @@ import { FundingProgress, fundingStatus } from "../components/Funding";
 import { Molecule } from "../components/Molecule";
 import { useDocumentTitle } from "../lib/useDocumentTitle";
 
-type Listing = { license: License; project?: Project };
-
 /** Licences per page: the most `list_licenses` returns in one call (MAX_PAGE in ip_license_nft). */
 const PAGE = 50;
 
-/** One page of licences, from id `start`, with the latest funding round of each. */
-async function loadListings(start: number): Promise<{ total: number; listings: Listing[] }> {
+/** One page of licences, from id `start`; each row then loads its own funding round. */
+async function loadListings(start: number): Promise<{ total: number; licenses: License[] }> {
   const [total, licenses] = await Promise.all([nft.total(), nft.list(BigInt(start), PAGE)]);
-  const listings = await Promise.all(
-    licenses.map(async (license) => {
-      const ids = await escrow.projectsByLicense(license.id);
-      const project = ids.length ? await escrow.get(ids[ids.length - 1]) : undefined;
-      return { license, project };
-    }),
-  );
-  return { total: Number(total), listings };
+  return { total: Number(total), licenses };
+}
+
+/** The latest funding round of a licence, if it has one. */
+async function latestRound(licenseId: bigint): Promise<Project | undefined> {
+  const ids = await escrow.projectsByLicense(licenseId);
+  return ids.length ? escrow.get(ids[ids.length - 1]) : undefined;
 }
 
 export { fundingStatus };
 
 const COLUMNS = "md:grid md:grid-cols-[minmax(0,2.3fr)_minmax(0,1fr)_minmax(0,1fr)_minmax(0,1fr)_minmax(0,1fr)_minmax(0,2.2fr)_1.5rem] md:items-center md:gap-6";
 
-export function ListingRow({ license, project }: Listing) {
+function FundingSkeleton() {
+  return (
+    <div className="flex flex-col gap-2">
+      <Skeleton className="h-3 w-24" />
+      <Skeleton className="h-1.5 w-full" />
+    </div>
+  );
+}
+
+export function ListingRow({ license }: { license: License }) {
   const { t } = useTranslation();
+  // Loaded per row: a failed RPC call then stays in its row instead of blanking the whole list.
+  const round = useAsync(() => latestRound(license.id), [String(license.id)]);
   const term = t("common.years", { count: license.terms.duration_years });
   const type = license.terms.exclusive ? t("common.exclusive") : t("common.nonExclusive");
 
@@ -62,7 +70,13 @@ export function ListingRow({ license, project }: Listing) {
         <p className="hidden truncate md:block">{license.terms.territory}</p>
         <p className="hidden md:block">{term}</p>
         <p className="hidden md:block">{type}</p>
-        <FundingProgress project={project} />
+        {round.error ? (
+          <p className="text-sm text-muted">{t("marketplace.roundUnavailable")}</p>
+        ) : round.loading && !round.data ? (
+          <FundingSkeleton />
+        ) : (
+          <FundingProgress project={round.data} />
+        )}
         <svg viewBox="0 0 24 24" className="hidden size-5 text-brand-ink transition duration-200 group-hover:translate-x-0.5 md:block" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
           <path d="m9 6 6 6-6 6" />
         </svg>
@@ -81,17 +95,14 @@ function RowSkeleton() {
       {[0, 1, 2, 3].map((i) => (
         <Skeleton key={i} className="hidden h-4 w-16 md:block" />
       ))}
-      <div className="flex flex-col gap-2">
-        <Skeleton className="h-3 w-24" />
-        <Skeleton className="h-1.5 w-full" />
-      </div>
+      <FundingSkeleton />
       <span />
     </li>
   );
 }
 
 /** The licences listed on-chain, as in the Figma table (stacked cards on phones). */
-export function LicenceTable({ data, loading }: { data?: Listing[]; loading: boolean }) {
+export function LicenceTable({ data, loading }: { data?: License[]; loading: boolean }) {
   const { t } = useTranslation();
   return (
     <div className="overflow-hidden rounded-3xl border border-line bg-card shadow-card">
@@ -116,7 +127,7 @@ export function LicenceTable({ data, loading }: { data?: Listing[]; loading: boo
       ) : (
         <ul className="divide-y divide-line">
           {loading && !data && [0, 1].map((i) => <RowSkeleton key={i} />)}
-          {data?.map((listing) => <ListingRow key={String(listing.license.id)} {...listing} />)}
+          {data?.map((license) => <ListingRow key={String(license.id)} license={license} />)}
         </ul>
       )}
     </div>
@@ -136,11 +147,11 @@ export function Marketplace() {
   const { push } = useToasts();
   const first = useAsync(() => loadListings(1), []);
   // Pages after the first one, appended by "Show more". Ids are contiguous from 1.
-  const [more, setMore] = useState<Listing[]>([]);
+  const [more, setMore] = useState<License[]>([]);
   const [pages, setPages] = useState(1);
   const [loadingMore, setLoadingMore] = useState(false);
   const { error, loading, reload } = first;
-  const data = first.data && [...first.data.listings, ...more];
+  const data = first.data && [...first.data.licenses, ...more];
   const total = first.data?.total ?? 0;
   const remaining = data ? total - data.length : 0;
 
@@ -148,7 +159,7 @@ export function Marketplace() {
     setLoadingMore(true);
     try {
       const page = await loadListings(1 + PAGE * pages);
-      setMore((all) => [...all, ...page.listings]);
+      setMore((all) => [...all, ...page.licenses]);
       setPages((n) => n + 1);
     } catch (err) {
       const raw = err instanceof Error ? err.message : String(err);
