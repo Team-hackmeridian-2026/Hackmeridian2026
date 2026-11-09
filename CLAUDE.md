@@ -11,7 +11,8 @@ Front-end, from `frontend/`, needs Node 22 and **npm 11** (`npm install -g npm@1
 - `npm run dev`: http://localhost:5173, uses the deployed testnet contracts, no config needed
 - `npm run build`: `tsc --noEmit` + `vite build`; this is the type check
 - `npm run test:i18n`: EN/FR/PT key and placeholder parity
-- There is no lint step and no front-end unit test.
+- `npm run test:format`: EURC amount parsing (`toUnits` / `fromUnits` in `lib/format.ts`)
+- There is no lint step; `test:format` is the only front-end unit test.
 
 Contracts, from `contracts/`:
 - `cargo test --locked`: unit tests
@@ -59,7 +60,7 @@ Read when needed (too long to import): `OVERVIEW.md` (architecture and data mode
 - Tags cannot be pushed from the sandbox (403); Antoine creates releases.
 
 ## Definition of Done
-- Front-end changed: `npm run build` and `npm run test:i18n` pass.
+- Front-end changed: `npm run build`, `npm run test:i18n` and `npm run test:format` pass.
 - Contracts changed: `cargo test --locked` and `stellar contract build` pass.
 - New UI text exists in EN, FR and PT.
 - Visual change: before/after screenshots in the PR (see CONTRIBUTING.md).
