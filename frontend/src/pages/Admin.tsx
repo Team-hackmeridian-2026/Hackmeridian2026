@@ -8,8 +8,7 @@ import { Badge, Button, Card, Field, Input, Notice, SectionTitle, Spinner, Statu
 import { useDocumentTitle } from "../lib/useDocumentTitle";
 import { accountSnapshot, FRIENDBOT_URL, type AccountSnapshot } from "../lib/account";
 import { formatNumber } from "../lib/format";
-
-const isAddress = (value: string) => /^G[A-Z2-7]{55}$/.test(value);
+import { isAddress } from "../components/listing";
 
 function ExternalLink({ href, children }: { href: string; children: ReactNode }) {
   return (
