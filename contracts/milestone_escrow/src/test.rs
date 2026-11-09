@@ -16,6 +16,7 @@ const ARBITER_PERIOD: u64 = 30 * 24 * 60 * 60;
 struct Setup<'a> {
     env: Env,
     escrow: MilestoneEscrowClient<'a>,
+    nft: IpLicenseNftClient<'a>,
     splitter: RoyaltySplitterClient<'a>,
     token: TokenClient<'a>,
     token_admin: StellarAssetClient<'a>,
@@ -77,7 +78,7 @@ fn setup(fee_bps: u32) -> Setup<'static> {
         (
             admin.clone(),
             sac.address(),
-            nft_id,
+            nft_id.clone(),
             splitter_id.clone(),
             treasury.clone(),
             fee_bps,
@@ -108,6 +109,7 @@ fn setup(fee_bps: u32) -> Setup<'static> {
     Setup {
         env,
         escrow,
+        nft,
         splitter,
         token,
         token_admin,
@@ -490,6 +492,53 @@ fn project_requires_configured_split_and_valid_amounts() {
             &DEADLINE
         ),
         Err(Ok(Error::InvalidMilestones.into()))
+    );
+
+    // A second licence whose royalty split was never configured: no round can open on it,
+    // since shares minted at funding would have no split to earn from.
+    let unconfigured = s.nft.mint(
+        &s.lab,
+        &String::from_str(&s.env, "Second patent"),
+        &vec![&s.env, s.inventor.clone()],
+        &LicenseTerms {
+            exclusive: false,
+            territory: String::from_str(&s.env, "EU"),
+            field: String::from_str(&s.env, "Oncology"),
+            duration_years: 5,
+        },
+        &BytesN::from_array(&s.env, &[2; 32]),
+        &String::from_str(&s.env, ""),
+    );
+    assert_eq!(
+        s.escrow.try_create_project(
+            &unconfigured,
+            &s.investor,
+            &s.arbiter,
+            &vec![&s.env, 10i128],
+            &WINDOW,
+            &DEADLINE
+        ),
+        Err(Ok(Error::SplitNotConfigured.into()))
+    );
+}
+
+#[test]
+fn unknown_project() {
+    let s = setup(0);
+    let missing: soroban_sdk::Error = Error::ProjectNotFound.into();
+    assert_eq!(s.escrow.try_get_project(&42).unwrap_err(), Ok(missing));
+    assert_eq!(s.escrow.try_fund(&42).unwrap_err(), Ok(missing));
+}
+
+// The constructor is the only place the fee is set, so an out-of-range fee must stop the deploy.
+#[test]
+#[should_panic(expected = "Error(Contract, #11)")]
+fn fee_above_100_percent_is_rejected_at_deploy() {
+    let env = Env::default();
+    let any = || Address::generate(&env);
+    env.register(
+        MilestoneEscrow,
+        (any(), any(), any(), any(), any(), 10_001u32),
     );
 }
 

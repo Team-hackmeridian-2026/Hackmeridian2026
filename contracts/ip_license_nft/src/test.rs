@@ -76,6 +76,30 @@ fn unverified_owner_cannot_mint() {
     assert_eq!(result, Err(Ok(Error::NotInstitution.into())));
 }
 
+// Each empty field is rejected on its own, so one valid field cannot mask a missing one.
+#[test]
+fn mint_rejects_incomplete_terms() {
+    let s = setup();
+    let try_mint = |title: &str, inventors: Vec<Address>, duration_years: u32| {
+        let mut t = terms(&s.env);
+        t.duration_years = duration_years;
+        s.client.try_mint(
+            &s.university,
+            &String::from_str(&s.env, title),
+            &inventors,
+            &t,
+            &BytesN::from_array(&s.env, &[7; 32]),
+            &String::from_str(&s.env, ""),
+        )
+    };
+    let inventors = vec![&s.env, s.inventor.clone()];
+    let invalid = Err(Ok(Error::InvalidTerms.into()));
+    assert_eq!(try_mint("", inventors.clone(), 10), invalid);
+    assert_eq!(try_mint("Anti-X antibody", Vec::new(&s.env), 10), invalid);
+    assert_eq!(try_mint("Anti-X antibody", inventors, 0), invalid);
+    assert_eq!(s.client.total(), 0);
+}
+
 #[test]
 fn transfer_only_to_institution() {
     let s = setup();

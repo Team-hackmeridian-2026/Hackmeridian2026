@@ -258,6 +258,51 @@ fn rounding_dust_goes_to_first_beneficiary() {
 }
 
 #[test]
+fn amounts_must_be_positive() {
+    let s = setup(0);
+    configure(&s);
+    let holder = investor(&s, 100);
+    let invalid = Err(Ok(Error::InvalidAmount.into()));
+    for amount in [0i128, -1] {
+        assert_eq!(
+            s.splitter.try_mint_shares(&s.license_id, &holder, &amount),
+            invalid
+        );
+        assert_eq!(
+            s.splitter.try_burn_shares(&s.license_id, &holder, &amount),
+            invalid
+        );
+        assert_eq!(
+            s.splitter.try_pay_royalty(&s.license_id, &holder, &amount),
+            invalid
+        );
+    }
+    assert_eq!(s.splitter.shares_of(&s.license_id, &holder), 100);
+}
+
+// Until the admin names the escrow as minter, nobody can create shares.
+#[test]
+fn shares_need_a_minter() {
+    let s = setup(0);
+    let id = s.env.register(
+        RoyaltySplitter,
+        (
+            s.admin.clone(),
+            s.token.address.clone(),
+            Address::generate(&s.env),
+            s.treasury.clone(),
+            0u32,
+        ),
+    );
+    let fresh = RoyaltySplitterClient::new(&s.env, &id);
+    let who = Address::generate(&s.env);
+    assert_eq!(
+        fresh.try_mint_shares(&s.license_id, &who, &1),
+        Err(Ok(Error::NoMinter.into()))
+    );
+}
+
+#[test]
 fn only_minter_can_mint() {
     let s = setup(0);
     configure(&s);
