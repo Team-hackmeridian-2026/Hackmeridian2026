@@ -47,6 +47,11 @@ function useNow(): number {
   return now;
 }
 
+/** No milestone can be submitted after the deadline. Rounds of contracts deployed before 2.0.0 have none. */
+function isPastDeadline(project: Project, now: number): boolean {
+  return project.deadline !== undefined && now >= Number(project.deadline);
+}
+
 // ---------- Licence header ----------
 
 function DossierCheck({ license }: { license: License }) {
@@ -230,8 +235,7 @@ function MilestoneRow({
     .every((m) => isSettled(m.status));
   const deadline = Number(milestone.submitted_at) + Number(project.challenge_period);
   const windowOpen = milestone.status === "Submitted" && now < deadline;
-  // Rounds of contracts deployed before 2.0.0 have no deadline.
-  const pastDeadline = project.deadline !== undefined && now >= Number(project.deadline);
+  const pastDeadline = isPastDeadline(project, now);
   const look = STATUS_LOOK[milestone.status];
 
   async function act(
@@ -383,7 +387,8 @@ function FundingRound({ projectId, signer, onChange }: { projectId: bigint; sign
           <dd><Address value={p.arbiter} /></dd>
         </div>
       </dl>
-      {!p.funded && signer?.address === p.investor && (
+      {/* Funding after the deadline would only lock the EURC until someone reclaims it. */}
+      {!p.funded && !isPastDeadline(p, now) && signer?.address === p.investor && (
         <Button
           busy={busy}
           onClick={async () => {
@@ -395,9 +400,10 @@ function FundingRound({ projectId, signer, onChange }: { projectId: bigint; sign
           {t("licence.fund", { amount: eurc(total) })}
         </Button>
       )}
-      {!p.funded && signer?.address !== p.investor && (
+      {!p.funded && !isPastDeadline(p, now) && signer?.address !== p.investor && (
         <p className="text-sm text-muted">{t("licence.waitingInvestor", { address: shortAddress(p.investor) })}</p>
       )}
+      {!p.funded && isPastDeadline(p, now) && <p className="text-sm text-muted">{t("licence.roundExpired")}</p>}
       {toReclaim.length > 0 && (
         <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-amber/40 bg-amber/10 px-4 py-3 text-sm">
           <p className="max-w-xl">

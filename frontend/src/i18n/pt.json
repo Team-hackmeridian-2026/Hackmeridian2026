@@ -292,6 +292,7 @@
     "arbiter": "Árbitro",
     "fund": "Financiar {{amount}}: bloquear no escrow por participações nas receitas",
     "waitingInvestor": "A aguardar que o investidor {{address}} bloqueie os fundos.",
+    "roundExpired": "A duração da investigação terminou antes de esta ronda ser financiada: já não pode ser financiada.",
     "royalties": "Royalties",
     "university": "Universidade",
     "inventor": "Inventor {{address}}",
