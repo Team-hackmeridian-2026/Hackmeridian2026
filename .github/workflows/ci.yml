@@ -35,7 +35,7 @@ jobs:
       - name: Unit tests
         run: cargo test --locked
       - name: Install the Stellar CLI
-        uses: stellar/stellar-cli@v28.1.0
+        uses: stellar/stellar-cli@v30.0.1
       - name: Build the Wasm contracts
         # soroban-sdk only builds contracts through `stellar contract build`.
         run: stellar contract build
