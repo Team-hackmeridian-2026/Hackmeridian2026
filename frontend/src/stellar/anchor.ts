@@ -102,13 +102,12 @@ export function anchorConfig(): Promise<AnchorConfig> {
 
 // ---------- SEP-10 ----------
 
-const tokens = new Map<string, string>();
-
-/** Proves to the anchor that the user controls `signer.address` by signing its challenge. */
+/**
+ * Proves to the anchor that the user controls `signer.address` by signing its challenge.
+ * Not cached: the cash-out page keeps the token while it is open, so leaving the page
+ * drops an expired one instead of reusing it for every later withdrawal.
+ */
 export async function authenticate(signer: Signer): Promise<string> {
-  const cached = tokens.get(signer.address);
-  if (cached) return cached;
-
   const cfg = await anchorConfig();
   const res = await fetch(`${cfg.webAuth}?account=${signer.address}`);
   const { transaction } = (await res.json()) as { transaction: string };
@@ -134,7 +133,6 @@ export async function authenticate(signer: Signer): Promise<string> {
   });
   const body = (await tokenRes.json()) as { token?: string; error?: string };
   if (!body.token) throw new Error(body.error ?? "The anchor refused the authentication.");
-  tokens.set(signer.address, body.token);
   return body.token;
 }
 
