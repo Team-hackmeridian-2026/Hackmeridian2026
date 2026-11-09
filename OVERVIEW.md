@@ -567,6 +567,7 @@ none of these is urgent for the demo.
 | 17 | Low | Security hygiene | The README publishes testnet secret keys for the jury; `VITE_DEMO_SECRETS` would be baked into the public bundle if ever set on Vercel | Rotate the jury accounts after judging; fail the build if that variable is set in production | Open |
 | 18 | Low | Performance | 914 kB main chunk, routes not code-split; the WebGL helix runs behind every page except home | Lazy-load routes; consider a static helix on inner pages | Open: routes are not code-split and `PageHelix` still runs on inner pages |
 | 19 | Info | Maths | Accumulator rounding leaves a few stroops of dust in the splitter; amounts are shown truncated to 2 decimals | Document; no action needed | No action |
+| 20 | High | Escrow | **A lab can be its own investor.** `create_project` accepts `investor == lab`: the lab funds its round, gets the money back minus the fee, and receives shares that dilute the investors of earlier rounds | Reject `investor == lab`; KYC review stays the guard against a second address of the same lab | **Fixed on `main`, waits for the next redeploy** (`InvalidParties`); the listing forms already refuse it |
 
 ---
 

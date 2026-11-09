@@ -173,7 +173,8 @@
       "parties": "Escolha um investidor e um árbitro.",
       "split": "A repartição dos royalties tem de somar 100 %.",
       "milestones": "Cada marco precisa de um montante positivo.",
-      "arbiter": "O árbitro tem de ser uma pessoa diferente do investidor e da universidade."
+      "arbiter": "O árbitro tem de ser uma pessoa diferente do investidor e da universidade.",
+      "selfInvestor": "O investidor tem de ser uma pessoa diferente da universidade: um laboratório não pode financiar a sua própria ronda."
     },
     "eyebrow": "Para universidades e laboratórios",
     "title": "Registar uma patente",
@@ -465,7 +466,7 @@
       "10": "O prazo de contestação ainda está aberto.",
       "11": "Configuração inválida.",
       "12": "A parte do laboratório deve estar entre 0 e 100 %.",
-      "13": "O árbitro tem de ser uma pessoa diferente do investidor e do laboratório.",
+      "13": "O árbitro tem de ser uma pessoa diferente do investidor e do laboratório, e o laboratório não pode ser o seu próprio investidor.",
       "14": "O prazo de contestação tem de estar entre 1 minuto e 30 dias.",
       "15": "O prazo final tem de ser no futuro.",
       "16": "A duração da investigação terminou: já não é possível submeter marcos.",

@@ -173,7 +173,8 @@
       "parties": "Choisissez un investisseur et un arbitre.",
       "split": "Le partage des redevances doit totaliser 100 %.",
       "milestones": "Chaque jalon doit avoir un montant positif.",
-      "arbiter": "L'arbitre doit être une autre personne que l'investisseur et l'université."
+      "arbiter": "L'arbitre doit être une autre personne que l'investisseur et l'université.",
+      "selfInvestor": "L'investisseur doit être une autre personne que l'université : un labo ne peut pas financer son propre tour."
     },
     "eyebrow": "Pour les universités et les labos",
     "title": "Déposer un brevet",
@@ -465,7 +466,7 @@
       "10": "Le délai de contestation est encore ouvert.",
       "11": "Configuration invalide.",
       "12": "La part du labo doit être comprise entre 0 et 100 %.",
-      "13": "L'arbitre doit être une autre personne que l'investisseur et le labo.",
+      "13": "L'arbitre doit être une autre personne que l'investisseur et le labo, et le labo ne peut pas être son propre investisseur.",
       "14": "Le délai de contestation doit être compris entre 1 minute et 30 jours.",
       "15": "L'échéance doit être dans le futur.",
       "16": "La durée de la recherche est écoulée : plus aucun jalon ne peut être soumis.",

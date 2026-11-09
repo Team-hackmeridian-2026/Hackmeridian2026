@@ -171,6 +171,8 @@ export function NewLicence() {
     if (!isAddress(investor) || !isAddress(arbiter)) return fail("parties", t("newLicence.errors.parties"));
     // The contract refuses it too (InvalidParties): the arbiter settles disputes between them.
     if (arbiter === investor || arbiter === signer.address) return fail("parties", t("newLicence.errors.arbiter"));
+    // The contracts of release 3.0.0 accept it, so the form is the only guard until the next redeploy.
+    if (investor === signer.address) return fail("parties", t("newLicence.errors.selfInvestor"));
     if (universityPct + inventorsPct + investorsPct !== 100) return fail("split", t("newLicence.errors.split"));
     if (milestones.length === 0 || milestones.some((m) => !(Number(m) > 0)))
       return fail("milestones", t("newLicence.errors.milestones"));

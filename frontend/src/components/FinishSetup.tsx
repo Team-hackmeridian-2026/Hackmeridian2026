@@ -135,6 +135,8 @@ function RoundForm({ license, signer, onDone }: { license: License; signer: Sign
     if (!isAddress(investor) || !isAddress(arbiter)) return setError(t("newLicence.errors.parties"));
     // The contract refuses it too (InvalidParties): the arbiter settles disputes between them.
     if (arbiter === investor || arbiter === license.owner) return setError(t("newLicence.errors.arbiter"));
+    // The contracts of release 3.0.0 accept it, so the form is the only guard until the next redeploy.
+    if (investor === license.owner) return setError(t("newLicence.errors.selfInvestor"));
     if (milestones.length === 0 || milestones.some((m) => !(Number(m) > 0))) return setError(t("newLicence.errors.milestones"));
     setBusy(true);
     const done = await run(t("newLicence.toasts.round"), () =>

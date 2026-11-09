@@ -108,7 +108,8 @@ pub enum Error {
     ChallengeWindowOpen = 10,
     InvalidConfig = 11,
     InvalidShare = 12,
-    /// The arbiter can be neither the investor nor the lab.
+    /// The arbiter can be neither the investor nor the lab, and the lab cannot
+    /// be its own investor.
     InvalidParties = 13,
     /// Challenge window outside [MIN_CHALLENGE_PERIOD, MAX_CHALLENGE_PERIOD].
     InvalidWindow = 14,
@@ -236,7 +237,9 @@ impl MilestoneEscrow {
             panic_with_error!(&env, Error::InvalidMilestones);
         }
         // The arbiter settles between the lab and the investor, so it can be neither.
-        if arbiter == investor || arbiter == lab {
+        // A lab funding itself would get its money back and mint shares for it,
+        // diluting the investors of earlier rounds for the price of the fee.
+        if arbiter == investor || arbiter == lab || investor == lab {
             panic_with_error!(&env, Error::InvalidParties);
         }
         if !(MIN_CHALLENGE_PERIOD..=MAX_CHALLENGE_PERIOD).contains(&challenge_period) {

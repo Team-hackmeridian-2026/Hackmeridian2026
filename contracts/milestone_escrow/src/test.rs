@@ -558,6 +558,19 @@ fn arbiter_window_and_deadline_are_checked_at_creation() {
     let parties = Err(Ok(Error::InvalidParties.into()));
     assert_eq!(try_create(&s.investor, WINDOW, DEADLINE), parties);
     assert_eq!(try_create(&s.lab, WINDOW, DEADLINE), parties);
+    // The lab cannot fund its own round, even when it is on the KYC allowlist.
+    s.splitter.set_allowed(&s.lab, &true);
+    assert_eq!(
+        s.escrow.try_create_project(
+            &s.license_id,
+            &s.lab,
+            &s.arbiter,
+            &vec![&s.env, 10i128],
+            &WINDOW,
+            &DEADLINE,
+        ),
+        parties
+    );
 
     let window = Err(Ok(Error::InvalidWindow.into()));
     assert_eq!(try_create(&s.arbiter, 0, DEADLINE), window);

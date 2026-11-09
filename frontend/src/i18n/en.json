@@ -173,7 +173,8 @@
       "parties": "Choose an investor and an arbiter.",
       "split": "The royalty split must add up to 100 %.",
       "milestones": "Every milestone needs a positive amount.",
-      "arbiter": "The arbiter must be someone other than the investor and the university."
+      "arbiter": "The arbiter must be someone other than the investor and the university.",
+      "selfInvestor": "The investor must be someone other than the university: a lab cannot fund its own round."
     },
     "eyebrow": "For universities and labs",
     "title": "List a patent",
@@ -465,7 +466,7 @@
       "10": "The challenge window is still open.",
       "11": "Invalid configuration.",
       "12": "The lab's share must be between 0 and 100 %.",
-      "13": "The arbiter must be someone other than the investor and the lab.",
+      "13": "The arbiter must be someone other than the investor and the lab, and the lab cannot be its own investor.",
       "14": "The challenge window must be between 1 minute and 30 days.",
       "15": "The deadline must be in the future.",
       "16": "The research period is over: no milestone can be submitted any more.",
