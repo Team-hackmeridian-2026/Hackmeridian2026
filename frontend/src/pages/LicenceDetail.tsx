@@ -331,23 +331,16 @@ function MilestoneRow({
   );
 }
 
-function FundingRound({ projectId, signer, onChange }: { projectId: bigint; signer: Signer | null; onChange: () => void }) {
+/** One funding round; `onChange` reloads every round of the page after a transaction. */
+function FundingRound({ project: p, signer, onChange }: { project: Project; signer: Signer | null; onChange: () => void }) {
   const { t } = useTranslation();
   const { run } = useToasts();
   const now = useNow();
-  const project = useAsync(() => escrow.get(projectId), [String(projectId)]);
   const [busy, setBusy] = useState(false);
   const [reclaiming, setReclaiming] = useState(false);
 
-  if (project.loading && !project.data) return <Spinner />;
-  if (project.error) return <ErrorBox message={project.error} onRetry={project.reload} />;
-  const p = project.data!;
   const total = p.milestones.reduce((s, m) => s + m.amount, 0n);
   const toReclaim = reclaimable(p, now);
-  const refresh = () => {
-    project.reload();
-    onChange();
-  };
 
   return (
     <Card className="flex flex-col gap-6">
@@ -388,7 +381,7 @@ function FundingRound({ projectId, signer, onChange }: { projectId: bigint; sign
           busy={busy}
           onClick={async () => {
             setBusy(true);
-            if (await run(t("licence.toasts.fund"), () => escrow.fund(signer, p.id))) refresh();
+            if (await run(t("licence.toasts.fund"), () => escrow.fund(signer, p.id))) onChange();
             setBusy(false);
           }}
         >
@@ -409,7 +402,7 @@ function FundingRound({ projectId, signer, onChange }: { projectId: bigint; sign
               busy={reclaiming}
               onClick={async () => {
                 setReclaiming(true);
-                if (await run(t("licence.toasts.reclaim"), () => escrow.reclaim(signer, p.id))) refresh();
+                if (await run(t("licence.toasts.reclaim"), () => escrow.reclaim(signer, p.id))) onChange();
                 setReclaiming(false);
               }}
             >
@@ -420,7 +413,7 @@ function FundingRound({ projectId, signer, onChange }: { projectId: bigint; sign
       )}
       <ol className="flex flex-col">
         {p.milestones.map((m, i) => (
-          <MilestoneRow key={i} project={p} milestone={m} index={i} signer={signer} now={now} onDone={refresh} />
+          <MilestoneRow key={i} project={p} milestone={m} index={i} signer={signer} now={now} onDone={onChange} />
         ))}
       </ol>
     </Card>
@@ -572,14 +565,13 @@ export function LicenceDetail() {
   const [version, setVersion] = useState(0);
   const license = useAsync(() => nft.get(licenseId), [id]);
   useDocumentTitle(license.data?.title);
-  const projects = useAsync(() => escrow.projectsByLicense(licenseId), [id, version]);
+  // Every funding round, oldest first, loaded once; the latest one is also summarised next to the title.
+  const rounds = useAsync(async () => {
+    const ids = await escrow.projectsByLicense(licenseId);
+    return Promise.all(ids.map((pid) => escrow.get(pid)));
+  }, [id, version]);
   // False when listing stopped before the royalty split was locked (see FinishSetup).
   const configured = useAsync(() => splitter.isConfigured(licenseId), [id, version]);
-  // Latest round, for the funding summary next to the title.
-  const latest = useAsync(async () => {
-    const ids = await escrow.projectsByLicense(licenseId);
-    return ids.length ? escrow.get(ids[ids.length - 1]) : undefined;
-  }, [id, version]);
 
   if (licenseId === 0n) return <NotFound title={t("licence.notFound")} />;
   if (license.loading) return <Spinner />;
@@ -626,7 +618,7 @@ export function LicenceDetail() {
         </div>
         <Card className="flex flex-col gap-4">
           <p className="text-sm font-semibold text-muted">{t("licence.funding")}</p>
-          {latest.loading && !latest.data ? <Spinner /> : <FundingProgress project={latest.data} large />}
+          {rounds.loading && !rounds.data ? <Spinner /> : <FundingProgress project={rounds.data?.at(-1)} large />}
           <a href="#funding" className={buttonClass({ variant: "secondary", className: "w-full" })}>
             {t("licence.goToMilestones")}
           </a>
@@ -666,14 +658,16 @@ export function LicenceDetail() {
           <DossierCheck license={l} />
 
           <h2 id="funding" className="mt-4 scroll-mt-36 font-display text-3xl font-bold tracking-tight">{t("licence.fundingTitle")}</h2>
-          {projects.data?.length === 0 &&
+          {rounds.error && <ErrorBox message={rounds.error} onRetry={rounds.reload} />}
+          {rounds.loading && !rounds.data && <Spinner />}
+          {rounds.data?.length === 0 &&
             (signer?.address === l.owner && configured.data !== undefined ? (
               <FinishSetup license={l} signer={signer} configured={configured.data} onDone={() => setVersion((v) => v + 1)} />
             ) : (
               <Card className="text-sm text-muted">{t("licence.noRound")}</Card>
             ))}
-          {projects.data?.map((pid) => (
-            <FundingRound key={String(pid)} projectId={pid} signer={signer} onChange={() => setVersion((v) => v + 1)} />
+          {rounds.data?.map((round) => (
+            <FundingRound key={String(round.id)} project={round} signer={signer} onChange={() => setVersion((v) => v + 1)} />
           ))}
         </div>
 
