@@ -198,6 +198,22 @@ fn transfer_keeps_past_earnings_with_seller() {
 }
 
 #[test]
+fn shares_minted_after_a_royalty_do_not_earn_it() {
+    // The usual flow: milestone 1 mints shares, a royalty arrives, then
+    // milestone 2 mints more for the same investor and a new one joins.
+    let s = setup(0);
+    configure(&s);
+    let a = investor(&s, 100);
+    pay(&s, 10_000); // a earns the investors' 3,000
+    s.splitter.mint_shares(&s.license_id, &a, &100);
+    let b = investor(&s, 200);
+    pay(&s, 10_000); // 3,000 for 400 shares: 1,500 each
+
+    assert_eq!(s.splitter.claimable(&s.license_id, &a), 4_500);
+    assert_eq!(s.splitter.claimable(&s.license_id, &b), 1_500);
+}
+
+#[test]
 fn shares_restricted_to_allowed_addresses() {
     let s = setup(0);
     configure(&s);
