@@ -1,6 +1,6 @@
 import { Buffer } from "buffer";
 import { contract } from "@stellar/stellar-sdk";
-import { CONTRACTS, EURC_CODE, EURC_ISSUER, HORIZON_URL, NETWORK_PASSPHRASE, RPC_URL } from "../config";
+import { CONTRACTS, NETWORK_PASSPHRASE, RPC_URL } from "../config";
 import { toUnits } from "../lib/format";
 import i18n from "../i18n";
 import type { Signer } from "./wallet";
@@ -303,15 +303,3 @@ export const splitter = {
   setAllowed: (signer: Signer, who: string, allowed: boolean) =>
     write(CONTRACTS.splitter, "set_allowed", { who, allowed }, signer),
 };
-
-// ---------- EURC balances (Horizon) ----------
-
-export async function eurcBalance(address: string): Promise<{ balance: string; hasTrustline: boolean } | null> {
-  const res = await fetch(`${HORIZON_URL}/accounts/${address}`);
-  if (res.status === 404) return null;
-  const account = (await res.json()) as {
-    balances: { asset_code?: string; asset_issuer?: string; balance: string }[];
-  };
-  const line = account.balances.find((b) => b.asset_code === EURC_CODE && b.asset_issuer === EURC_ISSUER);
-  return { balance: line?.balance ?? "0", hasTrustline: Boolean(line) };
-}
