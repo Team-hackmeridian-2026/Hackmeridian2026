@@ -8,7 +8,7 @@ import { Button, ErrorBox, Skeleton, buttonClass } from "../components/ui";
 import { useToasts } from "../components/toasts";
 import { isNetworkError } from "../lib/errors";
 import { HeroVisual } from "../components/HeroVisual";
-import { FundingProgress, fundingStatus } from "../components/Funding";
+import { FundingProgress } from "../components/Funding";
 import { Molecule } from "../components/Molecule";
 import { useDocumentTitle } from "../lib/useDocumentTitle";
 
@@ -29,8 +29,6 @@ async function loadListings(start: number): Promise<{ total: number; listings: L
   );
   return { total: Number(total), listings };
 }
-
-export { fundingStatus };
 
 const COLUMNS = "md:grid md:grid-cols-[minmax(0,2.3fr)_minmax(0,1fr)_minmax(0,1fr)_minmax(0,1fr)_minmax(0,1fr)_minmax(0,2.2fr)_1.5rem] md:items-center md:gap-6";
 

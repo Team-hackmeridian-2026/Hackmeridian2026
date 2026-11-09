@@ -268,8 +268,6 @@ export const escrow = {
     ),
   release: (signer: Signer, projectId: bigint, index: number) =>
     write(CONTRACTS.escrow, "release", { project_id: projectId, index }, signer),
-  resolve: (signer: Signer, projectId: bigint, index: number, approve: boolean) =>
-    write(CONTRACTS.escrow, "resolve", { project_id: projectId, index, approve }, signer),
   /** Anyone can trigger it: refunds the investor for every milestone `reclaimable` lists. */
   reclaim: (signer: Signer, projectId: bigint) => write(CONTRACTS.escrow, "reclaim", { project_id: projectId }, signer),
   /** labPct: share paid to the lab (0–100); the rest is refunded to the investor. */

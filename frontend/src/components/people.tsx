@@ -18,10 +18,6 @@ export const DIRECTORY: Person[] = [
 
 const OTHER = "__other__";
 
-export function nameOf(address: string): string {
-  return DIRECTORY.find((p) => p.address === address)?.name ?? shortAddress(address);
-}
-
 /** Picks a person by name; "Other address…" reveals a free input for any Stellar account. */
 export function PersonPicker({
   value,

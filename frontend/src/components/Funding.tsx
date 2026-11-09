@@ -6,7 +6,7 @@ import { eurc } from "../lib/format";
 export type FundingTone = "neutral" | "brand" | "amber" | "navy";
 
 /** Where a licence's funding round stands, in one short label. */
-export function fundingStatus(t: TFunction, project?: Project): { label: string; tone: FundingTone } {
+function fundingStatus(t: TFunction, project?: Project): { label: string; tone: FundingTone } {
   if (!project) return { label: t("funding.awaiting"), tone: "neutral" };
   if (!project.funded) return { label: t("funding.open"), tone: "amber" };
   const settled = project.milestones.filter((m) => isSettled(m.status)).length;
