@@ -1,4 +1,4 @@
-import { useState, type ReactNode } from "react";
+import { useRef, useState, type ReactNode } from "react";
 import { useTranslation } from "react-i18next";
 import { ACCOUNTS, CIRCLE_FAUCET_URL, CONTRACTS, explorer } from "../config";
 import { nft, splitter, type TxResult } from "../stellar/contracts";
@@ -43,23 +43,26 @@ function AccountChecker() {
   const [report, setReport] = useState<Report | null>(null);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  // Each keystroke starts a check: only the one for the address in the box may show its answer.
+  const latest = useRef("");
 
   async function check(address: string) {
+    latest.current = address;
     setReport(null);
     setError("");
+    setLoading(isAddress(address));
     if (!isAddress(address)) return;
-    setLoading(true);
     try {
       const [snapshot, institution, kyc] = await Promise.all([
         accountSnapshot(address),
         nft.isInstitution(address).catch(() => null),
         splitter.isAllowed(address).catch(() => null),
       ]);
-      setReport({ ...snapshot, institution, kyc });
+      if (latest.current === address) setReport({ ...snapshot, institution, kyc });
     } catch (err) {
-      setError(err instanceof Error ? err.message : String(err));
+      if (latest.current === address) setError(err instanceof Error ? err.message : String(err));
     }
-    setLoading(false);
+    if (latest.current === address) setLoading(false);
   }
 
   const yesNo = (value: boolean | null) => (value === null ? t("admin.checker.unknown") : undefined);
@@ -152,16 +155,23 @@ function Registry({
   const [who, setWho] = useState("");
   const [status, setStatus] = useState<boolean | null>(null);
   const [busy, setBusy] = useState(false);
+  // Same as AccountChecker: an older lookup must not overwrite the status of the address now typed.
+  const latest = useRef("");
 
   async function lookup(address = who) {
+    latest.current = address;
     setStatus(null);
-    if (isAddress(address)) setStatus(await check(address).catch(() => null));
+    if (!isAddress(address)) return;
+    const value = await check(address).catch(() => null);
+    if (latest.current === address) setStatus(value);
   }
 
   async function set(value: boolean) {
     if (!grant) return;
     setBusy(true);
-    if (await run(value ? yes : no, () => grant(who, value))) await lookup();
+    const done = await run(value ? yes : no, () => grant(who, value));
+    // Refresh the status only if the box still shows the address that was just changed.
+    if (done && latest.current === who) await lookup(who);
     setBusy(false);
   }
 
