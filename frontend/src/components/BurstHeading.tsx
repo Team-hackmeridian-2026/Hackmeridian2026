@@ -1,4 +1,4 @@
-import { useEffect, useRef, type ElementType } from "react";
+import { useEffect, useLayoutEffect, useRef, type ElementType } from "react";
 
 /**
  * Interactive title text, like the 0/1 molecules: letters near the pointer grow, move
@@ -10,12 +10,14 @@ import { useEffect, useRef, type ElementType } from "react";
  * so screen readers, copy and paste and search engines all see the plain text once.
  * Words stay unbreakable so the heading wraps exactly as before. Nothing moves with
  * prefers-reduced-motion, and touch scrolling never triggers the hover effect.
+ * When the heading comes into view, its letters decode through random glyphs first.
  */
 const REACH_PX = 150; // how far from the pointer letters react
 const PUSH_PX = 12; // how far a letter moves aside at full effect
 const GROW = 0.38; // extra scale at full effect
 // Same tokens as the molecules: saturated on the light theme, pastel on the dark one.
 const COLORS = ["--color-mol-indigo", "--color-mol-violet", "--color-mol-pink", "--color-mol-peach", "--color-mol-yellow"];
+const GLYPHS = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789#%&*+=<>/";
 
 type Letter = { el: HTMLSpanElement; bx: number; by: number; ox: number; oy: number; vx: number; vy: number; r: number; vr: number; h: number; color: string };
 
@@ -31,6 +33,63 @@ export function BurstHeading({
   id?: string;
 }) {
   const rootRef = useRef<HTMLSpanElement>(null);
+
+  // Matrix-style reveal on first view and on every text change (language switch): letters
+  // cycle through random glyphs, then settle left to right. A layout effect, so the real
+  // text never flashes before the scramble when the heading is already on screen.
+  useLayoutEffect(() => {
+    const root = rootRef.current;
+    if (!root || window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    const els = Array.from(root.querySelectorAll<HTMLSpanElement>("[data-ch]"));
+    let frame = 0;
+    let io: IntersectionObserver | undefined;
+    // Mutates React's own text node, so the next render still finds it; data-ch holds the real letter.
+    const settle = (el: HTMLSpanElement) => {
+      if (el.firstChild) el.firstChild.nodeValue = el.dataset.ch ?? "";
+      el.style.width = el.style.textAlign = "";
+    };
+    const start = () => {
+      // Lock each letter's width so the random glyphs never reflow the heading.
+      const widths = els.map((el) => el.offsetWidth);
+      els.forEach((el, i) => {
+        el.style.width = `${widths[i]}px`;
+        el.style.textAlign = "center";
+      });
+      const t0 = performance.now();
+      const stagger = Math.min(40, 700 / els.length);
+      const ends = els.map((_, i) => t0 + 120 + i * stagger + Math.random() * 200);
+      let last = 0;
+      const tick = (now: number) => {
+        const swap = now - last > 50; // ~20 glyph changes per second reads better than one per frame
+        if (swap) last = now;
+        let busy = false;
+        els.forEach((el, i) => {
+          if (!el.style.width) return;
+          if (now >= ends[i]) return settle(el);
+          busy = true;
+          if (swap && el.firstChild) el.firstChild.nodeValue = GLYPHS[Math.floor(Math.random() * GLYPHS.length)];
+        });
+        frame = busy ? requestAnimationFrame(tick) : 0;
+      };
+      tick(t0);
+    };
+
+    const r = root.getBoundingClientRect();
+    if (r.bottom > 0 && r.top < window.innerHeight) start();
+    else {
+      io = new IntersectionObserver(([e]) => {
+        if (!e.isIntersecting) return;
+        io!.disconnect();
+        start();
+      });
+      io.observe(root);
+    }
+    return () => {
+      io?.disconnect();
+      cancelAnimationFrame(frame);
+      els.forEach(settle);
+    };
+  }, [text]);
 
   useEffect(() => {
     const root = rootRef.current;
@@ -164,7 +223,7 @@ export function BurstHeading({
             {w > 0 && " "}
             <span className="inline-block whitespace-nowrap">
               {Array.from(word).map((ch, c) => (
-                <span key={c} data-ch className="inline-block origin-center">
+                <span key={c} data-ch={ch} className="inline-block origin-center">
                   {ch}
                 </span>
               ))}
