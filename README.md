@@ -153,7 +153,7 @@ number of holders, and everyone withdraws when they want (pull payments).
 
 - Node.js 22+ with npm 11 (`npm install -g npm@11`), the npm Dependabot uses
 - For the contracts: Rust with the `wasm32v1-none` target and the
-  [Stellar CLI](https://developers.stellar.org/docs/tools/cli) 28+
+  [Stellar CLI](https://developers.stellar.org/docs/tools/cli) 30+ (soroban-sdk 30 refuses older ones)
 - A Stellar wallet such as [Freighter](https://www.freighter.app/), set to **Testnet**
 
 ### Run the front-end (uses the deployed contracts)
