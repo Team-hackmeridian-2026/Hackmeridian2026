@@ -83,7 +83,7 @@ function SplitForm({ license, signer, onDone }: { license: License; signer: Sign
 
   async function submit() {
     setError(undefined);
-    const problem = splitProblem(split);
+    const problem = splitProblem(license.owner, license.inventors, split);
     if (problem) return setError(t(problem.message));
     setBusy(true);
     const done = await run(t("newLicence.toasts.split"), () =>

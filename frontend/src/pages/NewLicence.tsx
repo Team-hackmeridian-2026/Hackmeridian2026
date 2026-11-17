@@ -170,7 +170,7 @@ export function NewLicence() {
     if (metadataUri.trim() && !safeLink(metadataUri)) return fail("dossier", t("newLicence.errors.dataRoom"));
     if (inventorList.length === 0 || !inventorList.every(isAddress)) return fail("inventors", t("newLicence.errors.inventors"));
     // In the order of the sections on screen: split, then parties and milestones.
-    const problem = splitProblem(split) ?? roundProblem(signer.address, investor, arbiter, milestones);
+    const problem = splitProblem(signer.address, inventorList, split) ?? roundProblem(signer.address, investor, arbiter, milestones);
     if (problem) return fail(problem.field, t(problem.message));
 
     setBusy(true);

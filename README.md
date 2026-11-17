@@ -211,6 +211,11 @@ One-time setup, by a repository admin:
 
 These are testnet keys only. Never put mainnet keys in this secret.
 
+The **Extend contract lifetime (testnet)** workflow runs on the 1st of each
+month (or by hand) and renews the TTL of the three contracts and their code, so
+the network does not archive them. It needs no key: it pays with a throwaway
+Friendbot account.
+
 #### Switching to new demo accounts
 
 The contracts' admin is the account that deployed them. If the `bl-*` keys are
@@ -218,9 +223,10 @@ lost, deploy the new contracts with a new set of accounts:
 
 1. On your machine, `EURC_MODE=circle ./scripts/setup-accounts.sh` creates the
    `bl-*` identities, funds them with XLM and adds the EURC trustlines.
-2. Import the four jury accounts, whose testnet keys are in the table above:
-   `stellar keys add bl-jury-1 --secret-key` (then `bl-jury-2`, `bl-jury-3`
-   and `bl-jury-arbiter`) and paste the key when prompted.
+2. If you run the jury step, import the four jury accounts from the machine
+   that created them: `stellar keys add bl-jury-1 --secret-key` (then
+   `bl-jury-2`, `bl-jury-3` and `bl-jury-arbiter`) and paste the key when
+   prompted.
 3. Get test EURC on [faucet.circle.com](https://faucet.circle.com) for
    `bl-fund` (about 8) and `bl-pharma` (about 3, plus 5 per juror whose
    balance is empty).
@@ -247,32 +253,31 @@ Deployment state lives in `deployments/testnet.env` (gitignored, see
 
 ## Demo
 
-### For the jury: ready-made test accounts
+### Jury accounts
 
-Browsing needs no wallet. To sign transactions yourself, import one of these
-accounts into [Freighter](https://www.freighter.app) (**Settings → Network:
-Testnet**, then **Import a Stellar secret key**). Each juror account is already
-a verified institution, on the KYC allowlist, and holds 5 test EURC.
+Browsing needs no wallet. During judging, the jury signed with four
+ready-made testnet accounts, each a verified institution on the KYC allowlist
+with 5 test EURC. Their secret keys were shared for the event only and are no
+longer published here.
 
-> These are **testnet-only** keys created for the jury. They hold no real
-> value; please do not reuse them anywhere else.
+| Account | Role | Address |
+| --- | --- | --- |
+| Juror 1 | Lab and investor | `GA5VVZ5YYKUTCW6B3DEU6AK45QQVFEX2PFMJ6FMLKEMLSQ2CE7766XUL` |
+| Juror 2 | Lab and investor | `GBJL53EHJXAUAVLCDJNNX333BJFP4ZKMRMMMXHPAX3JEHIXA3KHLRM7Q` |
+| Juror 3 | Lab and investor | `GA2KN3QOYYU7SWDPLAZ6HQ7GS3CFXVLPAQFDSWIUEGOVC2DJLNM6KCVD` |
+| Jury arbiter | Arbiter (shared) | `GDREHWU6C7XZXEEYNEISEDIBZPTVSESBUPB5APUBNUSQ6TZ2ZNCY7I3T` |
 
-| Account | Role | Address | Secret key (testnet) |
-| --- | --- | --- | --- |
-| Juror 1 | Lab and investor | `GA5VVZ5YYKUTCW6B3DEU6AK45QQVFEX2PFMJ6FMLKEMLSQ2CE7766XUL` | `SABBMNYKKTGJOR3PPJIPG4J4ECLZ3DDBR3BTDPI573WHX4MZADUREI7K` |
-| Juror 2 | Lab and investor | `GBJL53EHJXAUAVLCDJNNX333BJFP4ZKMRMMMXHPAX3JEHIXA3KHLRM7Q` | `SBJQCWRJV5UXZXJG7VYX7V5AEENQJMDA4COYLFDDQCJ4Z6ZPC3HLCW2L` |
-| Juror 3 | Lab and investor | `GA2KN3QOYYU7SWDPLAZ6HQ7GS3CFXVLPAQFDSWIUEGOVC2DJLNM6KCVD` | `SAM7QD2BP37KDJRF3DOOYWHQIN2NN2BGMQRKJ4XGH66YS2QHOFKFYWCU` |
-| Jury arbiter | Arbiter (shared) | `GDREHWU6C7XZXEEYNEISEDIBZPTVSESBUPB5APUBNUSQ6TZ2ZNCY7I3T` | `SDONNHC2QNNE4TLFGQI7DQVZ22W73PC5V53Y3ZIYTVWWD67ZWFFY6DZL` |
+The walkthroughs below work with any account that is a verified institution
+and on the KYC allowlist (see [With your own wallet](#with-your-own-wallet-public-demo)).
+The contract refuses an arbiter who is also the investor, so a dispute needs a
+second Freighter account as the arbiter.
 
-The contract refuses an arbiter who is also the investor, so import the jury
-arbiter as a second Freighter account if you want to try a dispute.
-
-#### Happy path (about 5 minutes), connected as your juror account
+#### Happy path (about 5 minutes)
 
 1. **List a patent**. Fill in a title, field and territory, pick an inventor
    (the demo inventor is fine) and add any file as the dossier. In the funding
-   section, set the **investor** to your own juror address and the **arbiter**
-   to the jury arbiter address; choose the 1-minute challenge window and two
+   section, set the **investor** to your own address and the **arbiter** to
+   your second account's address; choose the 1-minute challenge window and two
    milestones of 1 EURC.
 2. On the licence page, **Fund**: 2 EURC are locked in escrow and shares are
    minted to you.
@@ -284,7 +289,7 @@ arbiter as a second Freighter account if you want to try a dispute.
 #### Dispute and partial resolution
 
 1. **Submit proof** of milestone 2, then **Dispute** it within the minute.
-2. Switch Freighter to the jury arbiter, reload, and use the arbiter slider
+2. Switch Freighter to the arbiter account, reload, and use the arbiter slider
    (for example 60 % to the lab): the milestone shows **Split**, 40 % is
    refunded and your investor shares shrink accordingly.
 

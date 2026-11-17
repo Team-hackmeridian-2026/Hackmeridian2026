@@ -12,13 +12,14 @@ Front-end, from `frontend/`, needs Node 22 and **npm 11** (`npm install -g npm@1
 - `npm run build`: `tsc --noEmit` + `vite build`; this is the type check
 - `npm run test:i18n`: EN/FR/PT key and placeholder parity
 - `npm run test:format`: EURC amount parsing (`toUnits` / `fromUnits` in `lib/format.ts`)
-- There is no lint step; `test:format` is the only front-end unit test.
+- `npm run test:rules`: listing rules (`components/listing.tsx`) and contract error messages (`explainError`)
+- There is no lint step.
 
 Contracts, from `contracts/`:
 - `cargo test --locked`: unit tests
 - `stellar contract build`: Wasm build (never `cargo build` for Wasm)
 
-`scripts/*.sh` (setup, deploy, seed) write to testnet: run them only when Antoine asks. Redeploys normally go through `.github/workflows/deploy-testnet.yml` (manual run, Antoine approves); `scripts/ci-load-testnet.sh` prepares the runner.
+`scripts/*.sh` (setup, deploy, seed) write to testnet: run them only when Antoine asks. Redeploys normally go through `.github/workflows/deploy-testnet.yml` (manual run, Antoine approves); `scripts/ci-load-testnet.sh` prepares the runner. `.github/workflows/extend-ttl.yml` renews the contracts' TTL every month.
 
 ## Architecture
 - `contracts/`: Cargo workspace with `ip_license_nft`, `milestone_escrow` and `royalty_splitter`; tests in `src/test.rs`.
@@ -28,7 +29,7 @@ Contracts, from `contracts/`:
 - `frontend/src/lib/`: `format.ts` (amounts, dates, sha256), `useAsync.ts`, `errors.ts`.
 - `frontend/src/i18n/`: `en.json`, `fr.json`, `pt.json`.
 - `frontend/src/deployment.json`: contract IDs and public addresses, written by `scripts/sync-frontend-config.sh`.
-- `.github/workflows/ci.yml`: contract tests, Wasm build, front-end build and i18n test.
+- `.github/workflows/ci.yml`: contract tests, Wasm build, front-end build and the three front-end tests.
 
 Read when needed (too long to import): `OVERVIEW.md` (architecture and data model), `docs/PLAN.md` (original plan), `frontend/src/i18n/README.md`.
 
@@ -60,7 +61,7 @@ Read when needed (too long to import): `OVERVIEW.md` (architecture and data mode
 - Tags cannot be pushed from the sandbox (403); Antoine creates releases.
 
 ## Definition of Done
-- Front-end changed: `npm run build`, `npm run test:i18n` and `npm run test:format` pass.
+- Front-end changed: `npm run build`, `npm run test:i18n`, `npm run test:format` and `npm run test:rules` pass.
 - Contracts changed: `cargo test --locked` and `stellar contract build` pass.
 - New UI text exists in EN, FR and PT.
 - Visual change: before/after screenshots in the PR (see CONTRIBUTING.md).

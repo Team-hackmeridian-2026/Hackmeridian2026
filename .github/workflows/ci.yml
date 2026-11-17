@@ -64,3 +64,5 @@ jobs:
         run: npm run test:i18n
       - name: EURC amount parsing
         run: npm run test:format
+      - name: Listing rules and error messages
+        run: npm run test:rules

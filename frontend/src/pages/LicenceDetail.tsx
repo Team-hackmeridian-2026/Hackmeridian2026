@@ -47,6 +47,13 @@ function useNow(): number {
   return now;
 }
 
+/**
+ * Seconds of slack around on-chain deadlines. The contract checks the time of the last
+ * closed ledger (one every ~5 s), a few seconds behind this clock: a release clicked the
+ * moment the window ends, or a dispute sent in its last seconds, would fail.
+ */
+const LEDGER_MARGIN = 10;
+
 /** No milestone can be submitted after the deadline. Rounds of contracts deployed before 2.0.0 have none. */
 function isPastDeadline(project: Project, now: number): boolean {
   return project.deadline !== undefined && now >= Number(project.deadline);
@@ -235,6 +242,8 @@ function MilestoneRow({
     .every((m) => isSettled(m.status));
   const deadline = Number(milestone.submitted_at) + Number(project.challenge_period);
   const windowOpen = milestone.status === "Submitted" && now < deadline;
+  const canDispute = windowOpen && now < deadline - LEDGER_MARGIN;
+  const canRelease = milestone.status === "Submitted" && now >= deadline + LEDGER_MARGIN;
   const pastDeadline = isPastDeadline(project, now);
   const look = STATUS_LOOK[milestone.status];
 
@@ -300,7 +309,7 @@ function MilestoneRow({
               </Button>
             </>
           )}
-          {isInvestor && windowOpen && (
+          {isInvestor && canDispute && (
             <>
               <Input placeholder={t("licence.disputePlaceholder")} value={note} onChange={(e) => setNote(e.target.value)} className="min-w-64 flex-1" />
               <Button
@@ -313,7 +322,7 @@ function MilestoneRow({
               </Button>
             </>
           )}
-          {milestone.status === "Submitted" && !windowOpen && (
+          {canRelease && (
             <Button busy={busy === "release"} onClick={() => act("release", () => escrow.release(signer, project.id, index))}>
               {t("licence.release")}
             </Button>
@@ -344,7 +353,7 @@ function FundingRound({ project: p, signer, onChange }: { project: Project; sign
   const [reclaiming, setReclaiming] = useState(false);
 
   const total = p.milestones.reduce((s, m) => s + m.amount, 0n);
-  const toReclaim = reclaimable(p, now);
+  const toReclaim = reclaimable(p, now - LEDGER_MARGIN);
 
   return (
     <Card className="flex flex-col gap-6">
@@ -489,15 +498,16 @@ function Royalties({
   return (
     <Section id="royalties" title={t("licence.royalties")}>
       <div className="flex h-8 gap-0.5 overflow-hidden rounded-xl">
-        {parts.map((p) => (
-          <div key={p.label} className={`${p.color} ${p.text} flex items-center px-2.5 text-xs font-semibold`} style={{ width: `${p.bps / 100}%` }}>
+        {/* By position: two beneficiaries can share a label (an owner listed as inventor too). */}
+        {parts.map((p, i) => (
+          <div key={i} className={`${p.color} ${p.text} flex items-center px-2.5 text-xs font-semibold`} style={{ width: `${p.bps / 100}%` }}>
             {p.bps / 100}%
           </div>
         ))}
       </div>
       <ul className="flex flex-col gap-2 text-sm">
-        {parts.map((p) => (
-          <li key={p.label} className="flex items-center justify-between gap-3">
+        {parts.map((p, i) => (
+          <li key={i} className="flex items-center justify-between gap-3">
             <span className="flex min-w-0 items-center gap-2.5">
               <span aria-hidden className={`size-3 shrink-0 rounded-[3px] ${p.color}`} />
               <span className="truncate">{p.label}</span>
