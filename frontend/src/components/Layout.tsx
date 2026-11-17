@@ -324,7 +324,7 @@ export function Layout() {
           <p className="flex flex-wrap items-center gap-3">
             {t("footer.contracts")}
             {(["nft", "escrow", "splitter"] as const).map((key) => (
-              <a key={key} href={explorer.contract(CONTRACTS[key])} target="_blank" rel="noreferrer" className="font-mono text-brand-ink hover:underline">
+              <a key={key} href={explorer.contract(CONTRACTS[key])} target="_blank" rel="noreferrer" className="py-1 font-mono text-brand-ink hover:underline">
                 {key}
               </a>
             ))}

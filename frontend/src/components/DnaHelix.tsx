@@ -82,6 +82,7 @@ const vertexShader = /* glsl */ `
   uniform float uAspect;
   uniform float uPixelRatio;
   uniform float uSize;
+  uniform float uScale;
   uniform float uCamZ;
   attribute vec3 aColor;
   attribute float aDigit;
@@ -104,7 +105,7 @@ const vertexShader = /* glsl */ `
     // 0 at the back of the helix, 1 at the front: back digits fade out a little.
     vDepth = clamp((mv.z + uCamZ + 170.0) / 340.0, 0.0, 1.0);
     // Base pairs (aKind = 1) are drawn a bit larger; digits near the pointer grow so the 0s and 1s become legible.
-    gl_PointSize = uSize * (0.6 + aRandom * 0.6) * (1.0 + aKind * 0.35) * (1.0 + vReveal * 1.1) * uPixelRatio * (1000.0 / -mv.z);
+    gl_PointSize = uSize * uScale * (0.6 + aRandom * 0.6) * (1.0 + aKind * 0.35) * (1.0 + vReveal * 1.1) * uPixelRatio * (1000.0 / -mv.z);
     gl_Position = projected;
   }
 `;
@@ -209,7 +210,6 @@ export default function DnaHelix({ className = "", fill = false }: { className?:
     const camera = new PerspectiveCamera(35, 1, 10, 6000);
     camera.position.set(0, 0, 2700);
     const group = new Group();
-    group.rotation.z = -0.38; // leans like the Figma helix: bottom left → top right
     scene.add(group);
 
     const zero = digitTexture("0");
@@ -225,6 +225,7 @@ export default function DnaHelix({ className = "", fill = false }: { className?:
         uAspect: { value: 1 },
         uPixelRatio: { value: 1 },
         uSize: { value: look().size[small ? 0 : 1] },
+        uScale: { value: 1 },
         uCamZ: { value: 2700 },
         uBaseAlpha: { value: look().alpha },
         uZero: { value: zero },
@@ -250,19 +251,34 @@ export default function DnaHelix({ className = "", fill = false }: { className?:
       renderer.setPixelRatio(dpr);
       renderer.setSize(w, h, false);
       camera.aspect = w / h;
+      const tanHalfFov = Math.tan((camera.fov * Math.PI) / 360);
+      let digitScale = 1;
       if (fill) {
         // Corner to corner: lean along the box diagonal and come close enough for the
         // helix to overrun the diagonal by about 10 %.
         const aspect = w / h;
         group.rotation.z = -Math.atan(aspect);
         const visibleHeight = HEIGHT / (1.1 * Math.sqrt(aspect * aspect + 1));
-        camera.position.z = visibleHeight / (2 * Math.tan((camera.fov * Math.PI) / 360));
+        camera.position.z = visibleHeight / (2 * tanHalfFov);
+      } else if (w > h) {
+        // A band wider than tall (the hero on phones and tablets): the helix lies across it,
+        // rising to the right, with its whole height inside so the top and bottom edges
+        // never cut it (15 % spare for perspective). Its ends may run off the sides.
+        const slope = 0.42; // radians above horizontal
+        group.rotation.z = slope - Math.PI / 2;
+        const pxPerUnit = (0.85 * h) / (HEIGHT * Math.sin(slope) + 2 * RADIUS * Math.cos(slope));
+        camera.position.z = h / pxPerUnit / (2 * tanHalfFov);
+        // Digit sizes are tuned for a canvas about 640 px tall (the desktop hero); in the
+        // shorter band they would cover the helix, so shrink them with it.
+        digitScale = Math.min(1, h / 640);
       } else {
+        group.rotation.z = -0.38; // leans like the Figma helix: bottom left → top right
         // Keep the whole leaning helix in frame, even in narrow boxes.
         camera.position.z = Math.max(2700, 1600 / (w / h));
       }
       camera.updateProjectionMatrix();
       material.uniforms.uCamZ.value = camera.position.z;
+      material.uniforms.uScale.value = digitScale;
       material.uniforms.uAspect.value = w / h;
       material.uniforms.uPixelRatio.value = dpr;
     }
