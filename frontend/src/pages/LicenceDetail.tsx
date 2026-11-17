@@ -642,7 +642,8 @@ export function LicenceDetail() {
       </section>
 
       <nav aria-label={t("licence.sections")} className="sticky top-[var(--header-h,65px)] z-30 -mx-4 border-y border-line bg-canvas/90 px-4 backdrop-blur-md sm:-mx-6 sm:px-6">
-        <ul className="flex gap-1 overflow-x-auto py-2 text-sm font-medium whitespace-nowrap text-muted">
+        {/* On narrow screens the tabs scroll sideways: the faded right edge shows there is more. */}
+        <ul className="flex gap-1 overflow-x-auto py-2 text-sm font-medium whitespace-nowrap text-muted max-md:pr-12 max-md:[mask-image:linear-gradient(to_right,black_88%,transparent)]">
           {sections.map(([anchor, label]) => (
             <li key={anchor}>
               <a href={`#${anchor}`} className="block rounded-full px-3 py-1.5 transition duration-200 hover:bg-subtle hover:text-ink">

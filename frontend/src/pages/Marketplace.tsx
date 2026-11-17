@@ -170,7 +170,7 @@ export function Marketplace() {
   return (
     <div className="flex flex-col">
       {/* Hero */}
-      <section className="relative isolate grid items-center gap-10 lg:grid-cols-[1.1fr_1fr] lg:gap-6">
+      <section className="relative isolate grid items-center gap-2 lg:grid-cols-[1.1fr_1fr] lg:gap-6">
         <div className="flex flex-col gap-7 py-6 sm:py-10">
           <BurstHeading
             as="h1"

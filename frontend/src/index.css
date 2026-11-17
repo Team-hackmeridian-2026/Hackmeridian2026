@@ -134,6 +134,16 @@ body {
   background: color-mix(in oklab, var(--color-brand) 30%, transparent);
 }
 
+/* iOS Safari zooms the whole page into a field whose text is under 16 px when it gets
+   focus. Unlayered, so it wins over the fields' `text-sm`. */
+@media (max-width: 639px) {
+  input,
+  select,
+  textarea {
+    font-size: 16px;
+  }
+}
+
 /* Slow float for the decorative molecules. */
 @keyframes float {
   0%,
