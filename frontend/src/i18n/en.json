@@ -174,7 +174,8 @@
       "parties": "Choose an investor and an arbiter.",
       "split": "The royalty split must add up to 100 %.",
       "splitFixed": "Give part of the royalties to the university or the inventors: the split needs at least one fixed beneficiary.",
-      "milestones": "Every milestone needs a positive amount.",
+      "splitTooMany": "At most 10 people can receive a fixed share: the university and up to 9 inventors. Set the university's or the inventors' share to 0 %, or list fewer inventors.",
+      "milestones": "Between 1 and 10 milestones, each with an amount above 0 and at most 2 decimals.",
       "arbiter": "The arbiter must be someone other than the investor and the university.",
       "selfInvestor": "The investor must be someone other than the university: a lab cannot fund its own round."
     },

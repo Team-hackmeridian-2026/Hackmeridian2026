@@ -143,7 +143,7 @@ const ERRORS: Record<string, string> = {
   [CONTRACTS.escrow]: "errors.escrow",
 };
 
-function explainError(contractId: string, err: unknown): string {
+export function explainError(contractId: string, err: unknown): string {
   if (err instanceof WalletError) {
     const short = err.detail ? `${err.detail.slice(0, 4)}…${err.detail.slice(-4)}` : "";
     return i18n.t(`errors.wallet.${err.kind}`, { address: short });
@@ -155,13 +155,15 @@ function explainError(contractId: string, err: unknown): string {
       : typeof err === "object" && err && "message" in err
         ? String((err as { message: unknown }).message)
         : String(err);
+  // Before the codes: the EURC token fails with its own numbers (#10 balance, #13 trustline),
+  // which come back through our contract's call and would read as our contract's errors.
+  if (/balance|underfunded|insufficient/i.test(raw)) return i18n.t("errors.balance");
+  if (/trustline/i.test(raw)) return i18n.t("errors.trustline");
   const code = /Error\(Contract, #(\d+)\)/.exec(raw)?.[1];
   if (code) {
     const key = `${ERRORS[contractId]}.${code}`;
     return ERRORS[contractId] && i18n.exists(key) ? i18n.t(key) : i18n.t("errors.contract", { code });
   }
-  if (/balance|underfunded|insufficient/i.test(raw)) return i18n.t("errors.balance");
-  if (/trustline/i.test(raw)) return i18n.t("errors.trustline");
   // Transactions are built with a 5-minute validity window; signing later makes the network refuse them.
   if (/txTooLate|tx_too_late|expired/i.test(raw)) return i18n.t("errors.expired");
   if (/reject|declin|cancel/i.test(raw)) return i18n.t("errors.cancelled");

@@ -1,6 +1,6 @@
 import { Trans, useTranslation } from "react-i18next";
 import type { Beneficiary, SplitConfig } from "../stellar/contracts";
-import { formatDate, formatNumber } from "../lib/format";
+import { formatDate, formatNumber, toUnits } from "../lib/format";
 import { Badge, Button, Field, Input, StatusIcon } from "./ui";
 
 /** Pieces shared by the listing form and the "finish setup" card of a licence. */
@@ -32,6 +32,23 @@ export function deadlineIn(days: number): number {
 
 export const isAddress = (a: string) => /^G[A-Z2-7]{55}$/.test(a);
 
+/** Contract limits: MAX_FIXED_BENEFICIARIES in royalty_splitter, MAX_MILESTONES in milestone_escrow. */
+const MAX_BENEFICIARIES = 10;
+const MAX_MILESTONES = 10;
+
+/**
+ * A milestone amount the round accepts: above 0, readable by `toUnits`, and at most 2 decimals,
+ * because every screen shows 2 (a "1.009" round would show "Fund 1.00 EURC" and take 1.009).
+ */
+export function isAmount(text: string): boolean {
+  try {
+    const units = toUnits(text);
+    return units > 0n && units % 100_000n === 0n; // 7 decimals on-chain, so 2 decimals = multiples of 10^5
+  } catch {
+    return false;
+  }
+}
+
 /** Royalty split as typed in the form, in percent. */
 export type SplitPercents = { university: number; inventors: number; investors: number };
 
@@ -40,11 +57,13 @@ export const DEFAULT_SPLIT: SplitPercents = { university: 40, inventors: 30, inv
 /** A form rule that failed: the section it is about and the i18n key of its message. */
 export type FormProblem = { field: "split" | "parties" | "milestones"; message: string };
 
-export function splitProblem(split: SplitPercents): FormProblem | null {
+export function splitProblem(owner: string, inventors: string[], split: SplitPercents): FormProblem | null {
   if (split.university + split.inventors + split.investors !== 100) return { field: "split", message: "newLicence.errors.split" };
   // The splitter needs a fixed beneficiary (it receives the rounding remainders); without one,
   // `configure` fails, and when listing that happens after the licence is minted.
   if (split.university + split.inventors === 0) return { field: "split", message: "newLicence.errors.splitFixed" };
+  if (splitConfig(owner, inventors, split).fixed.length > MAX_BENEFICIARIES)
+    return { field: "split", message: "newLicence.errors.splitTooMany" };
   return null;
 }
 
@@ -53,9 +72,9 @@ export function roundProblem(owner: string, investor: string, arbiter: string, m
   if (!isAddress(investor) || !isAddress(arbiter)) return { field: "parties", message: "newLicence.errors.parties" };
   // The contract refuses it too (InvalidParties): the arbiter settles disputes between them.
   if (arbiter === investor || arbiter === owner) return { field: "parties", message: "newLicence.errors.arbiter" };
-  // The contracts of release 3.0.0 accept it, so the forms are the only guard until the next redeploy.
+  // Refused on-chain too (InvalidParties): checking here saves a failed transaction after the mint.
   if (investor === owner) return { field: "parties", message: "newLicence.errors.selfInvestor" };
-  if (milestones.length === 0 || milestones.some((m) => !(Number(m) > 0)))
+  if (milestones.length === 0 || milestones.length > MAX_MILESTONES || !milestones.every(isAmount))
     return { field: "milestones", message: "newLicence.errors.milestones" };
   return null;
 }
@@ -135,7 +154,7 @@ export function MilestoneEditor({ milestones, onChange }: { milestones: string[]
       <span className="text-sm font-semibold">{t("newLicence.milestones")}</span>
       <p className="text-xs text-muted">{t("newLicence.milestonesHint")}</p>
       {milestones.map((m, i) => {
-        const invalid = m !== "" && !(Number(m) > 0);
+        const invalid = m !== "" && !isAmount(m);
         return (
           <div key={i} className="flex flex-wrap items-center gap-x-4 gap-y-2 rounded-2xl bg-subtle px-4 py-2.5">
             <span className="w-24 text-sm text-muted">{t("newLicence.milestone", { n: i + 1 })}</span>

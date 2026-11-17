@@ -55,7 +55,10 @@ ESCROW_ID="$(deploy milestone_escrow \
 echo "  milestone_escrow  $ESCROW_ID"
 
 echo "==> Configuration"
-invoke "$SPLITTER_ID" bl-admin set_minter --minter "$ESCROW_ID" >/dev/null
+# set_minter works once: a retry after an attempt that timed out but landed fails with
+# MinterAlreadySet (#9), which means the minter is set.
+out="$(invoke "$SPLITTER_ID" bl-admin set_minter --minter "$ESCROW_ID" 2>&1)" ||
+  grep -qF "Error(Contract, #9)" <<<"$out" || { echo "$out" >&2; exit 1; }
 invoke "$NFT_ID" bl-admin set_institution --institution "$LAB" --verified true >/dev/null
 invoke "$SPLITTER_ID" bl-admin set_allowed --who "$FUND" --allowed true >/dev/null
 echo "  escrow = share minter, lab = verified institution, fund = KYC approved"

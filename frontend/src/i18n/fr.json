@@ -174,7 +174,8 @@
       "parties": "Choisissez un investisseur et un arbitre.",
       "split": "Le partage des redevances doit totaliser 100 %.",
       "splitFixed": "Attribuez une part des redevances à l'université ou aux inventeurs : le partage a besoin d'au moins un bénéficiaire fixe.",
-      "milestones": "Chaque jalon doit avoir un montant positif.",
+      "splitTooMany": "10 bénéficiaires fixes au maximum : l'université et jusqu'à 9 inventeurs. Mettez la part de l'université ou des inventeurs à 0 %, ou indiquez moins d'inventeurs.",
+      "milestones": "Entre 1 et 10 jalons, chacun avec un montant positif et au plus 2 décimales.",
       "arbiter": "L'arbitre doit être une autre personne que l'investisseur et l'université.",
       "selfInvestor": "L'investisseur doit être une autre personne que l'université : un labo ne peut pas financer son propre tour."
     },

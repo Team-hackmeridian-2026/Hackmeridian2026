@@ -174,7 +174,8 @@
       "parties": "Escolha um investidor e um árbitro.",
       "split": "A repartição dos royalties tem de somar 100 %.",
       "splitFixed": "Atribua parte dos royalties à universidade ou aos inventores: a repartição precisa de pelo menos um beneficiário fixo.",
-      "milestones": "Cada marco precisa de um montante positivo.",
+      "splitTooMany": "No máximo 10 beneficiários fixos: a universidade e até 9 inventores. Ponha a parte da universidade ou dos inventores a 0 %, ou indique menos inventores.",
+      "milestones": "Entre 1 e 10 marcos, cada um com um montante positivo e no máximo 2 casas decimais.",
       "arbiter": "O árbitro tem de ser uma pessoa diferente do investidor e da universidade.",
       "selfInvestor": "O investidor tem de ser uma pessoa diferente da universidade: um laboratório não pode financiar a sua própria ronda."
     },

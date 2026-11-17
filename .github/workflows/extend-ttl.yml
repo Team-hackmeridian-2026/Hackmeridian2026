@@ -1,0 +1,47 @@
+name: Extend contract lifetime (testnet)
+
+# Stellar archives contract data once its TTL (time to live) runs out. The contracts
+# never extend their own instance (in ip_license_nft that cost ~1,059 XLM per licence),
+# so this job renews the three contract instances and their code once a month.
+# Any funded account can pay for that, so it uses a throwaway Friendbot account:
+# no secret, no approval.
+#
+# Per-licence entries (shares, claims, NDA records) are not covered: Stellar restores
+# them automatically the next time a transaction touches them.
+
+on:
+  schedule:
+    - cron: "0 6 1 * *" # 06:00 UTC on the 1st of each month
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  extend:
+    name: Extend
+    runs-on: ubuntu-latest
+    env:
+      NETWORK: testnet
+      # About 60 days (17,280 ledgers a day): one missed run still leaves a month.
+      LEDGERS: 1036800
+    steps:
+      - uses: actions/checkout@v7
+      - name: Install the Stellar CLI
+        uses: stellar/stellar-cli@v28.1.0
+      - name: Renew the instances and the code
+        run: |
+          stellar keys generate ttl-payer --network "$NETWORK" --fund
+          # An entry already archived cannot be extended: restore it (and extend it) instead.
+          renew() {
+            stellar contract extend "$@" --ledgers-to-extend "$LEDGERS" --source-account ttl-payer --network "$NETWORK" ||
+              stellar contract restore "$@" --ledgers-to-extend "$LEDGERS" --source-account ttl-payer --network "$NETWORK"
+          }
+          for key in nft escrow splitter; do
+            id="$(jq -r ".contracts.$key" frontend/src/deployment.json)"
+            hash="$(stellar ledger entry fetch contract-data --contract "$id" --instance --network "$NETWORK" --output json |
+              jq -r '.. | .wasm? // empty' | head -1)"
+            echo "==> $key $id (code ${hash:0:12}…)"
+            renew --id "$id"
+            renew --wasm-hash "$hash"
+          done

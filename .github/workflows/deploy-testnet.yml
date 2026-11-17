@@ -17,9 +17,11 @@ on:
         type: boolean
         default: true
       jury:
+        # Off by default: judging is over and the jury's keys were shared, so anyone
+        # holding them could list licences as a verified institution.
         description: "Register the jury accounts on the new contracts"
         type: boolean
-        default: true
+        default: false
       new_accounts:
         description: "Switch to new demo accounts (their addresses replace those in deployment.json)"
         type: boolean
@@ -118,7 +120,7 @@ jobs:
           print("\nThis updates `frontend/src/deployment.json` and the contract IDs in the README.\n")
           print("Still to do by hand before merging:")
           print("- [ ] README: the \"Source ahead of the deployment\" note and the on-chain evidence links")
-          print("- [ ] `CLAUDE.md` and `CONTRIBUTING.md`: the lines saying testnet runs release `1.0.1`")
+          print("- [ ] `CLAUDE.md` and `CONTRIBUTING.md`: the lines naming the release testnet runs")
           print("- [ ] Check the Vercel preview against the new contracts")
           print("- [ ] If seeding or the jury step failed, check the workflow log and rerun the script that failed")
           print("\nCI does not start on pull requests opened by a workflow: close and reopen this one to run it.")

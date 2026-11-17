@@ -131,7 +131,9 @@ export function CashOut() {
     if (!started) return popup?.close();
     if (popup) popup.location.href = started.url;
     else window.open(started.url, "_blank");
-    setTx(await getTransaction(token, started.id));
+    // If this first read fails, keep the id: the polling below picks the withdrawal up, instead
+    // of showing "Withdraw" again and starting a second one.
+    setTx(await getTransaction(token, started.id).catch(() => ({ id: started.id, status: "incomplete" as const })));
   }
 
   async function pay() {
