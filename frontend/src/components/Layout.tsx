@@ -159,9 +159,11 @@ function ThemeToggle() {
         <circle cx="12" cy="12" r="4" />
         <path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4" />
       </svg>
-      {/* Moon: switch to dark. */}
+      {/* Moon: switch to dark. A crescent's ink sits low-left of its box (centre 10.81, 13.17),
+          so the viewBox is shifted to put it in the middle: the moon then spins in place
+          instead of swinging up, and looks centred at rest. */}
       <svg
-        viewBox="0 0 24 24"
+        viewBox="-1.19 1.17 24 24"
         className={`${iconClass} ${theme === "light" ? iconShown : `rotate-90 ${iconHidden}`}`}
         fill="none"
         stroke="currentColor"
