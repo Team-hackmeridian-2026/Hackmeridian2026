@@ -26,6 +26,8 @@ const MIN_CHALLENGE_PERIOD: u64 = 60;
 const MAX_CHALLENGE_PERIOD: u64 = 30 * 24 * 60 * 60;
 /// Time the arbiter has, after the window closes, to settle a dispute.
 const ARBITER_PERIOD: u64 = 30 * 24 * 60 * 60;
+/// Latest deadline, so that the investor can always reclaim unproven milestones in reasonable time.
+const MAX_RESEARCH_PERIOD: u64 = 5 * 365 * 24 * 60 * 60;
 
 #[contractclient(name = "LicenseNftClient")]
 pub trait LicenseNftInterface {
@@ -113,7 +115,7 @@ pub enum Error {
     InvalidParties = 13,
     /// Challenge window outside [MIN_CHALLENGE_PERIOD, MAX_CHALLENGE_PERIOD].
     InvalidWindow = 14,
-    /// Deadline already passed when the project is created.
+    /// Deadline already passed, or more than MAX_RESEARCH_PERIOD away, when the project is created.
     InvalidDeadline = 15,
     DeadlinePassed = 16,
     NothingToReclaim = 17,
@@ -245,7 +247,8 @@ impl MilestoneEscrow {
         if !(MIN_CHALLENGE_PERIOD..=MAX_CHALLENGE_PERIOD).contains(&challenge_period) {
             panic_with_error!(&env, Error::InvalidWindow);
         }
-        if deadline <= env.ledger().timestamp() {
+        let now = env.ledger().timestamp();
+        if deadline <= now || deadline > now + MAX_RESEARCH_PERIOD {
             panic_with_error!(&env, Error::InvalidDeadline);
         }
         let mut milestones = Vec::new(&env);
