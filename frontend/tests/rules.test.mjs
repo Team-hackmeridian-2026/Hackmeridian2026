@@ -8,7 +8,7 @@ globalThis.document ??= { documentElement: {} };
 // As in format.test.mjs: Vite loads the app's real modules.
 const vite = await createServer({ configFile: false, appType: "custom", logLevel: "error", server: { middlewareMode: true, hmr: false } });
 const { splitConfig, splitProblem, roundProblem } = await vite.ssrLoadModule("/src/components/listing.tsx");
-const { explainError } = await vite.ssrLoadModule("/src/stellar/contracts.ts");
+const { explainError, reclaimable, ARBITER_PERIOD } = await vite.ssrLoadModule("/src/stellar/contracts.ts");
 const { CONTRACTS } = await vite.ssrLoadModule("/src/config.ts");
 const { default: i18n } = await vite.ssrLoadModule("/src/i18n/index.ts");
 test.after(() => vite.close());
@@ -54,4 +54,21 @@ test("explainError reads EURC token failures as balance and trustline problems",
   assert.equal(explainError(CONTRACTS.escrow, noTrustline), i18n.t("errors.trustline"));
   // The escrow's own #10 still reads as the escrow's message.
   assert.equal(explainError(CONTRACTS.escrow, new Error("HostError: Error(Contract, #10)")), i18n.t("errors.escrow.10"));
+});
+
+test("reclaimable lists the milestones the contract's reclaim refunds", () => {
+  const round = (milestones, funded = true) => ({ funded, deadline: 1_000n, challenge_period: 60n, milestones });
+  const pending = { status: "Pending", submitted_at: 0n };
+  // Unproven milestones: from the deadline on.
+  assert.deepEqual(reclaimable(round([pending]), 999), []);
+  assert.deepEqual(reclaimable(round([{ status: "Released", submitted_at: 10n }, pending]), 1_000), [1]);
+  // A dispute: once the challenge window and the arbiter's period are both over.
+  const disputed = { status: "Disputed", submitted_at: 100n };
+  const unsettledFrom = 100 + 60 + ARBITER_PERIOD;
+  assert.deepEqual(reclaimable({ ...round([disputed]), deadline: 10n ** 12n }, unsettledFrom - 1), []);
+  assert.deepEqual(reclaimable({ ...round([disputed]), deadline: 10n ** 12n }, unsettledFrom), [0]);
+  // Never a submitted or settled milestone, and nothing before the round is funded.
+  const late = 10 ** 10;
+  assert.deepEqual(reclaimable(round(["Submitted", "Released", "Refunded", "Split"].map((status) => ({ status, submitted_at: 100n }))), late), []);
+  assert.deepEqual(reclaimable(round([pending], false), late), []);
 });

@@ -7,7 +7,7 @@ globalThis.document ??= { documentElement: {} };
 
 // Vite resolves the app's extensionless imports and JSON, so the test runs the real format.ts.
 const vite = await createServer({ configFile: false, appType: "custom", logLevel: "error", server: { middlewareMode: true, hmr: false } });
-const { toUnits, fromUnits } = await vite.ssrLoadModule("/src/lib/format.ts");
+const { toUnits, fromUnits, safeLink } = await vite.ssrLoadModule("/src/lib/format.ts");
 const { default: i18n } = await vite.ssrLoadModule("/src/i18n/index.ts");
 test.after(() => vite.close());
 
@@ -40,4 +40,13 @@ test("fromUnits shows at most 2 decimals in the current language", async () => {
   assert.equal(fromUnits(-19_990_000n), "-1.99");
   await i18n.changeLanguage("fr");
   assert.equal(fromUnits(125_000_000n), "12,5");
+});
+
+test("safeLink makes only https: and ipfs: data room links clickable", () => {
+  // Any verified institution writes the link, so it is untrusted input.
+  assert.equal(safeLink(" https://lab.example/room ")?.href, "https://lab.example/room");
+  assert.equal(safeLink("ipfs://bafybeigdyrzt")?.protocol, "ipfs:");
+  for (const bad of ["javascript:alert(1)", "JavaScript:alert(1)", "data:text/html,<b>x</b>", "http://lab.example", "lab.example", ""]) {
+    assert.equal(safeLink(bad), null, bad);
+  }
 });
