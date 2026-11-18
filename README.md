@@ -87,7 +87,7 @@ flowchart TB
 
 | Building block | What we use | Role |
 | --- | --- | --- |
-| Smart contracts | 3 Soroban contracts in Rust (`soroban-sdk` 29, protocol 29) | Licences, milestone escrow, shares and royalties |
+| Smart contracts | 3 Soroban contracts in Rust (`soroban-sdk` 30.0.0-rc.1, protocol 30) | Licences, milestone escrow, shares and royalties |
 | Stablecoin | **Circle EURC** on testnet, issuer `GB3Q6QDZYTHWT7E5PVS3W7FUT5GVAFC5KSZFFLPU25GO7VTC3NM2ZTVO`, handled in Soroban through its **Stellar Asset Contract** | Funding and royalties in regulated euros (MiCA) |
 | Wallets | **Stellar Wallets Kit** (Freighter, xBull, Lobstr, Albedo…) | Users sign every transaction themselves |
 | Anchor | **SEP-1** (stellar.toml), **SEP-10** (web auth), **SEP-24** (interactive withdrawal) against the SDF test anchor `testanchor.stellar.org` | Cash-out from Stellar to a bank account |
@@ -153,7 +153,7 @@ number of holders, and everyone withdraws when they want (pull payments).
 
 - Node.js 22+ with npm 11 (`npm install -g npm@11`), the npm Dependabot uses
 - For the contracts: Rust with the `wasm32v1-none` target and the
-  [Stellar CLI](https://developers.stellar.org/docs/tools/cli) 28+
+  [Stellar CLI](https://developers.stellar.org/docs/tools/cli) 30+ (soroban-sdk 30 refuses older ones)
 - A Stellar wallet such as [Freighter](https://www.freighter.app/), set to **Testnet**
 
 ### Run the front-end (uses the deployed contracts)

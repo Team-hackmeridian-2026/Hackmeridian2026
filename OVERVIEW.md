@@ -35,7 +35,7 @@ findings and the questions we should answer before the next iteration.
 | | |
 | --- | --- |
 | **What it is** | A testnet MVP that turns a university patent into a programmable licence on Stellar: funded in EURC, released by milestones, royalties split automatically |
-| **On-chain** | 3 Soroban contracts in Rust (`soroban-sdk` 28): `ip_license_nft`, `milestone_escrow`, `royalty_splitter` (~1,330 lines, 30 unit tests) |
+| **On-chain** | 3 Soroban contracts in Rust (`soroban-sdk` 30.0.0-rc.1): `ip_license_nft`, `milestone_escrow`, `royalty_splitter` (~1,330 lines, 30 unit tests) |
 | **Off-chain** | A single-page React 19 + Vite 8 + Tailwind 4 app (~4,500 lines of TS/TSX), no backend, no database |
 | **External services** | Soroban RPC and Horizon (testnet), Circle EURC through its Stellar Asset Contract, Stellar Wallets Kit, SDF test anchor (SEP-1/10/24) |
 | **Hosting** | Vercel, production deployed from `main`, a preview per pull request |
@@ -268,7 +268,7 @@ runs them locally (Vercel runs `npm run build`, which includes `tsc`).
 ### 3.1 Repository map
 
 ```text
-contracts/                       Cargo workspace (soroban-sdk 28, release profile opt-level "z")
+contracts/                       Cargo workspace (soroban-sdk 30.0.0-rc.1, release profile opt-level "z")
   ip_license_nft/src/lib.rs      247  licences, institutions, NDA log
   milestone_escrow/src/lib.rs    546  rounds, milestones, disputes, fees
   royalty_splitter/src/lib.rs    538  shares, KYC allowlist, royalties, claims

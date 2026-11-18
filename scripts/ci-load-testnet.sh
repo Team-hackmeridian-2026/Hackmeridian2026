@@ -25,7 +25,7 @@ IDENTITIES="${XDG_CONFIG_HOME:-$HOME/.config}/stellar/identity"
 [ -n "${STELLAR_TESTNET_KEYS:-}" ] || { echo "STELLAR_TESTNET_KEYS is empty: add the secret first (see README)" >&2; exit 1; }
 
 # `stellar keys add --secret-key` only reads from a terminal, so write the
-# identity files the CLI reads (format checked with stellar-cli 28.1.0).
+# identity files the CLI reads (format checked with stellar-cli 28.1.0 and 30.0.1).
 mkdir -p "$IDENTITIES"
 umask 077
 loaded=()

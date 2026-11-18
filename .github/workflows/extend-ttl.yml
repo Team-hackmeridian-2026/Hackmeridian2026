@@ -28,7 +28,7 @@ jobs:
     steps:
       - uses: actions/checkout@v7
       - name: Install the Stellar CLI
-        uses: stellar/stellar-cli@v28.1.0
+        uses: stellar/stellar-cli@v30.0.1
       - name: Renew the instances and the code
         run: |
           stellar keys generate ttl-payer --network "$NETWORK" --fund
