@@ -59,9 +59,9 @@ export type Project = {
   challenge_period: bigint;
   /**
    * End of the research period (ledger time, seconds): no submission after it, and
-   * Pending milestones can be refunded. Absent on rounds of contracts deployed before 2.0.0.
+   * Pending milestones can be refunded.
    */
-  deadline?: bigint;
+  deadline: bigint;
   funded: boolean;
   milestones: Milestone[];
 };
@@ -71,7 +71,7 @@ export const ARBITER_PERIOD = 30 * 24 * 60 * 60;
 
 /** Indexes of the milestones `reclaim` would refund now: Pending after the deadline, or a dispute left unsettled. */
 export function reclaimable(project: Project, now: number): number[] {
-  if (project.deadline === undefined || !project.funded) return [];
+  if (!project.funded) return [];
   const deadline = Number(project.deadline);
   const window = Number(project.challenge_period);
   return project.milestones.flatMap((m, i) =>
@@ -238,7 +238,7 @@ export const escrow = {
       arbiter: string;
       amounts: string[];
       challengePeriod: number;
-      /** Ledger timestamp (seconds). Contracts deployed before 2.0.0 have no deadline and ignore it. */
+      /** Ledger timestamp (seconds). */
       deadline: number;
     },
   ) =>

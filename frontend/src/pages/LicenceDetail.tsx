@@ -54,9 +54,9 @@ function useNow(): number {
  */
 const LEDGER_MARGIN = 10;
 
-/** No milestone can be submitted after the deadline. Rounds of contracts deployed before 2.0.0 have none. */
+/** No milestone can be submitted after the deadline. */
 function isPastDeadline(project: Project, now: number): boolean {
-  return project.deadline !== undefined && now >= Number(project.deadline);
+  return now >= Number(project.deadline);
 }
 
 // ---------- Licence header ----------
@@ -291,7 +291,7 @@ function MilestoneRow({
       {milestone.status === "Pending" && project.funded && pastDeadline && (
         <p className="text-sm text-muted">{t("licence.deadlinePassed")}</p>
       )}
-      {milestone.status === "Disputed" && project.deadline !== undefined && (
+      {milestone.status === "Disputed" && (
         <p className="text-sm text-muted">{t("licence.arbiterUntil", { date: formatDate(deadline + ARBITER_PERIOD) })}</p>
       )}
 
@@ -367,9 +367,7 @@ function FundingRound({ project: p, signer, onChange }: { project: Project; sign
               window: formatDuration(Number(p.challenge_period)),
             })}
           </p>
-          {p.deadline !== undefined && (
-            <p className="text-sm text-muted">{t("licence.deadlineText", { date: formatDate(p.deadline) })}</p>
-          )}
+          <p className="text-sm text-muted">{t("licence.deadlineText", { date: formatDate(p.deadline) })}</p>
         </div>
         <div className="w-full sm:w-56">
           <FundingProgress project={p} />
