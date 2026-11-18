@@ -91,6 +91,16 @@ export function splitConfig(owner: string, inventors: string[], split: SplitPerc
   return { fixed: fixed.filter((b) => b.bps > 0), investors_bps: split.investors * 100 };
 }
 
+/** Error shown right under the section it is about. */
+export function FieldError({ message }: { message?: string }) {
+  if (!message) return null;
+  return (
+    <p role="alert" className="text-sm font-medium text-danger">
+      {message}
+    </p>
+  );
+}
+
 function SplitPreview({ parts }: { parts: { label: string; pct: number; color: string; text: string }[] }) {
   const { t } = useTranslation();
   const total = parts.reduce((s, p) => s + (Number.isFinite(p.pct) ? p.pct : 0), 0);
