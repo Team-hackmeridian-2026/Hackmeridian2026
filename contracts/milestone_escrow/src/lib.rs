@@ -81,7 +81,6 @@ pub struct Project {
 
 #[contracttype]
 enum DataKey {
-    Admin,
     Token,
     LicenseNft,
     Splitter,
@@ -196,7 +195,6 @@ pub struct MilestoneEscrow;
 impl MilestoneEscrow {
     pub fn __constructor(
         env: Env,
-        admin: Address,
         token: Address,
         license_nft: Address,
         splitter: Address,
@@ -207,7 +205,6 @@ impl MilestoneEscrow {
             panic_with_error!(&env, Error::InvalidConfig);
         }
         let s = env.storage().instance();
-        s.set(&DataKey::Admin, &admin);
         s.set(&DataKey::Token, &token);
         s.set(&DataKey::LicenseNft, &license_nft);
         s.set(&DataKey::Splitter, &splitter);
@@ -397,10 +394,6 @@ impl MilestoneEscrow {
         pay_lab(&env, project, index, m);
     }
 
-    pub fn resolve(env: Env, project_id: u64, index: u32, approve: bool) {
-        Self::resolve_partial(env, project_id, index, if approve { BPS_DENOMINATOR as u32 } else { 0 });
-    }
-
     /// Research can fail without anyone being at fault: the arbiter gives
     /// `lab_bps` of the milestone to the lab (work done) and refunds the rest to
     /// the investor, who gets shares only for the part paid to the lab.
@@ -478,11 +471,6 @@ impl MilestoneEscrow {
             .persistent()
             .get(&DataKey::ByLicense(license_id))
             .unwrap_or(Vec::new(&env))
-    }
-
-    pub fn total_projects(env: Env) -> u64 {
-        let next: u64 = env.storage().instance().get(&DataKey::NextId).unwrap();
-        next - 1
     }
 }
 

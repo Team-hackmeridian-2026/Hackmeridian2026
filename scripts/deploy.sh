@@ -50,7 +50,7 @@ SPLITTER_ID="$(deploy royalty_splitter \
 echo "  royalty_splitter  $SPLITTER_ID"
 
 ESCROW_ID="$(deploy milestone_escrow \
-  --admin "$ADMIN" --token "$EURC_CONTRACT" --license_nft "$NFT_ID" \
+  --token "$EURC_CONTRACT" --license_nft "$NFT_ID" \
   --splitter "$SPLITTER_ID" --treasury "$ADMIN" --fee_bps "$FEE_BPS")"
 echo "  milestone_escrow  $ESCROW_ID"
 
