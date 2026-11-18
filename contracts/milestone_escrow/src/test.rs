@@ -76,7 +76,6 @@ fn setup(fee_bps: u32) -> Setup<'static> {
     let escrow_id = env.register(
         MilestoneEscrow,
         (
-            admin.clone(),
             sac.address(),
             nft_id.clone(),
             splitter_id.clone(),
@@ -220,7 +219,7 @@ fn dispute_then_arbiter_approves() {
     advance(&s, WINDOW);
     assert_eq!(s.escrow.try_release(&pid, &0), Err(Ok(Error::WrongStatus.into())));
 
-    s.escrow.resolve(&pid, &0, &true);
+    s.escrow.resolve_partial(&pid, &0, &10_000);
     assert_eq!(s.token.balance(&s.lab), 10_000);
     assert_eq!(status(&s, pid, 0), MilestoneStatus::Released);
 }
@@ -302,7 +301,7 @@ fn dispute_then_arbiter_refunds_without_minting_shares() {
     s.escrow.fund(&pid);
     s.escrow.submit_milestone(&pid, &0, &proof(&s, 1));
     s.escrow.dispute(&pid, &0, &proof(&s, 2));
-    s.escrow.resolve(&pid, &0, &false);
+    s.escrow.resolve_partial(&pid, &0, &0);
 
     assert_eq!(status(&s, pid, 0), MilestoneStatus::Refunded);
     assert_eq!(s.token.balance(&s.investor), 1_000_000 - 20_000);
@@ -335,7 +334,7 @@ fn cannot_release_twice() {
     s.escrow.release(&pid, &0);
     assert_eq!(s.escrow.try_release(&pid, &0), Err(Ok(Error::WrongStatus.into())));
     assert_eq!(
-        s.escrow.try_resolve(&pid, &0, &true),
+        s.escrow.try_resolve_partial(&pid, &0, &10_000),
         Err(Ok(Error::WrongStatus.into()))
     );
 }
@@ -538,7 +537,7 @@ fn fee_above_100_percent_is_rejected_at_deploy() {
     let any = || Address::generate(&env);
     env.register(
         MilestoneEscrow,
-        (any(), any(), any(), any(), any(), 10_001u32),
+        (any(), any(), any(), any(), 10_001u32),
     );
 }
 
