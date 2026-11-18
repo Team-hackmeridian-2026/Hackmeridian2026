@@ -488,7 +488,8 @@
       "account": "Freighter's active account ({{address}}) isn't the one connected here. Switch accounts in Freighter, or disconnect and reconnect on this site."
     },
     "expired": "The transaction expired before it was signed (5-minute limit). Try again and confirm in your wallet within 5 minutes.",
-    "sendFailed": "The Stellar network refused the transaction. It may have expired: try again and sign within 5 minutes."
+    "sendFailed": "The Stellar network refused the transaction. It may have expired: try again and sign within 5 minutes.",
+    "unconfirmed": "Sent, but the network has not confirmed it yet. Check the transaction below before trying again, so it does not go through twice."
   },
   "errorPage": {
     "notFoundTitle": "Page not found",
