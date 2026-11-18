@@ -98,6 +98,8 @@ function spec(contractId: string): Promise<contract.Spec> {
       (c) => c.spec,
     );
     specs.set(contractId, s);
+    // A failed download must not stay cached, or every retry fails until the page is reloaded.
+    s.catch(() => specs.delete(contractId));
   }
   return s;
 }
