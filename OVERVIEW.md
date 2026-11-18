@@ -35,7 +35,7 @@ findings and the questions we should answer before the next iteration.
 | | |
 | --- | --- |
 | **What it is** | A testnet MVP that turns a university patent into a programmable licence on Stellar: funded in EURC, released by milestones, royalties split automatically |
-| **On-chain** | 3 Soroban contracts in Rust (`soroban-sdk` 30.0.0-rc.1): `ip_license_nft`, `milestone_escrow`, `royalty_splitter` (~1,330 lines, 30 unit tests) |
+| **On-chain** | 3 Soroban contracts in Rust (`soroban-sdk` 30.0.0-rc.1): `ip_license_nft`, `milestone_escrow`, `royalty_splitter` (~1,410 lines, 56 unit tests) |
 | **Off-chain** | A single-page React 19 + Vite 8 + Tailwind 4 app (~4,500 lines of TS/TSX), no backend, no database |
 | **External services** | Soroban RPC and Horizon (testnet), Circle EURC through its Stellar Asset Contract, Stellar Wallets Kit, SDF test anchor (SEP-1/10/24) |
 | **Hosting** | Vercel, production deployed from `main`, a preview per pull request |
@@ -270,9 +270,9 @@ runs them locally (Vercel runs `npm run build`, which includes `tsc`).
 ```text
 contracts/                       Cargo workspace (soroban-sdk 30.0.0-rc.1, release profile opt-level "z")
   ip_license_nft/src/lib.rs      247  licences, institutions, NDA log
-  milestone_escrow/src/lib.rs    546  rounds, milestones, disputes, fees
-  royalty_splitter/src/lib.rs    538  shares, KYC allowlist, royalties, claims
-  */src/test.rs                  788  30 tests in total (5 + 15 + 10)
+  milestone_escrow/src/lib.rs    628  rounds, milestones, disputes, fees
+  royalty_splitter/src/lib.rs    539  shares, KYC allowlist, royalties, claims
+  */src/test.rs                 1421  56 tests in total (9 + 28 + 19)
 frontend/
   src/main.tsx                        router: /, /new, /licence/:id, /admin, /cash-out
   src/config.ts, deployment.json      network constants and public contract IDs
@@ -413,9 +413,9 @@ Notable implementation choices:
 
 | Area | Coverage | Gap |
 | --- | --- | --- |
-| Contracts | 30 tests: demo scenario end to end, ordering, double release, dispute window, splits, refunds after a share sale, pro-rata royalties, transfers, clawback, fee, rounding | All tests use `mock_all_auths()`; only `only_minter_can_mint` asserts who signed. Arbiter-only, investor-only, lab-only and admin-only checks are untested |
-| Front-end | `tsc --noEmit` in the build, i18n parity and interpolation tests | No unit or end-to-end tests for flows, no lint step |
-| CI | GitHub Actions on every PR and on `main`: `cargo test`, Wasm build, `npm run build`, `npm run test:i18n` | No lint step, no end-to-end test |
+| Contracts | 56 tests: demo scenario end to end, ordering, double release, dispute window, splits, refunds after a share sale, pro-rata royalties, transfers, clawback, fee, rounding | All tests use `mock_all_auths()`; only the `only_*` tests assert who signed (admin, lab, investor, arbiter, licence owner, minter) |
+| Front-end | `tsc --noEmit` in the build, i18n parity and interpolation, EURC amount parsing, listing rules and contract error messages | No tests for pages or end-to-end flows, no lint step |
+| CI | GitHub Actions on every PR and on `main`: `cargo test`, Wasm build, `npm run build`, `npm run test:i18n`, `test:format`, `test:rules` | No lint step, no end-to-end test |
 
 ### 3.5 Maintainability notes
 
