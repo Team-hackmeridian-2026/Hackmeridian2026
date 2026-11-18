@@ -11,8 +11,8 @@ Front-end, from `frontend/`, needs Node 22 and **npm 11** (`npm install -g npm@1
 - `npm run dev`: http://localhost:5173, uses the deployed testnet contracts, no config needed
 - `npm run build`: `tsc --noEmit` + `vite build`; this is the type check
 - `npm run test:i18n`: EN/FR/PT key and placeholder parity
-- `npm run test:format`: EURC amount parsing (`toUnits` / `fromUnits` in `lib/format.ts`)
-- `npm run test:rules`: listing rules (`components/listing.tsx`) and contract error messages (`explainError`)
+- `npm run test:format`: EURC amount parsing (`toUnits` / `fromUnits` in `lib/format.ts`) and data room links (`safeLink`)
+- `npm run test:rules`: listing rules (`components/listing.tsx`), contract error messages (`explainError`) and the reclaim rule (`reclaimable`)
 - There is no lint step.
 
 Contracts, from `contracts/`:
