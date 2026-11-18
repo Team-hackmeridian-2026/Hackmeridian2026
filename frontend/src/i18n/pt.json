@@ -488,7 +488,8 @@
       "account": "A conta ativa no Freighter ({{address}}) não é a que está ligada aqui. Muda de conta no Freighter, ou desliga e volta a ligar-te no site."
     },
     "expired": "A transação expirou antes de ser assinada (limite de 5 minutos). Tente novamente e confirme na carteira em menos de 5 minutos.",
-    "sendFailed": "A rede Stellar recusou a transação. Pode ter expirado: tente novamente e assine em menos de 5 minutos."
+    "sendFailed": "A rede Stellar recusou a transação. Pode ter expirado: tente novamente e assine em menos de 5 minutos.",
+    "unconfirmed": "Enviada, mas a rede ainda não a confirmou. Verifique a transação abaixo antes de tentar novamente, para que não passe duas vezes."
   },
   "errorPage": {
     "notFoundTitle": "Página não encontrada",

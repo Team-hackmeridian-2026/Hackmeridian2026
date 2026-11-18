@@ -7,8 +7,10 @@ globalThis.document ??= { documentElement: {} };
 
 // As in format.test.mjs: Vite loads the app's real modules.
 const vite = await createServer({ configFile: false, appType: "custom", logLevel: "error", server: { middlewareMode: true, hmr: false } });
+// Loaded before the app's modules, so they share this copy, which the last test stubs.
+const { contract, Keypair } = await vite.ssrLoadModule("@stellar/stellar-sdk");
 const { splitConfig, splitProblem, roundProblem } = await vite.ssrLoadModule("/src/components/listing.tsx");
-const { explainError, reclaimable, ARBITER_PERIOD } = await vite.ssrLoadModule("/src/stellar/contracts.ts");
+const { explainError, reclaimable, ARBITER_PERIOD, splitter } = await vite.ssrLoadModule("/src/stellar/contracts.ts");
 const { CONTRACTS } = await vite.ssrLoadModule("/src/config.ts");
 const { default: i18n } = await vite.ssrLoadModule("/src/i18n/index.ts");
 test.after(() => vite.close());
@@ -71,4 +73,34 @@ test("reclaimable lists the milestones the contract's reclaim refunds", () => {
   const late = 10 ** 10;
   assert.deepEqual(reclaimable(round(["Submitted", "Released", "Refunded", "Split"].map((status) => ({ status, submitted_at: 100n }))), late), []);
   assert.deepEqual(reclaimable(round([pending], false), late), []);
+});
+
+test("a transaction sent but not confirmed is not reported as a failure to retry", async () => {
+  await i18n.changeLanguage("en");
+  // No network: a fake contract spec, and fake transactions in place of the SDK's.
+  const { Client, AssembledTransaction } = contract;
+  const original = { from: Client.from, build: AssembledTransaction.build };
+  const spec = { funcs: () => [{ name: "pay_royalty" }], getFunc: () => ({ inputs: [1, 2, 3] }), funcArgsToScVals: () => [], errorCases: () => [] };
+  let signAndSend;
+  Client.from = async () => ({ spec });
+  AssembledTransaction.build = async () => ({ signAndSend: (options) => signAndSend(options) });
+  const signer = { address: Keypair.random().publicKey(), sign: async () => ({ signedTxXdr: "" }), kind: "wallet" };
+  const pay = () => splitter.payRoyalty(signer, 1n, "5");
+  try {
+    // The network accepted it, then a status check failed: retrying would pay the royalty twice.
+    signAndSend = async ({ watcher }) => {
+      watcher.onSubmitted({ status: "PENDING", hash: "abc123" });
+      throw new Error("Failed to fetch");
+    };
+    await assert.rejects(pay(), (err) => err.hash === "abc123" && err.message === i18n.t("errors.unconfirmed"));
+    // Confirmed but failed on-chain: an ordinary failure.
+    signAndSend = async ({ watcher }) => {
+      watcher.onSubmitted({ status: "PENDING", hash: "abc123" });
+      return { sendTransactionResponse: { hash: "abc123" }, get result() { throw new Error("Transaction failed!"); } };
+    };
+    await assert.rejects(pay(), (err) => err.hash === undefined && err.message === "Transaction failed!");
+  } finally {
+    Client.from = original.from;
+    AssembledTransaction.build = original.build;
+  }
 });

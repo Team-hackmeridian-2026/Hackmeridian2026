@@ -126,12 +126,17 @@ async function read<T>(contractId: string, method: string, args: object = {}): P
 
 async function write<T>(contractId: string, method: string, args: object, signer: Signer): Promise<TxResult<T>> {
   const c = await client(contractId, signer);
+  let sentHash: string | undefined;
   try {
     const tx = await c[method](args);
-    const sent = await tx.signAndSend();
+    const sent = await tx.signAndSend({ watcher: { onSubmitted: (r) => (sentHash = r?.hash) } });
+    sentHash = undefined; // confirmed: from here on, an error is the transaction's own outcome
     const hash = sent.sendTransactionResponse?.hash ?? "";
     return { hash, result: sent.result as T };
   } catch (err) {
+    // Sent, but a status check failed (the SDK does not retry them): it may still land, and a
+    // retry would send it twice (a second royalty, a second licence). Keep its hash to check it.
+    if (sentHash) throw Object.assign(new Error(i18n.t("errors.unconfirmed")), { hash: sentHash });
     throw new Error(explainError(contractId, err));
   }
 }

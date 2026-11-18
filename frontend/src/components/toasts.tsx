@@ -4,7 +4,7 @@ import { TxLink } from "./ui";
 import { isNetworkError } from "../lib/errors";
 import type { TxResult } from "../stellar/contracts";
 
-/** Fired on window after every confirmed transaction (any toast that carries a hash). */
+/** Fired on window after every transaction sent (any toast that carries a hash, even one not confirmed yet). */
 export const TX_CONFIRMED_EVENT = "biolicensing:tx-confirmed";
 
 type Toast = { id: number; kind: "success" | "error" | "info"; text: string; hash?: string };
@@ -38,6 +38,12 @@ export function ToastProvider({ children }: { children: ReactNode }) {
         push({ kind: "success", text: t("common.confirmed", { label }), hash: res.hash });
         return res;
       } catch (err) {
+        // Sent but not confirmed (see `write`): show its link instead of a failure to retry.
+        const hash = (err as { hash?: string }).hash;
+        if (hash) {
+          push({ kind: "info", text: (err as Error).message, hash });
+          return null;
+        }
         const raw = err instanceof Error ? err.message : String(err);
         const message = isNetworkError(raw) ? t("common.networkError") : raw;
         push({ kind: "error", text: t("common.failed", { label, message }) });
