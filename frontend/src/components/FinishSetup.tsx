@@ -7,6 +7,7 @@ import { DIRECTORY, PersonPicker, type PersonKind } from "./people";
 import {
   DEFAULT_PERIOD_DAYS,
   DEFAULT_SPLIT,
+  FieldError,
   MilestoneEditor,
   RoundTimingFields,
   SplitFields,
@@ -65,15 +66,6 @@ export function FinishSetup({
   );
 }
 
-function FormError({ message }: { message?: string }) {
-  if (!message) return null;
-  return (
-    <p role="alert" className="text-sm font-medium text-danger">
-      {message}
-    </p>
-  );
-}
-
 function SplitForm({ license, signer, onDone }: { license: License; signer: Signer; onDone: () => void }) {
   const { t } = useTranslation();
   const { run } = useToasts();
@@ -97,7 +89,7 @@ function SplitForm({ license, signer, onDone }: { license: License; signer: Sign
     <div className="flex flex-col gap-4">
       <p className="text-sm font-semibold">{t("newLicence.royaltySplit")}</p>
       <SplitFields split={split} onChange={setSplit} />
-      <FormError message={error} />
+      <FieldError message={error} />
       <Button busy={busy} onClick={submit} className="self-start">
         {t("newLicence.steps.split")}
       </Button>
@@ -157,7 +149,7 @@ function RoundForm({ license, signer, onDone }: { license: License; signer: Sign
         onPeriodDays={setPeriodDays}
       />
 
-      <FormError message={error} />
+      <FieldError message={error} />
       <Button busy={busy} onClick={submit} className="self-start">
         {t("newLicence.steps.round")}
       </Button>

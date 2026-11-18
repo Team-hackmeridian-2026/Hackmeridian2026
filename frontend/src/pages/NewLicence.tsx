@@ -13,6 +13,7 @@ import { useDocumentTitle } from "../lib/useDocumentTitle";
 import {
   DEFAULT_PERIOD_DAYS,
   DEFAULT_SPLIT,
+  FieldError,
   MilestoneEditor,
   RoundTimingFields,
   SplitFields,
@@ -61,16 +62,6 @@ const DEFAULTS = DEMO_ENABLED
     };
 
 type FieldKey = "dossier" | "inventors" | "parties" | "split" | "milestones";
-
-/** Error shown right under the section it is about. */
-function FieldError({ message }: { message?: string }) {
-  if (!message) return null;
-  return (
-    <p role="alert" className="text-sm font-medium text-danger">
-      {message}
-    </p>
-  );
-}
 
 // Step badges from the Figma: lavender, pink, peach.
 const STEP_COLORS = ["bg-dna-violet/25", "bg-dna-pink/30", "bg-dna-peach/30"];
