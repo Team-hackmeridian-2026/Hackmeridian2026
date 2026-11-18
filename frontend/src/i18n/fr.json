@@ -472,7 +472,7 @@
       "12": "La part du labo doit être comprise entre 0 et 100 %.",
       "13": "L'arbitre doit être une autre personne que l'investisseur et le labo, et le labo ne peut pas être son propre investisseur.",
       "14": "Le délai de contestation doit être compris entre 1 minute et 30 jours.",
-      "15": "L'échéance doit être dans le futur.",
+      "15": "L'échéance doit être dans le futur, à 5 ans au plus.",
       "16": "La durée de la recherche est écoulée : plus aucun jalon ne peut être soumis.",
       "17": "Rien à rembourser pour l'instant.",
       "18": "L'investisseur n'est pas encore sur la liste KYC."

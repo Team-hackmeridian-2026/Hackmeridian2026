@@ -578,11 +578,14 @@ fn arbiter_window_and_deadline_are_checked_at_creation() {
     assert_eq!(try_create(&s.arbiter, 31 * 24 * 60 * 60, DEADLINE), window);
 
     advance(&s, 1_000);
-    assert_eq!(
-        try_create(&s.arbiter, WINDOW, 1_000),
-        Err(Ok(Error::InvalidDeadline.into()))
-    );
+    let deadline = Err(Ok(Error::InvalidDeadline.into()));
+    assert_eq!(try_create(&s.arbiter, WINDOW, 1_000), deadline);
     assert!(try_create(&s.arbiter, WINDOW, 1_001).is_ok());
+    // A deadline out of reach would let the lab lock the funds forever by never submitting.
+    let latest = 1_000 + 5 * 365 * 24 * 60 * 60;
+    assert_eq!(try_create(&s.arbiter, WINDOW, latest + 1), deadline);
+    assert_eq!(try_create(&s.arbiter, WINDOW, u64::MAX), deadline);
+    assert!(try_create(&s.arbiter, WINDOW, latest).is_ok());
 }
 
 #[test]

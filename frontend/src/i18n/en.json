@@ -472,7 +472,7 @@
       "12": "The lab's share must be between 0 and 100 %.",
       "13": "The arbiter must be someone other than the investor and the lab, and the lab cannot be its own investor.",
       "14": "The challenge window must be between 1 minute and 30 days.",
-      "15": "The deadline must be in the future.",
+      "15": "The deadline must be in the future and at most 5 years away.",
       "16": "The research period is over: no milestone can be submitted any more.",
       "17": "Nothing to refund yet.",
       "18": "The investor is not on the KYC allowlist yet."
