@@ -118,7 +118,7 @@ function TrustlineHint() {
         <span>
           <Trans
             i18nKey="wallet.trustlineHint"
-            components={{ link: <a href={CIRCLE_FAUCET_URL} target="_blank" rel="noreferrer" className="font-semibold underline" /> }}
+            components={{ faucet: <a href={CIRCLE_FAUCET_URL} target="_blank" rel="noreferrer" className="font-semibold underline" /> }}
           />
         </span>
       </p>
