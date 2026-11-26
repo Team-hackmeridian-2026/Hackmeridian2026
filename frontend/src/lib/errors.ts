@@ -1,5 +1,3 @@
-import { contract } from "@stellar/stellar-sdk";
-
 /**
  * True for errors that mean "the Stellar RPC / Horizon / anchor could not be reached".
  * Node-style codes (ECONNRESET, ERR_NETWORK) are matched as whole words, so translated
@@ -9,12 +7,4 @@ export function isNetworkError(message: string): boolean {
   return /failed to fetch|networkerror|network error|load failed|\btimed? ?out\b|\beconn[a-z]*\b|\berr_[a-z_]+\b|status code 50[234]|\b50[234]\b/i.test(
     message,
   );
-}
-
-/**
- * Contract reads do not reject when the contract fails with one of its own errors
- * (e.g. `LicenseNotFound`): the SDK resolves them to a `contract.Err` value instead.
- */
-export function isContractErr(value: unknown): value is InstanceType<typeof contract.Err> {
-  return value instanceof contract.Err;
 }

@@ -21,7 +21,6 @@ import { Address, Badge, Button, Card, ErrorBox, Input, Spinner, StatusIcon, but
 import { FundingProgress } from "../components/Funding";
 import { FinishSetup } from "../components/FinishSetup";
 import { useDocumentTitle } from "../lib/useDocumentTitle";
-import { isContractErr } from "../lib/errors";
 import { NotFound } from "../components/RouteError";
 
 // Decorative helix behind the page (Three.js is shared with the home page chunk).
@@ -590,8 +589,7 @@ export function LicenceDetail() {
   if (licenseId === 0n) return <NotFound title={t("licence.notFound")} />;
   if (license.loading) return <Spinner />;
   if (license.error) return <ErrorBox message={license.error} onRetry={license.reload} />;
-  // An unknown id comes back as the contract's LicenseNotFound error value.
-  if (!license.data || isContractErr(license.data)) return <NotFound title={t("licence.notFound")} />;
+  if (!license.data) return <NotFound title={t("licence.notFound")} />;
   const l = license.data;
   const facts = [
     [t("marketplace.table.field"), l.terms.field],
