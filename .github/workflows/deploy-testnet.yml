@@ -119,7 +119,7 @@ jobs:
               print("\nNew demo accounts: " + ", ".join(f"`{r}`" for r in moved) + ".")
           print("\nThis updates `frontend/src/deployment.json` and the contract IDs in the README.\n")
           print("Still to do by hand before merging:")
-          print("- [ ] README: the \"Source ahead of the deployment\" note and the on-chain evidence links")
+          print("- [ ] README: the \"Source and deployment\" note and the on-chain evidence links")
           print("- [ ] `CLAUDE.md` and `CONTRIBUTING.md`: the lines naming the release testnet runs")
           print("- [ ] Check the Vercel preview against the new contracts")
           print("- [ ] If seeding or the jury step failed, check the workflow log and rerun the script that failed")
