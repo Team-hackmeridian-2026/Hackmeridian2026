@@ -58,6 +58,31 @@ test("explainError reads EURC token failures as balance and trustline problems",
   assert.equal(explainError(CONTRACTS.escrow, new Error("HostError: Error(Contract, #10)")), i18n.t("errors.escrow.10"));
 });
 
+test("anchor failures read as the anchor's own message, or a translated one", async () => {
+  await i18n.changeLanguage("en");
+  const { StellarToml } = await vite.ssrLoadModule("@stellar/stellar-sdk");
+  const { ANCHOR_DOMAIN, anchorConfig, authenticate } = await vite.ssrLoadModule("/src/stellar/anchor.ts");
+  const original = { resolve: StellarToml.Resolver.resolve, fetch: globalThis.fetch };
+  StellarToml.Resolver.resolve = async () => ({
+    WEB_AUTH_ENDPOINT: "https://anchor.test/auth",
+    TRANSFER_SERVER_SEP0024: "https://anchor.test/sep24",
+    SIGNING_KEY: Keypair.random().publicKey(),
+  });
+  let answer;
+  globalThis.fetch = async (url) => ({ ok: false, json: async () => answer(String(url)) });
+  try {
+    // No withdraw section in /info: not an anchor the cash-out can use.
+    answer = () => ({});
+    await assert.rejects(anchorConfig(), { message: i18n.t("errors.anchor.unsupported", { domain: ANCHOR_DOMAIN }) });
+    // The anchor refuses to send a challenge: its own message, not a crash inside the SDK.
+    answer = (url) => (url.endsWith("/info") ? { withdraw: {} } : { error: "Invalid account" });
+    await assert.rejects(authenticate({ address: Keypair.random().publicKey() }), { message: "Invalid account" });
+  } finally {
+    StellarToml.Resolver.resolve = original.resolve;
+    globalThis.fetch = original.fetch;
+  }
+});
+
 test("reclaimable lists the milestones the contract's reclaim refunds", () => {
   const round = (milestones, funded = true) => ({ funded, deadline: 1_000n, challenge_period: 60n, milestones });
   const pending = { status: "Pending", submitted_at: 0n };
