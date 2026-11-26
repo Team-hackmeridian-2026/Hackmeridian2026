@@ -121,7 +121,14 @@ async function client(contractId: string, signer?: Signer): Promise<DynamicClien
 async function read<T>(contractId: string, method: string, args: object = {}): Promise<T> {
   const c = await client(contractId);
   const tx = await c[method](args);
-  return tx.result as T;
+  const result = tx.result;
+  // The SDK resolves the contract's own errors (LicenseNotFound…) to a contract.Err value instead of
+  // rejecting: throw them like any failed read, with their code for callers that expect one.
+  if (result instanceof contract.Err) {
+    const raw = String((tx.simulation as { error?: string } | undefined)?.error);
+    throw Object.assign(new Error(explainError(contractId, raw)), { code: Number(/Error\(Contract, #(\d+)\)/.exec(raw)?.[1]) });
+  }
+  return result as T;
 }
 
 async function write<T>(contractId: string, method: string, args: object, signer: Signer): Promise<TxResult<T>> {
@@ -197,7 +204,12 @@ function normalizeProject(p: Project): Project {
 export const nft = {
   total: () => read<bigint>(CONTRACTS.nft, "total"),
   list: (start = 1n, limit = 50) => read<License[]>(CONTRACTS.nft, "list_licenses", { start, limit }),
-  get: (id: bigint) => read<License>(CONTRACTS.nft, "get_license", { id }),
+  /** Undefined for an id no licence has (LicenseNotFound). */
+  get: (id: bigint) =>
+    read<License>(CONTRACTS.nft, "get_license", { id }).catch((err) => {
+      if (err.code === 2) return undefined;
+      throw err;
+    }),
   isInstitution: (who: string) => read<boolean>(CONTRACTS.nft, "is_institution", { who }),
   hasSignedNda: (id: bigint, viewer: string) => read<boolean>(CONTRACTS.nft, "has_signed_nda", { id, viewer }),
 
