@@ -34,7 +34,7 @@
     "disconnect": "Desligar",
     "connect": "Ligar carteira",
     "connectShort": "Ligar",
-    "trustlineHint": "Adicione uma trustline para o EURC da Circle na sua carteira e obtenha EURC de teste em <link>faucet.circle.com</link>."
+    "trustlineHint": "Adicione uma trustline para o EURC da Circle na sua carteira e obtenha EURC de teste em <faucet>faucet.circle.com</faucet>."
   },
   "footer": {
     "tagline": "BioLicensing · HackMeridian 2026 · testnet Stellar · montantes em EURC de teste",
@@ -403,7 +403,7 @@
       "transfer": "Transferência bancária"
     },
     "hints": {
-      "usdc": "Obtenha USDC de teste em <link>faucet.circle.com</link> (testnet Stellar).",
+      "usdc": "Obtenha USDC de teste em <faucet>faucet.circle.com</faucet> (testnet Stellar).",
       "native": "Todas as contas da testnet já têm XLM do Friendbot.",
       "other": "Obtenha {{code}} através de um depósito em {{domain}}."
     },

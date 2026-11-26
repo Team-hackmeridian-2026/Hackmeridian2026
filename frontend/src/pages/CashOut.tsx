@@ -54,7 +54,7 @@ function assetHint(t: TFunction, asset: AnchorAsset) {
       <Trans
         i18nKey="cashOut.hints.usdc"
         components={{
-          link: <a href={CIRCLE_FAUCET_URL} target="_blank" rel="noreferrer" className="font-semibold text-brand-ink underline" />,
+          faucet: <a href={CIRCLE_FAUCET_URL} target="_blank" rel="noreferrer" className="font-semibold text-brand-ink underline" />,
         }}
       />
     );

@@ -21,6 +21,16 @@ for (const language of ['fr', 'pt']) {
   });
 }
 
+// Trans parses <link>, <br>… as void HTML elements, so <link>text</link> renders an empty link with the text beside it.
+const pairedVoidTag = /<(area|base|br|col|embed|hr|img|input|link|meta|param|source|track|wbr)>[^<]*<\/\1>/;
+test('no Trans component is named after a void HTML element', () => {
+  for (const language of ['en', 'fr', 'pt']) {
+    for (const [key, value] of Object.entries(flatten(resources[language].translation))) {
+      assert.doesNotMatch(value, pairedVoidTag, `${language}: ${key}`);
+    }
+  }
+});
+
 test('all languages resolve plurals and preserve interpolated chain data', async () => {
   const i18n = createInstance();
   await i18n.init({ resources, fallbackLng: 'en', interpolation: { escapeValue: false } });

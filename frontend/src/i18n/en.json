@@ -34,7 +34,7 @@
     "disconnect": "Disconnect",
     "connect": "Connect wallet",
     "connectShort": "Connect",
-    "trustlineHint": "Add a trustline to Circle EURC in your wallet, then get test EURC on <link>faucet.circle.com</link>."
+    "trustlineHint": "Add a trustline to Circle EURC in your wallet, then get test EURC on <faucet>faucet.circle.com</faucet>."
   },
   "footer": {
     "tagline": "BioLicensing · HackMeridian 2026 · Stellar testnet · amounts are test EURC",
@@ -403,7 +403,7 @@
       "transfer": "Bank transfer"
     },
     "hints": {
-      "usdc": "Get test USDC on <link>faucet.circle.com</link> (Stellar testnet).",
+      "usdc": "Get test USDC on <faucet>faucet.circle.com</faucet> (Stellar testnet).",
       "native": "Every testnet account already holds XLM from Friendbot.",
       "other": "Get {{code}} through a deposit on {{domain}}."
     },
