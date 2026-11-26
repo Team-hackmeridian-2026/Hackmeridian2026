@@ -262,36 +262,42 @@ longer published here.
 
 | Account | Role | Address |
 | --- | --- | --- |
-| Juror 1 | Lab and investor | `GA5VVZ5YYKUTCW6B3DEU6AK45QQVFEX2PFMJ6FMLKEMLSQ2CE7766XUL` |
-| Juror 2 | Lab and investor | `GBJL53EHJXAUAVLCDJNNX333BJFP4ZKMRMMMXHPAX3JEHIXA3KHLRM7Q` |
-| Juror 3 | Lab and investor | `GA2KN3QOYYU7SWDPLAZ6HQ7GS3CFXVLPAQFDSWIUEGOVC2DJLNM6KCVD` |
+| Juror 1 | Lab or investor | `GA5VVZ5YYKUTCW6B3DEU6AK45QQVFEX2PFMJ6FMLKEMLSQ2CE7766XUL` |
+| Juror 2 | Lab or investor | `GBJL53EHJXAUAVLCDJNNX333BJFP4ZKMRMMMXHPAX3JEHIXA3KHLRM7Q` |
+| Juror 3 | Lab or investor | `GA2KN3QOYYU7SWDPLAZ6HQ7GS3CFXVLPAQFDSWIUEGOVC2DJLNM6KCVD` |
 | Jury arbiter | Arbiter (shared) | `GDREHWU6C7XZXEEYNEISEDIBZPTVSESBUPB5APUBNUSQ6TZ2ZNCY7I3T` |
 
-The walkthroughs below work with any account that is a verified institution
-and on the KYC allowlist (see [With your own wallet](#with-your-own-wallet-public-demo)).
-The contract refuses an arbiter who is also the investor, so a dispute needs a
-second Freighter account as the arbiter.
+The walkthroughs below need three Freighter accounts: a **lab** that is a
+verified institution, an **investor** on the KYC allowlist (see
+[With your own wallet](#with-your-own-wallet-public-demo)) and an **arbiter**.
+The contract refuses a lab that funds its own round, and an arbiter who is
+also the lab or the investor.
 
 #### Happy path (about 5 minutes)
 
-1. **List a patent**. Fill in a title, field and territory, pick an inventor
-   (the demo inventor is fine) and add any file as the dossier. In the funding
-   section, set the **investor** to your own address and the **arbiter** to
-   your second account's address; choose the 1-minute challenge window and two
-   milestones of 1 EURC.
-2. On the licence page, **Fund**: 2 EURC are locked in escrow and shares are
-   minted to you.
-3. **Submit proof** of milestone 1, wait one minute, then **Release the funds**
-   (0.99 EURC to the lab after the 1 % fee).
-4. **Pay in EURC** a royalty in the Royalties panel, then **Withdraw** your
-   university and investor shares.
+1. With the lab account, **List a patent**. Fill in a title, field and
+   territory, pick an inventor (the demo inventor is fine) and add any file as
+   the dossier. In the funding section, set the **investor** and the
+   **arbiter** to the addresses of those two accounts; choose the 1-minute
+   challenge window and two milestones of 1 EURC.
+2. Switch Freighter to the investor account, reload the licence page, and
+   **Fund**: 2 EURC are locked in escrow. No shares yet: the investor receives
+   them as milestones pay the lab.
+3. Back on the lab account, **Submit proof** of milestone 1, wait one minute,
+   then **Release the funds**: 0.99 EURC go to the lab after the 1 % fee, and
+   the investor receives shares for the 1 EURC paid.
+4. **Pay in EURC** a royalty in the Royalties panel (any account can), then
+   **Withdraw** each part: the university's with the lab account, the
+   investors' with the investor account.
 
 #### Dispute and partial resolution
 
-1. **Submit proof** of milestone 2, then **Dispute** it within the minute.
+1. With the lab account, **Submit proof** of milestone 2; with the investor
+   account, **Dispute** it within the minute.
 2. Switch Freighter to the arbiter account, reload, and use the arbiter slider
    (for example 60 % to the lab): the milestone shows **Split**, 40 % is
-   refunded and your investor shares shrink accordingly.
+   refunded to the investor, who receives shares only for the 60 % paid to
+   the lab.
 
 ### With your own wallet (public demo)
 
@@ -308,9 +314,9 @@ second Freighter account as the arbiter.
 | # | Role | Action | On-chain |
 | --- | --- | --- | --- |
 | 1 | University lab | **List a patent**: fill the 3 sections, confirm 3 times | Licence minted, split locked, funding round opened |
-| 2 | Investment fund | Open the licence, **Fund** | EURC locked in escrow, shares minted |
+| 2 | Investment fund | Open the licence, **Fund** | EURC locked in escrow |
 | 3 | University lab | **Submit proof** of milestone 1 | Challenge window opens (1 min in demo mode) |
-| 4 | Anyone | **Release the funds** once the window is closed | EURC paid to the lab, minus the platform fee |
+| 4 | Anyone | **Release the funds** once the window is closed | EURC paid to the lab, minus the platform fee; shares minted to the investor |
 | 5 | Industry licensee | **Pay in EURC** in the Royalties panel | Royalty split between university, inventors and investors |
 | 6 | Each beneficiary | **Withdraw** | EURC paid out |
 | 7 | University lab | **Cash out**: sign in to the anchor, withdraw, send the funds | SEP-10 auth, SEP-24 withdrawal, payment to the anchor |
