@@ -1,4 +1,4 @@
-import { useEffect, useState, type DragEvent, type FormEvent } from "react";
+import { useEffect, useRef, useState, type DragEvent, type FormEvent } from "react";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { ACCOUNTS } from "../config";
@@ -104,6 +104,8 @@ export function NewLicence() {
   const [periodDays, setPeriodDays] = useState(DEFAULT_PERIOD_DAYS);
 
   const [steps, setSteps] = useState<Step[]>(INITIAL_STEPS);
+  // What a failed listing already put on-chain, for the account that signed it.
+  const listed = useRef<{ owner: string; id?: bigint; split?: boolean }>({ owner: "" });
   const [busy, setBusy] = useState(false);
   const [formError, setFormError] = useState<string>();
   const [errorField, setErrorField] = useState<FieldKey | null>(null);
@@ -165,28 +167,37 @@ export function NewLicence() {
     if (problem) return fail(problem.field, t(problem.message));
 
     setBusy(true);
-    setSteps(INITIAL_STEPS);
+    // A retry resumes after the steps already confirmed: starting over would mint a second licence.
+    if (listed.current.owner !== signer.address) listed.current = { owner: signer.address };
+    const done = listed.current;
+    if (done.id === undefined) setSteps(INITIAL_STEPS);
     try {
-      setStep(0, { state: "running" });
-      const minted = await run(t("newLicence.toasts.mint"), () =>
-        nft.mint(signer, {
-          title,
-          inventors: inventorList,
-          terms: { exclusive, territory, field, duration_years: Number(years) },
-          dossierHash: hash,
-          metadataUri: metadataUri.trim(),
-        }),
-      );
-      if (!minted) return setStep(0, { state: "error" });
-      const licenseId = minted.result as bigint;
-      setStep(0, { state: "done", hash: minted.hash });
+      if (done.id === undefined) {
+        setStep(0, { state: "running" });
+        const minted = await run(t("newLicence.toasts.mint"), () =>
+          nft.mint(signer, {
+            title,
+            inventors: inventorList,
+            terms: { exclusive, territory, field, duration_years: Number(years) },
+            dossierHash: hash,
+            metadataUri: metadataUri.trim(),
+          }),
+        );
+        if (!minted) return setStep(0, { state: "error" });
+        done.id = minted.result as bigint;
+        setStep(0, { state: "done", hash: minted.hash });
+      }
+      const licenseId = done.id;
 
-      setStep(1, { state: "running" });
-      const configured = await run(t("newLicence.toasts.split"), () =>
-        splitter.configure(signer, licenseId, splitConfig(signer.address, inventorList, split)),
-      );
-      if (!configured) return setStep(1, { state: "error" });
-      setStep(1, { state: "done", hash: configured.hash });
+      if (!done.split) {
+        setStep(1, { state: "running" });
+        const configured = await run(t("newLicence.toasts.split"), () =>
+          splitter.configure(signer, licenseId, splitConfig(signer.address, inventorList, split)),
+        );
+        if (!configured) return setStep(1, { state: "error" });
+        done.split = true;
+        setStep(1, { state: "done", hash: configured.hash });
+      }
 
       setStep(2, { state: "running" });
       const created = await run(t("newLicence.toasts.round"), () =>
