@@ -12,7 +12,7 @@ Front-end, from `frontend/`, needs Node 22 and **npm 11** (`npm install -g npm@1
 - `npm run build`: `tsc --noEmit` + `vite build`; this is the type check
 - `npm run test:i18n`: EN/FR/PT key and placeholder parity
 - `npm run test:format`: EURC amount parsing (`toUnits` / `fromUnits` in `lib/format.ts`) and data room links (`safeLink`)
-- `npm run test:rules`: listing rules (`components/listing.tsx`), contract error messages (`explainError`), the reclaim rule (`reclaimable`), sent-but-unconfirmed transactions (`write`) and reads the contract refuses (`read`)
+- `npm run test:rules`: listing rules (`components/listing.tsx`), contract and anchor error messages (`explainError`, `anchor.ts`), the reclaim rule (`reclaimable`), sent-but-unconfirmed transactions (`write`) and reads the contract refuses (`read`)
 - There is no lint step.
 
 Contracts, from `contracts/`:
