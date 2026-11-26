@@ -489,7 +489,16 @@
     },
     "expired": "A transação expirou antes de ser assinada (limite de 5 minutos). Tente novamente e confirme na carteira em menos de 5 minutos.",
     "sendFailed": "A rede Stellar recusou a transação. Pode ter expirado: tente novamente e assine em menos de 5 minutos.",
-    "unconfirmed": "Enviada, mas a rede ainda não a confirmou. Verifique a transação abaixo antes de tentar novamente, para que não passe duas vezes."
+    "unconfirmed": "Enviada, mas a rede ainda não a confirmou. Verifique a transação abaixo antes de tentar novamente, para que não passe duas vezes.",
+    "anchor": {
+      "unsupported": "{{domain}} não suporta SEP-10 e SEP-24.",
+      "noChallenge": "O anchor não enviou o desafio de início de sessão.",
+      "otherAccount": "O desafio de início de sessão do anchor é para outra conta.",
+      "authRefused": "O anchor recusou o início de sessão.",
+      "startFailed": "O anchor não conseguiu iniciar o levantamento.",
+      "notFound": "O anchor não encontra este levantamento.",
+      "noPaymentDetails": "O anchor ainda não indicou os dados do pagamento."
+    }
   },
   "errorPage": {
     "notFoundTitle": "Página não encontrada",

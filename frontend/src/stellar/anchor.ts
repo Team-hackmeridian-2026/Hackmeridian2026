@@ -19,6 +19,7 @@ import {
   WebAuth,
 } from "@stellar/stellar-sdk";
 import { HORIZON_URL, NETWORK_PASSPHRASE } from "../config";
+import i18n from "../i18n";
 import type { Signer } from "./wallet";
 
 export const ANCHOR_DOMAIN = "testanchor.stellar.org";
@@ -75,11 +76,12 @@ export function anchorConfig(): Promise<AnchorConfig> {
   configPromise ??= (async () => {
     const toml = await StellarToml.Resolver.resolve(ANCHOR_DOMAIN);
     if (!toml.WEB_AUTH_ENDPOINT || !toml.TRANSFER_SERVER_SEP0024 || !toml.SIGNING_KEY) {
-      throw new Error(`${ANCHOR_DOMAIN} does not support SEP-10 and SEP-24.`);
+      throw new Error(i18n.t("errors.anchor.unsupported", { domain: ANCHOR_DOMAIN }));
     }
     const info = (await (await fetch(`${toml.TRANSFER_SERVER_SEP0024}/info`)).json()) as {
-      withdraw: Record<string, { enabled: boolean; min_amount?: number; max_amount?: number }>;
+      withdraw?: Record<string, { enabled: boolean; min_amount?: number; max_amount?: number }>;
     };
+    if (!info.withdraw) throw new Error(i18n.t("errors.anchor.unsupported", { domain: ANCHOR_DOMAIN }));
     const issuers = new Map((toml.CURRENCIES ?? []).map((c) => [c.code, c.issuer]));
     const assets = Object.entries(info.withdraw)
       .filter(([, w]) => w.enabled)
@@ -110,7 +112,8 @@ export function anchorConfig(): Promise<AnchorConfig> {
 export async function authenticate(signer: Signer): Promise<string> {
   const cfg = await anchorConfig();
   const res = await fetch(`${cfg.webAuth}?account=${signer.address}`);
-  const { transaction } = (await res.json()) as { transaction: string };
+  const { transaction, error } = (await res.json()) as { transaction?: string; error?: string };
+  if (!transaction) throw new Error(error ?? i18n.t("errors.anchor.noChallenge"));
 
   // Reject a challenge that was not issued by this anchor for this account.
   const { clientAccountID } = WebAuth.readChallengeTx(
@@ -120,7 +123,7 @@ export async function authenticate(signer: Signer): Promise<string> {
     ANCHOR_DOMAIN,
     new URL(cfg.webAuth).host,
   );
-  if (clientAccountID !== signer.address) throw new Error("The anchor's challenge is for another account.");
+  if (clientAccountID !== signer.address) throw new Error(i18n.t("errors.anchor.otherAccount"));
 
   const { signedTxXdr } = await signer.sign(transaction, {
     networkPassphrase: NETWORK_PASSPHRASE,
@@ -132,7 +135,7 @@ export async function authenticate(signer: Signer): Promise<string> {
     body: JSON.stringify({ transaction: signedTxXdr }),
   });
   const body = (await tokenRes.json()) as { token?: string; error?: string };
-  if (!body.token) throw new Error(body.error ?? "The anchor refused the authentication.");
+  if (!body.token) throw new Error(body.error ?? i18n.t("errors.anchor.authRefused"));
   return body.token;
 }
 
@@ -150,7 +153,7 @@ export async function startWithdrawal(
     body: JSON.stringify({ asset_code: asset.code, ...(asset.issuer && { asset_issuer: asset.issuer }), account, lang: "en" }),
   });
   const body = (await res.json()) as { id?: string; url?: string; error?: string };
-  if (!body.id || !body.url) throw new Error(body.error ?? "The anchor could not start the withdrawal.");
+  if (!body.id || !body.url) throw new Error(body.error ?? i18n.t("errors.anchor.startFailed"));
   return { id: body.id, url: body.url };
 }
 
@@ -160,7 +163,7 @@ export async function getTransaction(token: string, id: string): Promise<AnchorT
     headers: { Authorization: `Bearer ${token}` },
   });
   const body = (await res.json()) as { transaction?: AnchorTransaction; error?: string };
-  if (!body.transaction) throw new Error(body.error ?? "Withdrawal not found.");
+  if (!body.transaction) throw new Error(body.error ?? i18n.t("errors.anchor.notFound"));
   return body.transaction;
 }
 
@@ -217,7 +220,7 @@ function memoOf(tx: AnchorTransaction): Memo {
 
 /** Sends the funds the anchor is waiting for, with the memo it uses to match the payment. */
 export function payAnchor(signer: Signer, a: AnchorAsset, tx: AnchorTransaction): Promise<string> {
-  if (!tx.withdraw_anchor_account || !tx.amount_in) throw new Error("The anchor has not given payment details yet.");
+  if (!tx.withdraw_anchor_account || !tx.amount_in) throw new Error(i18n.t("errors.anchor.noPaymentDetails"));
   return submit(signer, (b) =>
     b
       .addOperation(

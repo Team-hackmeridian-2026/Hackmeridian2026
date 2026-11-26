@@ -489,7 +489,16 @@
     },
     "expired": "La transaction a expiré avant d'être signée (limite de 5 minutes). Recommencez et confirmez dans votre wallet en moins de 5 minutes.",
     "sendFailed": "Le réseau Stellar a refusé la transaction. Elle a peut-être expiré : recommencez et signez en moins de 5 minutes.",
-    "unconfirmed": "Envoyée, mais le réseau ne l'a pas encore confirmée. Vérifiez la transaction ci-dessous avant de réessayer, pour qu'elle ne passe pas deux fois."
+    "unconfirmed": "Envoyée, mais le réseau ne l'a pas encore confirmée. Vérifiez la transaction ci-dessous avant de réessayer, pour qu'elle ne passe pas deux fois.",
+    "anchor": {
+      "unsupported": "{{domain}} ne prend pas en charge SEP-10 et SEP-24.",
+      "noChallenge": "L'anchor n'a pas envoyé de défi de connexion.",
+      "otherAccount": "Le défi de connexion de l'anchor concerne un autre compte.",
+      "authRefused": "L'anchor a refusé la connexion.",
+      "startFailed": "L'anchor n'a pas pu démarrer le retrait.",
+      "notFound": "L'anchor ne trouve pas ce retrait.",
+      "noPaymentDetails": "L'anchor n'a pas encore donné les détails du paiement."
+    }
   },
   "errorPage": {
     "notFoundTitle": "Page introuvable",
