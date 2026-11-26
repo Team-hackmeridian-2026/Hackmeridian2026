@@ -244,7 +244,7 @@ showing their licences.
 | `NETWORK` | scripts | `testnet` | Stellar network |
 | `EURC_MODE` | `setup-accounts.sh` | `mock` | `circle` = official Circle EURC (get it on [faucet.circle.com](https://faucet.circle.com)); `mock` = a test EURC issued by our own account |
 | `FEE_BPS` | `deploy.sh` | `100` | Platform fee in basis points (100 = 1 %) |
-| `VITE_DEMO_SECRETS` | `frontend/.env.local` | none | **Local only, never committed.** Testnet keys of the demo accounts, written by `sync-frontend-config.sh --demo` to switch roles on stage. The public build has none and only uses wallets |
+| `VITE_DEMO_SECRETS` | `frontend/.env.local` | none | **Local only, never committed.** Testnet keys of the demo accounts, written by `sync-frontend-config.sh --demo` to switch roles on stage. Read by `npm run dev` only: `npm run build` ignores it, so no bundle contains the keys |
 
 Deployment state lives in `deployments/testnet.env` (gitignored, see
 `deployments/testnet.env.example`). Secret keys stay in the Stellar CLI config.
@@ -315,9 +315,9 @@ second Freighter account as the arbiter.
 | 6 | Each beneficiary | **Withdraw** | EURC paid out |
 | 7 | University lab | **Cash out**: sign in to the anchor, withdraw, send the funds | SEP-10 auth, SEP-24 withdrawal, payment to the anchor |
 
-Every action shows a link to the transaction on stellar.expert. Locally, the
-**Demo: act as…** menu switches between the demo accounts without a wallet
-(requires `frontend/.env.local`, see above).
+Every action shows a link to the transaction on stellar.expert. With
+`npm run dev`, the **Demo: act as…** menu switches between the demo accounts
+without a wallet (requires `frontend/.env.local`, see above).
 
 ---
 

@@ -34,7 +34,7 @@ const INITIAL_STEPS: Step[] = [
 ];
 
 /**
- * Starting values of the form. The stage demo (local build with demo keys, see
+ * Starting values of the form. The stage demo (dev server with demo keys, see
  * scripts/sync-frontend-config.sh --demo) gets a ready-to-submit sample; the public
  * site starts empty, so a real lab never names the demo fund or arbiter by accident.
  */

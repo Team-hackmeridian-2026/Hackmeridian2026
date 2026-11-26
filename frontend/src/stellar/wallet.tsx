@@ -24,13 +24,14 @@ export const DEMO_ROLES = ["lab", "fund", "pharma", "arbiter", "inventor", "admi
 export type DemoRole = (typeof DEMO_ROLES)[number];
 
 /**
- * Demo mode: testnet secret keys injected at build time from frontend/.env.local
- * (written by scripts/sync-frontend-config.sh --demo, never committed). Only used
- * on stage to switch roles quickly; the public build has no keys and uses wallets.
+ * Demo mode: testnet secret keys from frontend/.env.local (written by
+ * scripts/sync-frontend-config.sh --demo, never committed), to switch roles quickly
+ * on stage. Read by the dev server only: Vite copies VITE_* variables into every
+ * build, and the admin's key must never end up in a bundle someone could publish.
  */
 const DEMO_SECRETS: Partial<Record<DemoRole, string>> = (() => {
   try {
-    return JSON.parse(import.meta.env.VITE_DEMO_SECRETS ?? "{}");
+    return JSON.parse((import.meta.env.DEV && import.meta.env.VITE_DEMO_SECRETS) || "{}");
   } catch {
     return {};
   }

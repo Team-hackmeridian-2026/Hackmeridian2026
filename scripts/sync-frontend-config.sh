@@ -3,7 +3,7 @@
 # (frontend/src/deployment.json: public addresses and contract IDs only).
 #
 #   --demo  also writes frontend/.env.local with the testnet secret keys of the
-#           demo accounts (gitignored, for local use only).
+#           demo accounts (gitignored, read by `npm run dev` only).
 set -euo pipefail
 
 NETWORK="${NETWORK:-testnet}"

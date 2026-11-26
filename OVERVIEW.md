@@ -401,7 +401,7 @@ Notable implementation choices:
   `Error(Contract, #n)` to translated messages per contract.
 - **Two signer kinds.** `wallet` (Stellar Wallets Kit, checks network and
   active account before every signature) and `demo` (testnet secret keys
-  injected at build time from `frontend/.env.local`, never in the public
+  from `frontend/.env.local`, read by the dev server only, never in a
   build).
 - **State management is local.** `useAsync` + a `version` counter, no global
   store or cache; a confirmed transaction fires `biolicensing:tx-confirmed` so
