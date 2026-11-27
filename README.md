@@ -258,7 +258,9 @@ Deployment state lives in `deployments/testnet.env` (gitignored, see
 Browsing needs no wallet. During judging, the jury signed with four
 ready-made testnet accounts, each a verified institution on the KYC allowlist
 with 5 test EURC. Their secret keys were shared for the event only and are no
-longer published here.
+longer published here. They stay readable in the git history, so the jurors'
+institution and KYC rights were revoked on 27 November 2026: do not register
+these keys again (`scripts/jury-accounts.sh` or the workflow's jury option).
 
 | Account | Role | Address |
 | --- | --- | --- |
