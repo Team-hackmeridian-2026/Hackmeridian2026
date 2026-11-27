@@ -13,7 +13,7 @@ export type SignTransaction = (
 export type Signer = {
   address: string;
   sign: SignTransaction;
-  /** "wallet" = Freighter & co. via Stellar Wallets Kit, "demo" = local testnet key. */
+  /** "wallet" = Varial & co. via Stellar Wallets Kit, "demo" = local testnet key. */
   kind: "wallet" | "demo";
   /** Set in demo mode, so the header can show the role in the current language. */
   role?: DemoRole;
@@ -76,7 +76,7 @@ async function checkWallet(address: string): Promise<void> {
     throw new WalletError("notConnected");
   }
   // Check the network before asking for the address: on a network where the site was never
-  // approved (Mainnet), Freighter answers that request with a connection popup.
+  // approved (Mainnet), Varial answers that request with a connection popup.
   if (network.networkPassphrase && network.networkPassphrase !== NETWORK_PASSPHRASE) throw new WalletError("network");
   let active: string;
   try {

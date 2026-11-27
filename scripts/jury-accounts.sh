@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Prepares testnet accounts the jury imports into Freighter to play the whole
+# Prepares testnet accounts the jury imports into Varial to play the whole
 # journey without waiting for the admin: each juror is a verified institution,
 # on the KYC allowlist, and gets a few EURC; one shared arbiter account is
 # enough (the arbiter must differ from the investor).

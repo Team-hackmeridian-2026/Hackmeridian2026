@@ -72,7 +72,7 @@ milestone releases and royalties (1 % on testnet).
 
 ```mermaid
 flowchart TB
-    U["Lab · Investor · Licensee · Arbiter"] --> F["React front-end<br/>Stellar Wallets Kit (Freighter…)"]
+    U["Lab · Investor · Licensee · Arbiter"] --> F["React front-end<br/>Stellar Wallets Kit (Varial…)"]
     F -->|"Soroban RPC"| NFT["ip_license_nft"]
     F -->|"Soroban RPC"| ESC["milestone_escrow"]
     F -->|"Soroban RPC"| SPL["royalty_splitter"]
@@ -89,7 +89,7 @@ flowchart TB
 | --- | --- | --- |
 | Smart contracts | 3 Soroban contracts in Rust (`soroban-sdk` 30.0.0-rc.1, protocol 30) | Licences, milestone escrow, shares and royalties |
 | Stablecoin | **Circle EURC** on testnet, issuer `GB3Q6QDZYTHWT7E5PVS3W7FUT5GVAFC5KSZFFLPU25GO7VTC3NM2ZTVO`, handled in Soroban through its **Stellar Asset Contract** | Funding and royalties in regulated euros (MiCA) |
-| Wallets | **Stellar Wallets Kit** (Freighter, xBull, Lobstr, Albedo…) | Users sign every transaction themselves |
+| Wallets | **Stellar Wallets Kit** (Varial, xBull, Lobstr, Albedo…) | Users sign every transaction themselves |
 | Anchor | **SEP-1** (stellar.toml), **SEP-10** (web auth), **SEP-24** (interactive withdrawal) against the SDF test anchor `testanchor.stellar.org` | Cash-out from Stellar to a bank account |
 | APIs | Soroban RPC `soroban-testnet.stellar.org`, Horizon `horizon-testnet.stellar.org` | Contract calls, balances, classic payments |
 | Off-chain data | SHA-256 computed in the browser (Web Crypto) | Proves the dossier without publishing it |
@@ -154,7 +154,7 @@ number of holders, and everyone withdraws when they want (pull payments).
 - Node.js 22+ with npm 11 (`npm install -g npm@11`), the npm Dependabot uses
 - For the contracts: Rust with the `wasm32v1-none` target and the
   [Stellar CLI](https://developers.stellar.org/docs/tools/cli) 30+ (soroban-sdk 30 refuses older ones)
-- A Stellar wallet such as [Freighter](https://www.freighter.app/), set to **Testnet**
+- A Stellar wallet such as [Varial](https://varialwallet.com/) (formerly Freighter), set to **Testnet**
 
 ### Run the front-end (uses the deployed contracts)
 
@@ -269,7 +269,7 @@ these keys again (`scripts/jury-accounts.sh` or the workflow's jury option).
 | Juror 3 | Lab or investor | `GA2KN3QOYYU7SWDPLAZ6HQ7GS3CFXVLPAQFDSWIUEGOVC2DJLNM6KCVD` |
 | Jury arbiter | Arbiter (shared) | `GDREHWU6C7XZXEEYNEISEDIBZPTVSESBUPB5APUBNUSQ6TZ2ZNCY7I3T` |
 
-The walkthroughs below need three Freighter accounts: a **lab** that is a
+The walkthroughs below need three Varial accounts: a **lab** that is a
 verified institution, an **investor** on the KYC allowlist (see
 [With your own wallet](#with-your-own-wallet-public-demo)) and an **arbiter**.
 The contract refuses a lab that funds its own round, and an arbiter who is
@@ -282,7 +282,7 @@ also the lab or the investor.
    the dossier. In the funding section, set the **investor** and the
    **arbiter** to the addresses of those two accounts; choose the 1-minute
    challenge window and two milestones of 1 EURC.
-2. Switch Freighter to the investor account, reload the licence page, and
+2. Switch Varial to the investor account, reload the licence page, and
    **Fund**: 2 EURC are locked in escrow. No shares yet: the investor receives
    them as milestones pay the lab.
 3. Back on the lab account, **Submit proof** of milestone 1, wait one minute,
@@ -296,14 +296,14 @@ also the lab or the investor.
 
 1. With the lab account, **Submit proof** of milestone 2; with the investor
    account, **Dispute** it within the minute.
-2. Switch Freighter to the arbiter account, reload, and use the arbiter slider
+2. Switch Varial to the arbiter account, reload, and use the arbiter slider
    (for example 60 % to the lab): the milestone shows **Split**, 40 % is
    refunded to the investor, who receives shares only for the 60 % paid to
    the lab.
 
 ### With your own wallet (public demo)
 
-1. In Freighter, switch to **Testnet** and fund the account with Friendbot.
+1. In Varial, switch to **Testnet** and fund the account with Friendbot.
 2. Add the **EURC** asset (issuer `GB3Q…ZTVO`) and get test EURC on
    [faucet.circle.com](https://faucet.circle.com) (Stellar testnet).
 3. Open the app and click **Connect wallet**.
