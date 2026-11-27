@@ -244,6 +244,8 @@ function MilestoneRow({
   const canDispute = windowOpen && now < deadline - LEDGER_MARGIN;
   const canRelease = milestone.status === "Submitted" && now >= deadline + LEDGER_MARGIN;
   const pastDeadline = isPastDeadline(project, now);
+  // Like a dispute: a proof sent in the last seconds would land in a ledger already past the deadline.
+  const canSubmit = !isPastDeadline(project, now + LEDGER_MARGIN);
   const look = STATUS_LOOK[milestone.status];
 
   async function act(
@@ -296,7 +298,7 @@ function MilestoneRow({
 
       {signer && (
         <div className="flex flex-wrap items-center gap-2">
-          {isLab && project.funded && milestone.status === "Pending" && previousSettled && !pastDeadline && (
+          {isLab && project.funded && milestone.status === "Pending" && previousSettled && canSubmit && (
             <>
               <Input placeholder={t("licence.reportPlaceholder")} value={note} onChange={(e) => setNote(e.target.value)} className="min-w-64 flex-1" />
               <Button
