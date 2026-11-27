@@ -58,7 +58,10 @@ export const DEFAULT_SPLIT: SplitPercents = { university: 40, inventors: 30, inv
 export type FormProblem = { field: "split" | "parties" | "milestones"; message: string };
 
 export function splitProblem(owner: string, inventors: string[], split: SplitPercents): FormProblem | null {
-  if (split.university + split.inventors + split.investors !== 100) return { field: "split", message: "newLicence.errors.split" };
+  const percents = [split.university, split.inventors, split.investors];
+  // Whole percents from 0: the split card of the licence page is not a <form>, so the browser checks nothing there.
+  if (!percents.every((p) => Number.isInteger(p) && p >= 0) || percents.reduce((a, b) => a + b) !== 100)
+    return { field: "split", message: "newLicence.errors.split" };
   // The splitter needs a fixed beneficiary (it receives the rounding remainders); without one,
   // `configure` fails, and when listing that happens after the licence is minted.
   if (split.university + split.inventors === 0) return { field: "split", message: "newLicence.errors.splitFixed" };

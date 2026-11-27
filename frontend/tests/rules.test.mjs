@@ -38,6 +38,13 @@ test("splitProblem refuses more fixed beneficiaries than configure accepts (10)"
   assert.equal(splitProblem(addr("A"), inventors(10), { university: 0, inventors: 70, investors: 30 }), null);
 });
 
+test("splitProblem refuses percentages configure cannot take, though they add up to 100", () => {
+  // 33.34 % is not a whole number of bps, and -10 % drops the university and leaves 110 %.
+  for (const split of [{ university: 33.33, inventors: 33.33, investors: 33.34 }, { university: -10, inventors: 60, investors: 50 }]) {
+    assert.equal(splitProblem(addr("A"), inventors(1), split)?.message, "newLicence.errors.split", JSON.stringify(split));
+  }
+});
+
 test("roundProblem refuses milestones create_project would refuse", async () => {
   await i18n.changeLanguage("en");
   const round = (milestones) => roundProblem(addr("A"), addr("B"), addr("C"), milestones);

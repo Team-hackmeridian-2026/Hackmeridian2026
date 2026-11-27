@@ -172,7 +172,7 @@
       "dataRoom": "O link da data room deve começar com https:// ou ipfs://.",
       "inventors": "Verifique os endereços dos inventores.",
       "parties": "Escolha um investidor e um árbitro.",
-      "split": "A repartição dos royalties tem de somar 100 %.",
+      "split": "A repartição dos royalties tem de ser em percentagens inteiras e somar 100 %.",
       "splitFixed": "Atribua parte dos royalties à universidade ou aos inventores: a repartição precisa de pelo menos um beneficiário fixo.",
       "splitTooMany": "No máximo 10 beneficiários fixos: a universidade e até 9 inventores. Ponha a parte da universidade ou dos inventores a 0 %, ou indique menos inventores.",
       "milestones": "Entre 1 e 10 marcos, cada um com um montante positivo e no máximo 2 casas decimais.",
