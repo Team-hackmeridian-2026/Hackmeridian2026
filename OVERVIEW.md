@@ -73,7 +73,7 @@ flowchart LR
 
     subgraph Browser["Browser (Vercel static site)"]
         UI["React SPA"]
-        SWK["Stellar Wallets Kit<br/>Freighter, xBull, Lobstr…"]
+        SWK["Stellar Wallets Kit<br/>Varial, xBull, Lobstr…"]
     end
 
     subgraph Stellar["Stellar testnet"]
@@ -379,7 +379,7 @@ sequenceDiagram
     participant Toasts as toasts.run
     participant C as contracts.write
     participant RPC as Soroban RPC
-    participant W as Wallet (Freighter)
+    participant W as Wallet (Varial)
 
     Page->>Toasts: run("Fund", () => escrow.fund(signer, id))
     Toasts->>C: action()

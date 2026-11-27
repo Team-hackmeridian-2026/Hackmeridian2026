@@ -55,7 +55,7 @@ Read when needed (too long to import): `OVERVIEW.md` (architecture and data mode
 - Treat contract tests as proof of who signed: they use `mock_all_auths()`. Assert auths when you touch access control.
 
 ### Cloud sandbox only
-- Testnet and prod are unreachable by curl; test through Claude in Chrome. Antoine signs every Freighter transaction.
+- Testnet and prod are unreachable by curl; test through Claude in Chrome. Antoine signs every Varial transaction.
 - Before pushing from a shallow clone, run `git fetch origin main` and rebase, otherwise you get a 413.
 - Open PRs with `gh api repos/Team-hackmeridian-2026/Hackmeridian2026/pulls --input pr.json` (GraphQL is blocked).
 - Tags cannot be pushed from the sandbox (403); Antoine creates releases.
