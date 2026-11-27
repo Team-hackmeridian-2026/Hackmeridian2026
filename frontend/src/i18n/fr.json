@@ -172,7 +172,7 @@
       "dataRoom": "Le lien de la data room doit commencer par https:// ou ipfs://.",
       "inventors": "Vérifiez les adresses des inventeurs.",
       "parties": "Choisissez un investisseur et un arbitre.",
-      "split": "Le partage des redevances doit totaliser 100 %.",
+      "split": "Le partage des redevances doit être en pourcentages entiers et totaliser 100 %.",
       "splitFixed": "Attribuez une part des redevances à l'université ou aux inventeurs : le partage a besoin d'au moins un bénéficiaire fixe.",
       "splitTooMany": "10 bénéficiaires fixes au maximum : l'université et jusqu'à 9 inventeurs. Mettez la part de l'université ou des inventeurs à 0 %, ou indiquez moins d'inventeurs.",
       "milestones": "Entre 1 et 10 jalons, chacun avec un montant positif et au plus 2 décimales.",
