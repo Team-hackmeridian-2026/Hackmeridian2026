@@ -1,7 +1,6 @@
-import { createContext, useCallback, useContext, useMemo, useState, type ReactNode } from "react";
+import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
 import { Keypair, TransactionBuilder } from "@stellar/stellar-sdk";
-import { StellarWalletsKit } from "@creit.tech/stellar-wallets-kit/sdk";
-import { defaultModules } from "@creit.tech/stellar-wallets-kit/modules/utils";
+import type { StellarWalletsKit } from "@creit.tech/stellar-wallets-kit/sdk";
 import { LocalStorageKeys, Networks } from "@creit.tech/stellar-wallets-kit/types";
 import { NETWORK_PASSPHRASE } from "../config";
 import { WalletError } from "./errors";
@@ -38,18 +37,41 @@ const DEMO_SECRETS: Partial<Record<DemoRole, string>> = (() => {
 })();
 export const DEMO_ENABLED = Object.keys(DEMO_SECRETS).length > 0;
 
-let kitReady = false;
-function initKit() {
-  if (kitReady) return;
-  StellarWalletsKit.init({ modules: defaultModules(), network: Networks.TESTNET });
-  kitReady = true;
+/** Wallet of a session restored after a refresh, selected once the kit has loaded. */
+let restoredWallet: string | null = null;
+let kitPromise: Promise<typeof StellarWalletsKit> | null = null;
+
+/**
+ * Wallets Kit and its wallet modules (about 250 kB, a sixth of the main bundle) load on
+ * first use, so visitors who only browse never download them.
+ */
+function loadKit(): Promise<typeof StellarWalletsKit> {
+  if (!kitPromise) {
+    kitPromise = Promise.all([
+      import("@creit.tech/stellar-wallets-kit/sdk"),
+      import("@creit.tech/stellar-wallets-kit/modules/utils"),
+    ]).then(([{ StellarWalletsKit: kit }, { defaultModules }]) => {
+      kit.init({ modules: defaultModules(), network: Networks.TESTNET });
+      try {
+        if (restoredWallet) kit.setWallet(restoredWallet);
+      } catch {
+        // A wallet this kit version no longer has ("freighter" became "varial" in 2.8): the session is dropped.
+        restoredWallet = null;
+      }
+      return kit;
+    });
+    // A failed download must not stay cached, or connecting fails until the page is reloaded.
+    kitPromise.catch(() => (kitPromise = null));
+  }
+  return kitPromise;
 }
 
 /** Catch the usual mistakes up front: extension off or locked, wrong network, other account active. */
 async function checkWallet(address: string): Promise<void> {
+  const kit = await loadKit();
   let network: { networkPassphrase: string };
   try {
-    network = await StellarWalletsKit.getNetwork();
+    network = await kit.getNetwork();
   } catch {
     throw new WalletError("notConnected");
   }
@@ -58,7 +80,7 @@ async function checkWallet(address: string): Promise<void> {
   if (network.networkPassphrase && network.networkPassphrase !== NETWORK_PASSPHRASE) throw new WalletError("network");
   let active: string;
   try {
-    active = (await StellarWalletsKit.fetchAddress()).address;
+    active = (await kit.fetchAddress()).address;
   } catch {
     throw new WalletError("notConnected");
   }
@@ -71,7 +93,7 @@ function walletSigner(address: string): Signer {
     kind: "wallet",
     sign: async (xdr) => {
       await checkWallet(address);
-      return StellarWalletsKit.signTransaction(xdr, { networkPassphrase: NETWORK_PASSPHRASE, address });
+      return (await loadKit()).signTransaction(xdr, { networkPassphrase: NETWORK_PASSPHRASE, address });
     },
   };
 }
@@ -119,8 +141,7 @@ function restoreSigner(): Signer | null {
     const address = localStorage.getItem(LocalStorageKeys.activeAddress);
     const walletId = localStorage.getItem(LocalStorageKeys.selectedModuleId);
     if (!address || !walletId) return null;
-    initKit();
-    StellarWalletsKit.setWallet(walletId);
+    restoredWallet = walletId;
     return walletSigner(address);
   } catch {
     return null;
@@ -141,11 +162,21 @@ export function WalletProvider({ children }: { children: ReactNode }) {
   const [signer, setSigner] = useState<Signer | null>(restoreSigner);
   const [connecting, setConnecting] = useState(false);
 
+  // A restored wallet session loads the kit at once, to check that its wallet still exists.
+  useEffect(() => {
+    if (!restoredWallet) return;
+    loadKit().then(
+      () => {
+        if (!restoredWallet) setSigner(null);
+      },
+      () => {}, // download failed: the next use of the wallet tries again
+    );
+  }, []);
+
   const connectWallet = useCallback(async () => {
-    initKit();
     setConnecting(true);
     try {
-      const { address } = await StellarWalletsKit.authModal();
+      const { address } = await (await loadKit()).authModal();
       rememberDemoRole(null);
       setSigner(walletSigner(address));
     } finally {
@@ -161,7 +192,7 @@ export function WalletProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const disconnect = useCallback(async () => {
-    if (signer?.kind === "wallet") await StellarWalletsKit.disconnect();
+    if (signer?.kind === "wallet") await (await loadKit()).disconnect();
     rememberDemoRole(null);
     setSigner(null);
   }, [signer]);
