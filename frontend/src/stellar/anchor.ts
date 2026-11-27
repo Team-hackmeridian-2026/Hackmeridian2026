@@ -16,6 +16,7 @@ import {
   Operation,
   StellarToml,
   TransactionBuilder,
+  TransactionFailedError,
   WebAuth,
 } from "@stellar/stellar-sdk";
 import { HORIZON_URL, NETWORK_PASSPHRASE } from "../config";
@@ -187,7 +188,8 @@ export async function balanceOf(account: string, a: AnchorAsset): Promise<{ bala
   return { balance: line?.balance ?? "0", trusted: Boolean(line) };
 }
 
-async function submit(signer: Signer, build: (b: TransactionBuilder) => TransactionBuilder): Promise<string> {
+/** Builds a transaction and has the user sign it; returns the signed XDR. */
+async function sign(signer: Signer, build: (b: TransactionBuilder) => TransactionBuilder): Promise<string> {
   const account = await horizon.loadAccount(signer.address);
   const tx = build(new TransactionBuilder(account, { fee: BASE_FEE, networkPassphrase: NETWORK_PASSPHRASE }))
     .setTimeout(180)
@@ -196,13 +198,17 @@ async function submit(signer: Signer, build: (b: TransactionBuilder) => Transact
     networkPassphrase: NETWORK_PASSPHRASE,
     address: signer.address,
   });
+  return signedTxXdr;
+}
+
+async function send(signedTxXdr: string): Promise<string> {
   const res = await horizon.submitTransaction(TransactionBuilder.fromXDR(signedTxXdr, NETWORK_PASSPHRASE));
   return res.hash;
 }
 
 /** Adds a trustline so the account can hold the anchor's asset. */
-export function addTrustline(signer: Signer, a: AnchorAsset): Promise<string> {
-  return submit(signer, (b) => b.addOperation(Operation.changeTrust({ asset: toAsset(a) })));
+export async function addTrustline(signer: Signer, a: AnchorAsset): Promise<string> {
+  return send(await sign(signer, (b) => b.addOperation(Operation.changeTrust({ asset: toAsset(a) }))));
 }
 
 function memoOf(tx: AnchorTransaction): Memo {
@@ -218,14 +224,26 @@ function memoOf(tx: AnchorTransaction): Memo {
   }
 }
 
+/**
+ * The signed payment of each withdrawal, by anchor transaction id. A retry resends that same
+ * transaction: if the first send landed although Horizon timed out or the connection dropped,
+ * Horizon answers with its result instead of a second payment going out.
+ */
+const payments = new Map<string, string>();
+
 /** Sends the funds the anchor is waiting for, with the memo it uses to match the payment. */
-export function payAnchor(signer: Signer, a: AnchorAsset, tx: AnchorTransaction): Promise<string> {
-  if (!tx.withdraw_anchor_account || !tx.amount_in) throw new Error(i18n.t("errors.anchor.noPaymentDetails"));
-  return submit(signer, (b) =>
-    b
-      .addOperation(
-        Operation.payment({ destination: tx.withdraw_anchor_account!, asset: toAsset(a), amount: tx.amount_in! }),
-      )
-      .addMemo(memoOf(tx)),
-  );
+export async function payAnchor(signer: Signer, a: AnchorAsset, tx: AnchorTransaction): Promise<string> {
+  const { withdraw_anchor_account: destination, amount_in: amount } = tx;
+  if (!destination || !amount) throw new Error(i18n.t("errors.anchor.noPaymentDetails"));
+  const signed =
+    payments.get(tx.id) ??
+    (await sign(signer, (b) => b.addOperation(Operation.payment({ destination, asset: toAsset(a), amount })).addMemo(memoOf(tx))));
+  payments.set(tx.id, signed);
+  try {
+    return await send(signed);
+  } catch (err) {
+    // Refused with result codes (expired, underfunded…): nothing was paid, so the next try signs a new one.
+    if (err instanceof TransactionFailedError) payments.delete(tx.id);
+    throw err;
+  }
 }

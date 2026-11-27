@@ -83,6 +83,42 @@ test("anchor failures read as the anchor's own message, or a translated one", as
   }
 });
 
+test("a cash-out payment retried after an unanswered send is not paid twice", async () => {
+  const { Horizon, Account, TransactionFailedError } = await vite.ssrLoadModule("@stellar/stellar-sdk");
+  const { payAnchor } = await vite.ssrLoadModule("/src/stellar/anchor.ts");
+  const server = Horizon.Server.prototype;
+  const original = { loadAccount: server.loadAccount, submitTransaction: server.submitTransaction };
+  const address = Keypair.random().publicKey();
+  let signatures = 0;
+  const signer = { address, kind: "demo", sign: async (xdr) => (signatures++, { signedTxXdr: xdr }) };
+  const sent = [];
+  let answer;
+  server.loadAccount = async () => new Account(address, "1");
+  server.submitTransaction = async (tx) => (sent.push(tx.toXDR()), answer());
+  const xlm = { code: "native", min: 0, max: Infinity };
+  const withdrawal = (id) => ({ id, status: "pending_user_transfer_start", amount_in: "5", withdraw_anchor_account: Keypair.random().publicKey() });
+  try {
+    // Horizon timed out, yet the payment may have landed: the retry resends the same transaction.
+    const first = withdrawal("w1");
+    answer = () => Promise.reject(new Error("timeout of 60000ms exceeded"));
+    await assert.rejects(payAnchor(signer, xlm, first));
+    answer = async () => ({ hash: "abc123" });
+    assert.equal(await payAnchor(signer, xlm, first), "abc123");
+    assert.equal(signatures, 1);
+    assert.equal(sent[1], sent[0]);
+    // Refused with result codes: nothing went out, so the next try signs a new transaction.
+    const second = withdrawal("w2");
+    const tooLate = { status: 400, statusText: "Bad Request", data: { extras: { result_codes: { transaction: "tx_too_late" } } } };
+    answer = () => Promise.reject(new TransactionFailedError("Transaction submission failed. Server responded: 400 Bad Request", tooLate));
+    await assert.rejects(payAnchor(signer, xlm, second));
+    answer = async () => ({ hash: "def456" });
+    assert.equal(await payAnchor(signer, xlm, second), "def456");
+    assert.equal(signatures, 3);
+  } finally {
+    Object.assign(server, original);
+  }
+});
+
 test("reclaimable lists the milestones the contract's reclaim refunds", () => {
   const round = (milestones, funded = true) => ({ funded, deadline: 1_000n, challenge_period: 60n, milestones });
   const pending = { status: "Pending", submitted_at: 0n };
